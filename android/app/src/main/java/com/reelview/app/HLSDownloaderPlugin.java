@@ -215,8 +215,14 @@ public class HLSDownloaderPlugin extends Plugin {
     @PluginMethod
     public void getCapturedStreams(PluginCall call) {
         try {
+            Log.d(TAG, "getCapturedStreams called - Current count: " + capturedStreams.size());
+            if (capturedStreams.isEmpty()) {
+                Log.w(TAG, "? NO CAPTURED STREAMS - Check ReelViewWebViewClient logs for interception");
+            }
+            
             JSONArray streams = new JSONArray();
             for (String url : capturedStreams) {
+                Log.d(TAG, "  Including stream: " + url.substring(0, Math.min(100, url.length())));
                 JSONObject stream = new JSONObject();
                 stream.put("url", url);
                 stream.put("type", "hls");

@@ -21,10 +21,14 @@ public class ReelViewWebViewClient extends BridgeWebViewClient {
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
         String url = request.getUrl().toString();
         
+        Log.d(TAG, "shouldInterceptRequest called for: " + url.substring(0, Math.min(100, url.length())));
+        
         // Capture HLS streams
         if (isHLSStream(url)) {
-            Log.d(TAG, "HLS stream detected: " + url.substring(0, Math.min(100, url.length())));
+            Log.d(TAG, "? HLS stream MATCHED: " + url.substring(0, Math.min(100, url.length())));
             captureStreamUrl(url);
+        } else {
+            Log.d(TAG, "? Not HLS stream: " + url.substring(0, Math.min(80, url.length())));
         }
         
         return super.shouldInterceptRequest(view, request);
