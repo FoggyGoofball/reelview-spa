@@ -152,7 +152,7 @@ function requireReact_production_min() {
   function O(a) {
     return "object" === typeof a && null !== a && a.$$typeof === l;
   }
-  function escape(a) {
+  function escape2(a) {
     var b = { "=": "=0", ":": "=2" };
     return "$" + a.replace(/[=:]/g, function(a2) {
       return b[a2];
@@ -160,7 +160,7 @@ function requireReact_production_min() {
   }
   var P = /\/+/g;
   function Q(a, b) {
-    return "object" === typeof a && null !== a && null != a.key ? escape("" + a.key) : b.toString(36);
+    return "object" === typeof a && null !== a && null != a.key ? escape2("" + a.key) : b.toString(36);
   }
   function R(a, b, e, d, c) {
     var k = typeof a;
@@ -13869,6 +13869,1082 @@ window.reelviewLogs = {
 console.log("%cReelView Logger Initialized", "color: #00aa00; font-weight: bold; font-size: 14px;");
 console.log("%cUse window.reelviewLogs.export() to get all logs", "color: #666;");
 console.log("%cUse window.reelviewLogs.copy() to copy logs to clipboard", "color: #666;");
+const createCapacitorPlatforms = (win) => {
+  const defaultPlatformMap = /* @__PURE__ */ new Map();
+  defaultPlatformMap.set("web", { name: "web" });
+  const capPlatforms = win.CapacitorPlatforms || {
+    currentPlatform: { name: "web" },
+    platforms: defaultPlatformMap
+  };
+  const addPlatform2 = (name, platform2) => {
+    capPlatforms.platforms.set(name, platform2);
+  };
+  const setPlatform2 = (name) => {
+    if (capPlatforms.platforms.has(name)) {
+      capPlatforms.currentPlatform = capPlatforms.platforms.get(name);
+    }
+  };
+  capPlatforms.addPlatform = addPlatform2;
+  capPlatforms.setPlatform = setPlatform2;
+  return capPlatforms;
+};
+const initPlatforms = (win) => win.CapacitorPlatforms = createCapacitorPlatforms(win);
+const CapacitorPlatforms = /* @__PURE__ */ initPlatforms(typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : {});
+const addPlatform = CapacitorPlatforms.addPlatform;
+const setPlatform = CapacitorPlatforms.setPlatform;
+const legacyRegisterWebPlugin = (cap, webPlugin) => {
+  var _a;
+  const config2 = webPlugin.config;
+  const Plugins2 = cap.Plugins;
+  if (!(config2 === null || config2 === void 0 ? void 0 : config2.name)) {
+    throw new Error(`Capacitor WebPlugin is using the deprecated "registerWebPlugin()" function, but without the config. Please use "registerPlugin()" instead to register this web plugin."`);
+  }
+  console.warn(`Capacitor plugin "${config2.name}" is using the deprecated "registerWebPlugin()" function`);
+  if (!Plugins2[config2.name] || ((_a = config2 === null || config2 === void 0 ? void 0 : config2.platforms) === null || _a === void 0 ? void 0 : _a.includes(cap.getPlatform()))) {
+    Plugins2[config2.name] = webPlugin;
+  }
+};
+var ExceptionCode;
+(function(ExceptionCode2) {
+  ExceptionCode2["Unimplemented"] = "UNIMPLEMENTED";
+  ExceptionCode2["Unavailable"] = "UNAVAILABLE";
+})(ExceptionCode || (ExceptionCode = {}));
+class CapacitorException extends Error {
+  constructor(message, code, data2) {
+    super(message);
+    this.message = message;
+    this.code = code;
+    this.data = data2;
+  }
+}
+const getPlatformId = (win) => {
+  var _a, _b;
+  if (win === null || win === void 0 ? void 0 : win.androidBridge) {
+    return "android";
+  } else if ((_b = (_a = win === null || win === void 0 ? void 0 : win.webkit) === null || _a === void 0 ? void 0 : _a.messageHandlers) === null || _b === void 0 ? void 0 : _b.bridge) {
+    return "ios";
+  } else {
+    return "web";
+  }
+};
+const createCapacitor = (win) => {
+  var _a, _b, _c, _d, _e;
+  const capCustomPlatform = win.CapacitorCustomPlatform || null;
+  const cap = win.Capacitor || {};
+  const Plugins2 = cap.Plugins = cap.Plugins || {};
+  const capPlatforms = win.CapacitorPlatforms;
+  const defaultGetPlatform = () => {
+    return capCustomPlatform !== null ? capCustomPlatform.name : getPlatformId(win);
+  };
+  const getPlatform2 = ((_a = capPlatforms === null || capPlatforms === void 0 ? void 0 : capPlatforms.currentPlatform) === null || _a === void 0 ? void 0 : _a.getPlatform) || defaultGetPlatform;
+  const defaultIsNativePlatform = () => getPlatform2() !== "web";
+  const isNativePlatform = ((_b = capPlatforms === null || capPlatforms === void 0 ? void 0 : capPlatforms.currentPlatform) === null || _b === void 0 ? void 0 : _b.isNativePlatform) || defaultIsNativePlatform;
+  const defaultIsPluginAvailable = (pluginName) => {
+    const plugin = registeredPlugins.get(pluginName);
+    if (plugin === null || plugin === void 0 ? void 0 : plugin.platforms.has(getPlatform2())) {
+      return true;
+    }
+    if (getPluginHeader(pluginName)) {
+      return true;
+    }
+    return false;
+  };
+  const isPluginAvailable = ((_c = capPlatforms === null || capPlatforms === void 0 ? void 0 : capPlatforms.currentPlatform) === null || _c === void 0 ? void 0 : _c.isPluginAvailable) || defaultIsPluginAvailable;
+  const defaultGetPluginHeader = (pluginName) => {
+    var _a2;
+    return (_a2 = cap.PluginHeaders) === null || _a2 === void 0 ? void 0 : _a2.find((h) => h.name === pluginName);
+  };
+  const getPluginHeader = ((_d = capPlatforms === null || capPlatforms === void 0 ? void 0 : capPlatforms.currentPlatform) === null || _d === void 0 ? void 0 : _d.getPluginHeader) || defaultGetPluginHeader;
+  const handleError = (err) => win.console.error(err);
+  const pluginMethodNoop = (_target, prop, pluginName) => {
+    return Promise.reject(`${pluginName} does not have an implementation of "${prop}".`);
+  };
+  const registeredPlugins = /* @__PURE__ */ new Map();
+  const defaultRegisterPlugin = (pluginName, jsImplementations = {}) => {
+    const registeredPlugin = registeredPlugins.get(pluginName);
+    if (registeredPlugin) {
+      console.warn(`Capacitor plugin "${pluginName}" already registered. Cannot register plugins twice.`);
+      return registeredPlugin.proxy;
+    }
+    const platform2 = getPlatform2();
+    const pluginHeader = getPluginHeader(pluginName);
+    let jsImplementation;
+    const loadPluginImplementation = async () => {
+      if (!jsImplementation && platform2 in jsImplementations) {
+        jsImplementation = typeof jsImplementations[platform2] === "function" ? jsImplementation = await jsImplementations[platform2]() : jsImplementation = jsImplementations[platform2];
+      } else if (capCustomPlatform !== null && !jsImplementation && "web" in jsImplementations) {
+        jsImplementation = typeof jsImplementations["web"] === "function" ? jsImplementation = await jsImplementations["web"]() : jsImplementation = jsImplementations["web"];
+      }
+      return jsImplementation;
+    };
+    const createPluginMethod = (impl, prop) => {
+      var _a2, _b2;
+      if (pluginHeader) {
+        const methodHeader = pluginHeader === null || pluginHeader === void 0 ? void 0 : pluginHeader.methods.find((m) => prop === m.name);
+        if (methodHeader) {
+          if (methodHeader.rtype === "promise") {
+            return (options) => cap.nativePromise(pluginName, prop.toString(), options);
+          } else {
+            return (options, callback) => cap.nativeCallback(pluginName, prop.toString(), options, callback);
+          }
+        } else if (impl) {
+          return (_a2 = impl[prop]) === null || _a2 === void 0 ? void 0 : _a2.bind(impl);
+        }
+      } else if (impl) {
+        return (_b2 = impl[prop]) === null || _b2 === void 0 ? void 0 : _b2.bind(impl);
+      } else {
+        throw new CapacitorException(`"${pluginName}" plugin is not implemented on ${platform2}`, ExceptionCode.Unimplemented);
+      }
+    };
+    const createPluginMethodWrapper = (prop) => {
+      let remove;
+      const wrapper = (...args) => {
+        const p = loadPluginImplementation().then((impl) => {
+          const fn = createPluginMethod(impl, prop);
+          if (fn) {
+            const p2 = fn(...args);
+            remove = p2 === null || p2 === void 0 ? void 0 : p2.remove;
+            return p2;
+          } else {
+            throw new CapacitorException(`"${pluginName}.${prop}()" is not implemented on ${platform2}`, ExceptionCode.Unimplemented);
+          }
+        });
+        if (prop === "addListener") {
+          p.remove = async () => remove();
+        }
+        return p;
+      };
+      wrapper.toString = () => `${prop.toString()}() { [capacitor code] }`;
+      Object.defineProperty(wrapper, "name", {
+        value: prop,
+        writable: false,
+        configurable: false
+      });
+      return wrapper;
+    };
+    const addListener = createPluginMethodWrapper("addListener");
+    const removeListener = createPluginMethodWrapper("removeListener");
+    const addListenerNative = (eventName, callback) => {
+      const call = addListener({ eventName }, callback);
+      const remove = async () => {
+        const callbackId = await call;
+        removeListener({
+          eventName,
+          callbackId
+        }, callback);
+      };
+      const p = new Promise((resolve) => call.then(() => resolve({ remove })));
+      p.remove = async () => {
+        console.warn(`Using addListener() without 'await' is deprecated.`);
+        await remove();
+      };
+      return p;
+    };
+    const proxy = new Proxy({}, {
+      get(_, prop) {
+        switch (prop) {
+          // https://github.com/facebook/react/issues/20030
+          case "$$typeof":
+            return void 0;
+          case "toJSON":
+            return () => ({});
+          case "addListener":
+            return pluginHeader ? addListenerNative : addListener;
+          case "removeListener":
+            return removeListener;
+          default:
+            return createPluginMethodWrapper(prop);
+        }
+      }
+    });
+    Plugins2[pluginName] = proxy;
+    registeredPlugins.set(pluginName, {
+      name: pluginName,
+      proxy,
+      platforms: /* @__PURE__ */ new Set([
+        ...Object.keys(jsImplementations),
+        ...pluginHeader ? [platform2] : []
+      ])
+    });
+    return proxy;
+  };
+  const registerPlugin2 = ((_e = capPlatforms === null || capPlatforms === void 0 ? void 0 : capPlatforms.currentPlatform) === null || _e === void 0 ? void 0 : _e.registerPlugin) || defaultRegisterPlugin;
+  if (!cap.convertFileSrc) {
+    cap.convertFileSrc = (filePath) => filePath;
+  }
+  cap.getPlatform = getPlatform2;
+  cap.handleError = handleError;
+  cap.isNativePlatform = isNativePlatform;
+  cap.isPluginAvailable = isPluginAvailable;
+  cap.pluginMethodNoop = pluginMethodNoop;
+  cap.registerPlugin = registerPlugin2;
+  cap.Exception = CapacitorException;
+  cap.DEBUG = !!cap.DEBUG;
+  cap.isLoggingEnabled = !!cap.isLoggingEnabled;
+  cap.platform = cap.getPlatform();
+  cap.isNative = cap.isNativePlatform();
+  return cap;
+};
+const initCapacitorGlobal = (win) => win.Capacitor = createCapacitor(win);
+const Capacitor = /* @__PURE__ */ initCapacitorGlobal(typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : {});
+const registerPlugin = Capacitor.registerPlugin;
+const Plugins = Capacitor.Plugins;
+const registerWebPlugin = (plugin) => legacyRegisterWebPlugin(Capacitor, plugin);
+class WebPlugin {
+  constructor(config2) {
+    this.listeners = {};
+    this.windowListeners = {};
+    if (config2) {
+      console.warn(`Capacitor WebPlugin "${config2.name}" config object was deprecated in v3 and will be removed in v4.`);
+      this.config = config2;
+    }
+  }
+  addListener(eventName, listenerFunc) {
+    const listeners2 = this.listeners[eventName];
+    if (!listeners2) {
+      this.listeners[eventName] = [];
+    }
+    this.listeners[eventName].push(listenerFunc);
+    const windowListener = this.windowListeners[eventName];
+    if (windowListener && !windowListener.registered) {
+      this.addWindowListener(windowListener);
+    }
+    const remove = async () => this.removeListener(eventName, listenerFunc);
+    const p = Promise.resolve({ remove });
+    Object.defineProperty(p, "remove", {
+      value: async () => {
+        console.warn(`Using addListener() without 'await' is deprecated.`);
+        await remove();
+      }
+    });
+    return p;
+  }
+  async removeAllListeners() {
+    this.listeners = {};
+    for (const listener in this.windowListeners) {
+      this.removeWindowListener(this.windowListeners[listener]);
+    }
+    this.windowListeners = {};
+  }
+  notifyListeners(eventName, data2) {
+    const listeners2 = this.listeners[eventName];
+    if (listeners2) {
+      listeners2.forEach((listener) => listener(data2));
+    }
+  }
+  hasListeners(eventName) {
+    return !!this.listeners[eventName].length;
+  }
+  registerWindowListener(windowEventName, pluginEventName) {
+    this.windowListeners[pluginEventName] = {
+      registered: false,
+      windowEventName,
+      pluginEventName,
+      handler: (event) => {
+        this.notifyListeners(pluginEventName, event);
+      }
+    };
+  }
+  unimplemented(msg = "not implemented") {
+    return new Capacitor.Exception(msg, ExceptionCode.Unimplemented);
+  }
+  unavailable(msg = "not available") {
+    return new Capacitor.Exception(msg, ExceptionCode.Unavailable);
+  }
+  async removeListener(eventName, listenerFunc) {
+    const listeners2 = this.listeners[eventName];
+    if (!listeners2) {
+      return;
+    }
+    const index2 = listeners2.indexOf(listenerFunc);
+    this.listeners[eventName].splice(index2, 1);
+    if (!this.listeners[eventName].length) {
+      this.removeWindowListener(this.windowListeners[eventName]);
+    }
+  }
+  addWindowListener(handle) {
+    window.addEventListener(handle.windowEventName, handle.handler);
+    handle.registered = true;
+  }
+  removeWindowListener(handle) {
+    if (!handle) {
+      return;
+    }
+    window.removeEventListener(handle.windowEventName, handle.handler);
+    handle.registered = false;
+  }
+}
+const WebView = /* @__PURE__ */ registerPlugin("WebView");
+const encode = (str) => encodeURIComponent(str).replace(/%(2[346B]|5E|60|7C)/g, decodeURIComponent).replace(/[()]/g, escape);
+const decode = (str) => str.replace(/(%[\dA-F]{2})+/gi, decodeURIComponent);
+class CapacitorCookiesPluginWeb extends WebPlugin {
+  async getCookies() {
+    const cookies = document.cookie;
+    const cookieMap = {};
+    cookies.split(";").forEach((cookie) => {
+      if (cookie.length <= 0)
+        return;
+      let [key, value] = cookie.replace(/=/, "CAP_COOKIE").split("CAP_COOKIE");
+      key = decode(key).trim();
+      value = decode(value).trim();
+      cookieMap[key] = value;
+    });
+    return cookieMap;
+  }
+  async setCookie(options) {
+    try {
+      const encodedKey = encode(options.key);
+      const encodedValue = encode(options.value);
+      const expires = `; expires=${(options.expires || "").replace("expires=", "")}`;
+      const path = (options.path || "/").replace("path=", "");
+      const domain = options.url != null && options.url.length > 0 ? `domain=${options.url}` : "";
+      document.cookie = `${encodedKey}=${encodedValue || ""}${expires}; path=${path}; ${domain};`;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+  async deleteCookie(options) {
+    try {
+      document.cookie = `${options.key}=; Max-Age=0`;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+  async clearCookies() {
+    try {
+      const cookies = document.cookie.split(";") || [];
+      for (const cookie of cookies) {
+        document.cookie = cookie.replace(/^ +/, "").replace(/=.*/, `=;expires=${(/* @__PURE__ */ new Date()).toUTCString()};path=/`);
+      }
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+  async clearAllCookies() {
+    try {
+      await this.clearCookies();
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+}
+const CapacitorCookies = registerPlugin("CapacitorCookies", {
+  web: () => new CapacitorCookiesPluginWeb()
+});
+const readBlobAsBase64 = async (blob) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const base64String = reader.result;
+    resolve(base64String.indexOf(",") >= 0 ? base64String.split(",")[1] : base64String);
+  };
+  reader.onerror = (error) => reject(error);
+  reader.readAsDataURL(blob);
+});
+const normalizeHttpHeaders = (headers = {}) => {
+  const originalKeys = Object.keys(headers);
+  const loweredKeys = Object.keys(headers).map((k) => k.toLocaleLowerCase());
+  const normalized = loweredKeys.reduce((acc, key, index2) => {
+    acc[key] = headers[originalKeys[index2]];
+    return acc;
+  }, {});
+  return normalized;
+};
+const buildUrlParams = (params, shouldEncode = true) => {
+  if (!params)
+    return null;
+  const output = Object.entries(params).reduce((accumulator, entry) => {
+    const [key, value] = entry;
+    let encodedValue;
+    let item;
+    if (Array.isArray(value)) {
+      item = "";
+      value.forEach((str) => {
+        encodedValue = shouldEncode ? encodeURIComponent(str) : str;
+        item += `${key}=${encodedValue}&`;
+      });
+      item.slice(0, -1);
+    } else {
+      encodedValue = shouldEncode ? encodeURIComponent(value) : value;
+      item = `${key}=${encodedValue}`;
+    }
+    return `${accumulator}&${item}`;
+  }, "");
+  return output.substr(1);
+};
+const buildRequestInit = (options, extra = {}) => {
+  const output = Object.assign({ method: options.method || "GET", headers: options.headers }, extra);
+  const headers = normalizeHttpHeaders(options.headers);
+  const type = headers["content-type"] || "";
+  if (typeof options.data === "string") {
+    output.body = options.data;
+  } else if (type.includes("application/x-www-form-urlencoded")) {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(options.data || {})) {
+      params.set(key, value);
+    }
+    output.body = params.toString();
+  } else if (type.includes("multipart/form-data") || options.data instanceof FormData) {
+    const form = new FormData();
+    if (options.data instanceof FormData) {
+      options.data.forEach((value, key) => {
+        form.append(key, value);
+      });
+    } else {
+      for (const key of Object.keys(options.data)) {
+        form.append(key, options.data[key]);
+      }
+    }
+    output.body = form;
+    const headers2 = new Headers(output.headers);
+    headers2.delete("content-type");
+    output.headers = headers2;
+  } else if (type.includes("application/json") || typeof options.data === "object") {
+    output.body = JSON.stringify(options.data);
+  }
+  return output;
+};
+class CapacitorHttpPluginWeb extends WebPlugin {
+  /**
+   * Perform an Http request given a set of options
+   * @param options Options to build the HTTP request
+   */
+  async request(options) {
+    const requestInit = buildRequestInit(options, options.webFetchExtra);
+    const urlParams = buildUrlParams(options.params, options.shouldEncodeUrlParams);
+    const url = urlParams ? `${options.url}?${urlParams}` : options.url;
+    const response = await fetch(url, requestInit);
+    const contentType = response.headers.get("content-type") || "";
+    let { responseType = "text" } = response.ok ? options : {};
+    if (contentType.includes("application/json")) {
+      responseType = "json";
+    }
+    let data2;
+    let blob;
+    switch (responseType) {
+      case "arraybuffer":
+      case "blob":
+        blob = await response.blob();
+        data2 = await readBlobAsBase64(blob);
+        break;
+      case "json":
+        data2 = await response.json();
+        break;
+      case "document":
+      case "text":
+      default:
+        data2 = await response.text();
+    }
+    const headers = {};
+    response.headers.forEach((value, key) => {
+      headers[key] = value;
+    });
+    return {
+      data: data2,
+      headers,
+      status: response.status,
+      url: response.url
+    };
+  }
+  /**
+   * Perform an Http GET request given a set of options
+   * @param options Options to build the HTTP request
+   */
+  async get(options) {
+    return this.request(Object.assign(Object.assign({}, options), { method: "GET" }));
+  }
+  /**
+   * Perform an Http POST request given a set of options
+   * @param options Options to build the HTTP request
+   */
+  async post(options) {
+    return this.request(Object.assign(Object.assign({}, options), { method: "POST" }));
+  }
+  /**
+   * Perform an Http PUT request given a set of options
+   * @param options Options to build the HTTP request
+   */
+  async put(options) {
+    return this.request(Object.assign(Object.assign({}, options), { method: "PUT" }));
+  }
+  /**
+   * Perform an Http PATCH request given a set of options
+   * @param options Options to build the HTTP request
+   */
+  async patch(options) {
+    return this.request(Object.assign(Object.assign({}, options), { method: "PATCH" }));
+  }
+  /**
+   * Perform an Http DELETE request given a set of options
+   * @param options Options to build the HTTP request
+   */
+  async delete(options) {
+    return this.request(Object.assign(Object.assign({}, options), { method: "DELETE" }));
+  }
+}
+const CapacitorHttp = registerPlugin("CapacitorHttp", {
+  web: () => new CapacitorHttpPluginWeb()
+});
+class AndroidStreamDetector {
+  detectedStreams = /* @__PURE__ */ new Map();
+  isInitialized = false;
+  isAndroid = false;
+  constructor() {
+    this.isAndroid = Capacitor.getPlatform() === "android";
+  }
+  /**
+   * Initialize stream detection
+   */
+  initialize() {
+    if (!this.isAndroid || this.isInitialized) return;
+    console.log("[ANDROID_DETECTOR] Initializing Android stream detection");
+    this.monitorIframes();
+    this.isInitialized = true;
+    console.log("[ANDROID_DETECTOR] Stream detection initialized");
+  }
+  /**
+   * Get current captured streams
+   */
+  getStreams() {
+    return Array.from(this.detectedStreams.values()).sort((a, b) => b.timestamp - a.timestamp);
+  }
+  /**
+   * Monitor iframe sources for m3u8 URLs
+   */
+  monitorIframes() {
+    this.checkExistingIframes();
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === "attributes" && mutation.attributeName === "src") {
+          const iframe = mutation.target;
+          const src = iframe.getAttribute("src");
+          if (src) {
+            this.handleIframeURL(src, "iframe-src");
+          }
+        }
+        if (mutation.type === "childList") {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const elem = node;
+              if (elem.tagName === "IFRAME") {
+                const src = elem.getAttribute("src");
+                if (src) {
+                  this.handleIframeURL(src, "iframe-added");
+                }
+              }
+              const iframes = elem.querySelectorAll("iframe");
+              iframes.forEach((iframe) => {
+                const src = iframe.getAttribute("src");
+                if (src) {
+                  this.handleIframeURL(src, "iframe-found");
+                }
+              });
+            }
+          });
+        }
+      });
+    });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["src"],
+      subtree: true,
+      childList: true
+    });
+    console.log("[ANDROID_DETECTOR] Iframe monitoring started");
+  }
+  /**
+   * Check for existing iframes on page
+   */
+  checkExistingIframes() {
+    const iframes = document.querySelectorAll("iframe");
+    console.log(`[ANDROID_DETECTOR] Found ${iframes.length} existing iframes`);
+    iframes.forEach((iframe) => {
+      const src = iframe.getAttribute("src");
+      if (src) {
+        this.handleIframeURL(src, "existing-iframe");
+      }
+    });
+  }
+  /**
+   * Handle iframe URL - check if it's a stream
+   */
+  handleIframeURL(url, source) {
+    if (!url || typeof url !== "string") return;
+    const lowerUrl = url.toLowerCase();
+    const isEmbedProvider = lowerUrl.includes("vidsrc") || lowerUrl.includes("vidlink") || lowerUrl.includes("godriveplayer") || lowerUrl.includes("mostream");
+    if (isEmbedProvider) {
+      const streamId = url;
+      if (!this.detectedStreams.has(streamId)) {
+        const stream = {
+          url,
+          type: "hls",
+          // These providers serve HLS
+          timestamp: Date.now(),
+          source
+        };
+        this.detectedStreams.set(streamId, stream);
+        console.log(`[ANDROID_DETECTOR] Captured ${source}: ${url.substring(0, 100)}`);
+        this.captureInNative(url);
+      }
+    }
+    if (lowerUrl.includes(".m3u8") || lowerUrl.includes(".mpd")) {
+      const streamId = url;
+      if (!this.detectedStreams.has(streamId)) {
+        const stream = {
+          url,
+          type: lowerUrl.includes(".mpd") ? "dash" : "hls",
+          timestamp: Date.now(),
+          source
+        };
+        this.detectedStreams.set(streamId, stream);
+        console.log(`[ANDROID_DETECTOR] Captured direct stream ${source}: ${url.substring(0, 100)}`);
+        this.captureInNative(url);
+      }
+    }
+  }
+  /**
+   * Send captured stream to native plugin for storage
+   */
+  async captureInNative(url) {
+    try {
+      const { HLSDownloader } = Capacitor.Plugins;
+      if (!HLSDownloader) {
+        console.log("[ANDROID_DETECTOR] HLSDownloader plugin not available");
+        return;
+      }
+      const result = await HLSDownloader.captureStream({ url });
+      console.log(`[ANDROID_DETECTOR] Sent to native plugin`, result);
+    } catch (error) {
+      console.error("[ANDROID_DETECTOR] Error sending to native:", error);
+    }
+  }
+  /**
+   * Clear detected streams
+   */
+  clear() {
+    this.detectedStreams.clear();
+  }
+}
+let detectorInstance = null;
+function initializeAndroidStreamDetector() {
+  if (!detectorInstance) {
+    detectorInstance = new AndroidStreamDetector();
+    detectorInstance.initialize();
+  }
+  return detectorInstance;
+}
+function getAndroidStreamDetector() {
+  return detectorInstance;
+}
+function getAndroidStreams() {
+  return detectorInstance?.getStreams() || [];
+}
+const INTERCEPTOR_PATTERNS = {
+  // Class patterns that ad networks commonly use
+  classPatterns: [
+    /overlay/i,
+    /intercept/i,
+    /click[-_]?catcher/i,
+    /ad[-_]?layer/i,
+    /popup[-_]?layer/i,
+    /blocker/i,
+    /shield/i,
+    /mask/i
+  ],
+  // ID patterns
+  idPatterns: [
+    /overlay/i,
+    /intercept/i,
+    /ad[-_]?container/i,
+    /popup/i
+  ],
+  // Style patterns (elements that cover the viewport)
+  stylePatterns: {
+    position: ["fixed", "absolute"],
+    zIndex: (z) => z > 1e3,
+    // High z-index
+    coveringViewport: (el) => {
+      const rect = el.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      return rect.width >= viewportWidth * 0.8 && rect.height >= viewportHeight * 0.8;
+    }
+  }
+};
+const PROTECTED_SELECTORS = [
+  "[data-app-element]",
+  // App-marked elements
+  "header",
+  // Site header
+  "nav",
+  // Navigation elements
+  ".sticky",
+  // Sticky positioned elements (like header)
+  "[data-radix-portal]",
+  // Radix UI portals (modals, sheets, etc.)
+  "[data-radix-dialog-overlay]",
+  "[data-radix-sheet-overlay]"
+];
+class OverlayNeutralizer {
+  config;
+  isInitialized = false;
+  isPaused = false;
+  playerElements = /* @__PURE__ */ new Set();
+  neutralizedElements = /* @__PURE__ */ new WeakSet();
+  observer = null;
+  debounceTimer = null;
+  pendingMutations = [];
+  constructor(config2 = {}) {
+    this.config = {
+      enableLogging: config2.enableLogging ?? false,
+      playerZIndex: config2.playerZIndex ?? 9999,
+      // Lower than header (999999)
+      interceptorZIndex: config2.interceptorZIndex ?? -1,
+      watchSubtree: config2.watchSubtree ?? true,
+      watchAttributes: config2.watchAttributes ?? true,
+      debounceMs: config2.debounceMs ?? 50
+    };
+    this.log("[OVERLAY-NEUTRALIZER] Constructor called with MutationObserver strategy");
+  }
+  log(message, ...args) {
+    if (this.config.enableLogging) {
+      console.log(message, ...args);
+    }
+  }
+  /**
+   * Check if an element is protected (should not be modified)
+   */
+  isProtectedElement(el) {
+    for (const selector of PROTECTED_SELECTORS) {
+      if (el.matches(selector) || el.closest(selector)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  /**
+   * Initialize the overlay neutralizer with MutationObserver
+   */
+  initialize() {
+    if (this.isInitialized) {
+      this.log("[OVERLAY-NEUTRALIZER] Already initialized");
+      return;
+    }
+    this.log("[OVERLAY-NEUTRALIZER] Initializing with MutationObserver");
+    this.elevatePlayerLayer();
+    this.scanAndNeutralizeInterceptors();
+    this.setupMutationObserver();
+    this.isInitialized = true;
+    this.log("[OVERLAY-NEUTRALIZER] Initialization complete");
+  }
+  /**
+   * Set up the MutationObserver to watch for DOM changes
+   */
+  setupMutationObserver() {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+    this.observer = new MutationObserver((mutations) => {
+      if (this.isPaused) return;
+      this.pendingMutations.push(...mutations);
+      this.debouncedProcessMutations();
+    });
+    this.observer.observe(document.body, {
+      childList: true,
+      // Watch for added/removed nodes
+      subtree: this.config.watchSubtree,
+      // Watch all descendants
+      attributes: this.config.watchAttributes,
+      // Watch attribute changes
+      attributeFilter: ["style", "class", "id"]
+      // Only these attributes
+    });
+    this.log("[OVERLAY-NEUTRALIZER] MutationObserver started");
+  }
+  /**
+   * Debounce mutation processing to avoid performance issues
+   * from rapid DOM changes
+   */
+  debouncedProcessMutations() {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+    }
+    this.debounceTimer = setTimeout(() => {
+      this.processPendingMutations();
+    }, this.config.debounceMs);
+  }
+  /**
+   * Process all pending mutations
+   */
+  processPendingMutations() {
+    if (this.pendingMutations.length === 0) return;
+    const mutations = this.pendingMutations;
+    this.pendingMutations = [];
+    let hasNewNodes = false;
+    let hasRelevantChanges = false;
+    for (const mutation of mutations) {
+      if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
+        hasNewNodes = true;
+        mutation.addedNodes.forEach((node) => {
+          if (node instanceof HTMLElement) {
+            if (this.isProtectedElement(node)) return;
+            if (this.isPotentialInterceptor(node)) {
+              this.neutralizeElement(node);
+              hasRelevantChanges = true;
+            }
+            if (this.isVideoPlayer(node)) {
+              this.elevateElement(node);
+              hasRelevantChanges = true;
+            }
+            this.scanNodeAndDescendants(node);
+          }
+        });
+      }
+      if (mutation.type === "attributes" && mutation.target instanceof HTMLElement) {
+        const el = mutation.target;
+        if (this.isProtectedElement(el)) continue;
+        if (this.isPotentialInterceptor(el) && !this.neutralizedElements.has(el)) {
+          this.neutralizeElement(el);
+          hasRelevantChanges = true;
+        }
+      }
+    }
+    if (hasRelevantChanges) {
+      this.elevatePlayerLayer();
+    }
+    if (hasNewNodes) {
+      this.log("[OVERLAY-NEUTRALIZER] Processed mutations:", {
+        total: mutations.length,
+        relevantChanges: hasRelevantChanges
+      });
+    }
+  }
+  /**
+   * Scan a node and all its descendants for interceptors and players
+   */
+  scanNodeAndDescendants(node) {
+    if (this.isProtectedElement(node)) return;
+    const allElements = node.querySelectorAll("*");
+    allElements.forEach((el) => {
+      if (el instanceof HTMLElement) {
+        if (this.isProtectedElement(el)) return;
+        if (this.isPotentialInterceptor(el)) {
+          this.neutralizeElement(el);
+        }
+        if (this.isVideoPlayer(el)) {
+          this.elevateElement(el);
+        }
+      }
+    });
+  }
+  /**
+   * Detect if an element is likely a click interceptor overlay
+   */
+  isPotentialInterceptor(el) {
+    if (this.neutralizedElements.has(el)) return false;
+    if (this.isVideoPlayer(el)) return false;
+    if (this.isProtectedElement(el)) return false;
+    const className = el.className || "";
+    const id = el.id || "";
+    const style = window.getComputedStyle(el);
+    for (const pattern of INTERCEPTOR_PATTERNS.classPatterns) {
+      if (pattern.test(className)) {
+        this.log("[OVERLAY-NEUTRALIZER] Detected interceptor by class:", className);
+        return true;
+      }
+    }
+    for (const pattern of INTERCEPTOR_PATTERNS.idPatterns) {
+      if (pattern.test(id)) {
+        this.log("[OVERLAY-NEUTRALIZER] Detected interceptor by ID:", id);
+        return true;
+      }
+    }
+    const position = style.position;
+    const zIndex = parseInt(style.zIndex) || 0;
+    if (INTERCEPTOR_PATTERNS.stylePatterns.position.includes(position)) {
+      if (INTERCEPTOR_PATTERNS.stylePatterns.zIndex(zIndex)) {
+        if (INTERCEPTOR_PATTERNS.stylePatterns.coveringViewport(el)) {
+          const opacity = parseFloat(style.opacity) || 1;
+          const bgColor = style.backgroundColor;
+          const isTransparent = opacity < 0.1 || bgColor === "transparent" || bgColor === "rgba(0, 0, 0, 0)";
+          if (isTransparent) {
+            this.log("[OVERLAY-NEUTRALIZER] Detected transparent overlay interceptor:", {
+              position,
+              zIndex,
+              opacity,
+              bgColor
+            });
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+  /**
+   * Check if an element is a video player
+   */
+  isVideoPlayer(el) {
+    if (el.tagName === "IFRAME") {
+      const title = el.getAttribute("title") || "";
+      const src = el.getAttribute("src") || "";
+      if (title.toLowerCase().includes("video") || title.toLowerCase().includes("player") || src.includes("vidlink") || src.includes("vidsrc") || src.includes("godrive") || src.includes("mostream")) {
+        return true;
+      }
+    }
+    if (el.tagName === "VIDEO") {
+      return true;
+    }
+    const className = el.className || "";
+    if (/video[-_]?player|player[-_]?container|vidlink/i.test(className)) {
+      return true;
+    }
+    return false;
+  }
+  /**
+   * Neutralize a click interceptor element
+   */
+  neutralizeElement(el) {
+    if (this.neutralizedElements.has(el)) return;
+    if (this.isProtectedElement(el)) return;
+    el.style.zIndex = String(this.config.interceptorZIndex);
+    el.style.pointerEvents = "none";
+    this.neutralizedElements.add(el);
+    this.log("[OVERLAY-NEUTRALIZER] Neutralized element:", el.tagName, el.className);
+  }
+  /**
+   * Elevate a video player element
+   */
+  elevateElement(el) {
+    el.style.position = el.style.position || "relative";
+    el.style.zIndex = String(this.config.playerZIndex);
+    this.playerElements.add(el);
+  }
+  /**
+   * Elevate all player/video iframe elements to top z-index
+   */
+  elevatePlayerLayer() {
+    const selectors = [
+      'iframe[title*="Video"]',
+      'iframe[title*="Player"]',
+      'iframe[src*="vidlink"]',
+      'iframe[src*="vidsrc"]',
+      'iframe[src*="godrive"]',
+      'iframe[src*="mostream"]',
+      "video",
+      ".video-player",
+      ".player-container",
+      "[data-video-player]"
+    ];
+    const players = document.querySelectorAll(selectors.join(", "));
+    players.forEach((el) => {
+      if (el instanceof HTMLElement) {
+        this.elevateElement(el);
+      }
+    });
+    if (players.length > 0) {
+      this.log("[OVERLAY-NEUTRALIZER] Elevated", players.length, "player elements to z-index", this.config.playerZIndex);
+    }
+  }
+  /**
+   * Scan the entire document for interceptors
+   */
+  scanAndNeutralizeInterceptors() {
+    const allElements = document.querySelectorAll("*");
+    let neutralizedCount = 0;
+    allElements.forEach((el) => {
+      if (el instanceof HTMLElement && this.isPotentialInterceptor(el)) {
+        this.neutralizeElement(el);
+        neutralizedCount++;
+      }
+    });
+    if (neutralizedCount > 0) {
+      this.log("[OVERLAY-NEUTRALIZER] Initial scan neutralized", neutralizedCount, "elements");
+    }
+  }
+  /**
+   * Pause the MutationObserver (useful when opening modals)
+   */
+  pause() {
+    this.log("[OVERLAY-NEUTRALIZER] Pausing");
+    this.isPaused = true;
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+  }
+  /**
+   * Resume the MutationObserver
+   */
+  resume() {
+    this.log("[OVERLAY-NEUTRALIZER] Resuming");
+    this.isPaused = false;
+    this.setupMutationObserver();
+    this.elevatePlayerLayer();
+    this.scanAndNeutralizeInterceptors();
+  }
+  /**
+   * Force a manual scan (useful after dynamic content loads)
+   */
+  forceScan() {
+    this.log("[OVERLAY-NEUTRALIZER] Force scan triggered");
+    this.elevatePlayerLayer();
+    this.scanAndNeutralizeInterceptors();
+  }
+  /**
+   * Clean up all resources
+   */
+  cleanup() {
+    this.log("[OVERLAY-NEUTRALIZER] Cleaning up");
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
+    }
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+    this.playerElements.clear();
+    this.pendingMutations = [];
+    this.isInitialized = false;
+  }
+  /**
+   * Get current status
+   */
+  getStatus() {
+    return {
+      initialized: this.isInitialized,
+      paused: this.isPaused,
+      observerActive: this.observer !== null,
+      playerElementsCount: this.playerElements.size,
+      playerZIndex: this.config.playerZIndex
+    };
+  }
+}
+let overlayNeutralizerInstance = null;
+function initializeOverlayNeutralizer(config2) {
+  if (!overlayNeutralizerInstance) {
+    overlayNeutralizerInstance = new OverlayNeutralizer(config2);
+    overlayNeutralizerInstance.initialize();
+  }
+  return overlayNeutralizerInstance;
+}
+function neutralizeProviderOverlays(provider) {
+  if (overlayNeutralizerInstance) {
+    overlayNeutralizerInstance.forceScan();
+  }
+}
+function getOverlayNeutralizer() {
+  return overlayNeutralizerInstance;
+}
+function cleanupOverlayNeutralizer() {
+  if (overlayNeutralizerInstance) {
+    overlayNeutralizerInstance.cleanup();
+    overlayNeutralizerInstance = null;
+  }
+}
 class AbortError extends Error {
   constructor() {
     super("Throttled function aborted");
@@ -29083,9 +30159,9 @@ const colorFunctionRegex = /^(rgba?|hsla?|hwb|(ok)?(lab|lch))\(.+\)$/;
 const shadowRegex = /^(inset_)?-?((\d+)?\.?(\d+)[a-z]+|0)_-?((\d+)?\.?(\d+)[a-z]+|0)/;
 const imageRegex = /^(url|image|image-set|cross-fade|element|(repeating-)?(linear|radial|conic)-gradient)\(.+\)$/;
 const isFraction = (value) => fractionRegex.test(value);
-const isNumber = (value) => Boolean(value) && !Number.isNaN(Number(value));
+const isNumber$1 = (value) => Boolean(value) && !Number.isNaN(Number(value));
 const isInteger = (value) => Boolean(value) && Number.isInteger(Number(value));
-const isPercent = (value) => value.endsWith("%") && isNumber(value.slice(0, -1));
+const isPercent = (value) => value.endsWith("%") && isNumber$1(value.slice(0, -1));
 const isTshirtSize = (value) => tshirtUnitRegex.test(value);
 const isAny = () => true;
 const isLengthOnly = (value) => (
@@ -29101,7 +30177,7 @@ const isAnyNonArbitrary = (value) => !isArbitraryValue(value) && !isArbitraryVar
 const isArbitrarySize = (value) => getIsArbitraryValue(value, isLabelSize, isNever);
 const isArbitraryValue = (value) => arbitraryValueRegex.test(value);
 const isArbitraryLength = (value) => getIsArbitraryValue(value, isLabelLength, isLengthOnly);
-const isArbitraryNumber = (value) => getIsArbitraryValue(value, isLabelNumber, isNumber);
+const isArbitraryNumber = (value) => getIsArbitraryValue(value, isLabelNumber, isNumber$1);
 const isArbitraryPosition = (value) => getIsArbitraryValue(value, isLabelPosition, isNever);
 const isArbitraryImage = (value) => getIsArbitraryValue(value, isLabelImage, isImage);
 const isArbitraryShadow = (value) => getIsArbitraryValue(value, isNever, isShadow);
@@ -29161,7 +30237,7 @@ const validators = /* @__PURE__ */ Object.defineProperty({
   isArbitraryVariableSize,
   isFraction,
   isInteger,
-  isNumber,
+  isNumber: isNumber$1,
   isPercent,
   isTshirtSize
 }, Symbol.toStringTag, {
@@ -29215,7 +30291,7 @@ const getDefaultConfig = () => {
     isArbitraryVariable,
     isArbitraryValue
   ];
-  const scaleBorderWidth = () => ["", isNumber, isArbitraryVariableLength, isArbitraryLength];
+  const scaleBorderWidth = () => ["", isNumber$1, isArbitraryVariableLength, isArbitraryLength];
   const scaleLineStyle = () => ["solid", "dashed", "dotted", "double"];
   const scaleBlendMode = () => ["normal", "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn", "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity"];
   const scaleBlur = () => [
@@ -29227,9 +30303,9 @@ const getDefaultConfig = () => {
     isArbitraryValue
   ];
   const scaleOrigin = () => ["center", "top", "top-right", "right", "bottom-right", "bottom", "bottom-left", "left", "top-left", isArbitraryVariable, isArbitraryValue];
-  const scaleRotate = () => ["none", isNumber, isArbitraryVariable, isArbitraryValue];
-  const scaleScale = () => ["none", isNumber, isArbitraryVariable, isArbitraryValue];
-  const scaleSkew = () => [isNumber, isArbitraryVariable, isArbitraryValue];
+  const scaleRotate = () => ["none", isNumber$1, isArbitraryVariable, isArbitraryValue];
+  const scaleScale = () => ["none", isNumber$1, isArbitraryVariable, isArbitraryValue];
+  const scaleSkew = () => [isNumber$1, isArbitraryVariable, isArbitraryValue];
   const scaleTranslate = () => [isFraction, "full", "px", isArbitraryVariable, isArbitraryValue, themeSpacing];
   return {
     cacheSize: 500,
@@ -29249,7 +30325,7 @@ const getDefaultConfig = () => {
       perspective: ["dramatic", "near", "normal", "midrange", "distant", "none"],
       radius: [isTshirtSize],
       shadow: [isTshirtSize],
-      spacing: [isNumber],
+      spacing: [isNumber$1],
       text: [isTshirtSize],
       tracking: ["tighter", "tight", "normal", "wide", "wider", "widest"]
     },
@@ -29275,7 +30351,7 @@ const getDefaultConfig = () => {
        * @see https://tailwindcss.com/docs/columns
        */
       columns: [{
-        columns: [isNumber, isArbitraryValue, isArbitraryVariable, themeContainer]
+        columns: [isNumber$1, isArbitraryValue, isArbitraryVariable, themeContainer]
       }],
       /**
        * Break After
@@ -29506,21 +30582,21 @@ const getDefaultConfig = () => {
        * @see https://tailwindcss.com/docs/flex
        */
       flex: [{
-        flex: [isNumber, isFraction, "auto", "initial", "none", isArbitraryValue]
+        flex: [isNumber$1, isFraction, "auto", "initial", "none", isArbitraryValue]
       }],
       /**
        * Flex Grow
        * @see https://tailwindcss.com/docs/flex-grow
        */
       grow: [{
-        grow: ["", isNumber, isArbitraryVariable, isArbitraryValue]
+        grow: ["", isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Flex Shrink
        * @see https://tailwindcss.com/docs/flex-shrink
        */
       shrink: [{
-        shrink: ["", isNumber, isArbitraryVariable, isArbitraryValue]
+        shrink: ["", isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Order
@@ -29993,7 +31069,7 @@ const getDefaultConfig = () => {
        * @see https://tailwindcss.com/docs/line-clamp
        */
       "line-clamp": [{
-        "line-clamp": [isNumber, "none", isArbitraryVariable, isArbitraryNumber]
+        "line-clamp": [isNumber$1, "none", isArbitraryVariable, isArbitraryNumber]
       }],
       /**
        * Line Height
@@ -30068,7 +31144,7 @@ const getDefaultConfig = () => {
        * @see https://tailwindcss.com/docs/text-decoration-thickness
        */
       "text-decoration-thickness": [{
-        decoration: [isNumber, "from-font", "auto", isArbitraryVariable, isArbitraryLength]
+        decoration: [isNumber$1, "from-font", "auto", isArbitraryVariable, isArbitraryLength]
       }],
       /**
        * Text Decoration Color
@@ -30082,7 +31158,7 @@ const getDefaultConfig = () => {
        * @see https://tailwindcss.com/docs/text-underline-offset
        */
       "underline-offset": [{
-        "underline-offset": [isNumber, "auto", isArbitraryVariable, isArbitraryValue]
+        "underline-offset": [isNumber$1, "auto", isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Text Transform
@@ -30543,14 +31619,14 @@ const getDefaultConfig = () => {
        * @see https://tailwindcss.com/docs/outline-offset
        */
       "outline-offset": [{
-        "outline-offset": [isNumber, isArbitraryVariable, isArbitraryValue]
+        "outline-offset": [isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Outline Width
        * @see https://tailwindcss.com/docs/outline-width
        */
       "outline-w": [{
-        outline: ["", isNumber, isArbitraryVariableLength, isArbitraryLength]
+        outline: ["", isNumber$1, isArbitraryVariableLength, isArbitraryLength]
       }],
       /**
        * Outline Color
@@ -30625,7 +31701,7 @@ const getDefaultConfig = () => {
        * @see https://github.com/tailwindlabs/tailwindcss/blob/v4.0.0/packages/tailwindcss/src/utilities.ts#L4158
        */
       "ring-offset-w": [{
-        "ring-offset": [isNumber, isArbitraryLength]
+        "ring-offset": [isNumber$1, isArbitraryLength]
       }],
       /**
        * Ring Offset Color
@@ -30655,7 +31731,7 @@ const getDefaultConfig = () => {
        * @see https://tailwindcss.com/docs/opacity
        */
       opacity: [{
-        opacity: [isNumber, isArbitraryVariable, isArbitraryValue]
+        opacity: [isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Mix Blend Mode
@@ -30699,14 +31775,14 @@ const getDefaultConfig = () => {
        * @see https://tailwindcss.com/docs/brightness
        */
       brightness: [{
-        brightness: [isNumber, isArbitraryVariable, isArbitraryValue]
+        brightness: [isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Contrast
        * @see https://tailwindcss.com/docs/contrast
        */
       contrast: [{
-        contrast: [isNumber, isArbitraryVariable, isArbitraryValue]
+        contrast: [isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Drop Shadow
@@ -30727,35 +31803,35 @@ const getDefaultConfig = () => {
        * @see https://tailwindcss.com/docs/grayscale
        */
       grayscale: [{
-        grayscale: ["", isNumber, isArbitraryVariable, isArbitraryValue]
+        grayscale: ["", isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Hue Rotate
        * @see https://tailwindcss.com/docs/hue-rotate
        */
       "hue-rotate": [{
-        "hue-rotate": [isNumber, isArbitraryVariable, isArbitraryValue]
+        "hue-rotate": [isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Invert
        * @see https://tailwindcss.com/docs/invert
        */
       invert: [{
-        invert: ["", isNumber, isArbitraryVariable, isArbitraryValue]
+        invert: ["", isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Saturate
        * @see https://tailwindcss.com/docs/saturate
        */
       saturate: [{
-        saturate: [isNumber, isArbitraryVariable, isArbitraryValue]
+        saturate: [isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Sepia
        * @see https://tailwindcss.com/docs/sepia
        */
       sepia: [{
-        sepia: ["", isNumber, isArbitraryVariable, isArbitraryValue]
+        sepia: ["", isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Backdrop Filter
@@ -30782,56 +31858,56 @@ const getDefaultConfig = () => {
        * @see https://tailwindcss.com/docs/backdrop-brightness
        */
       "backdrop-brightness": [{
-        "backdrop-brightness": [isNumber, isArbitraryVariable, isArbitraryValue]
+        "backdrop-brightness": [isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Backdrop Contrast
        * @see https://tailwindcss.com/docs/backdrop-contrast
        */
       "backdrop-contrast": [{
-        "backdrop-contrast": [isNumber, isArbitraryVariable, isArbitraryValue]
+        "backdrop-contrast": [isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Backdrop Grayscale
        * @see https://tailwindcss.com/docs/backdrop-grayscale
        */
       "backdrop-grayscale": [{
-        "backdrop-grayscale": ["", isNumber, isArbitraryVariable, isArbitraryValue]
+        "backdrop-grayscale": ["", isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Backdrop Hue Rotate
        * @see https://tailwindcss.com/docs/backdrop-hue-rotate
        */
       "backdrop-hue-rotate": [{
-        "backdrop-hue-rotate": [isNumber, isArbitraryVariable, isArbitraryValue]
+        "backdrop-hue-rotate": [isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Backdrop Invert
        * @see https://tailwindcss.com/docs/backdrop-invert
        */
       "backdrop-invert": [{
-        "backdrop-invert": ["", isNumber, isArbitraryVariable, isArbitraryValue]
+        "backdrop-invert": ["", isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Backdrop Opacity
        * @see https://tailwindcss.com/docs/backdrop-opacity
        */
       "backdrop-opacity": [{
-        "backdrop-opacity": [isNumber, isArbitraryVariable, isArbitraryValue]
+        "backdrop-opacity": [isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Backdrop Saturate
        * @see https://tailwindcss.com/docs/backdrop-saturate
        */
       "backdrop-saturate": [{
-        "backdrop-saturate": [isNumber, isArbitraryVariable, isArbitraryValue]
+        "backdrop-saturate": [isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Backdrop Sepia
        * @see https://tailwindcss.com/docs/backdrop-sepia
        */
       "backdrop-sepia": [{
-        "backdrop-sepia": ["", isNumber, isArbitraryVariable, isArbitraryValue]
+        "backdrop-sepia": ["", isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       // --------------
       // --- Tables ---
@@ -30900,7 +31976,7 @@ const getDefaultConfig = () => {
        * @see https://tailwindcss.com/docs/transition-duration
        */
       duration: [{
-        duration: [isNumber, "initial", isArbitraryVariable, isArbitraryValue]
+        duration: [isNumber$1, "initial", isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Transition Timing Function
@@ -30914,7 +31990,7 @@ const getDefaultConfig = () => {
        * @see https://tailwindcss.com/docs/transition-delay
        */
       delay: [{
-        delay: [isNumber, isArbitraryVariable, isArbitraryValue]
+        delay: [isNumber$1, isArbitraryVariable, isArbitraryValue]
       }],
       /**
        * Animation
@@ -31358,7 +32434,7 @@ const getDefaultConfig = () => {
        * @see https://tailwindcss.com/docs/stroke-width
        */
       "stroke-w": [{
-        stroke: [isNumber, isArbitraryVariableLength, isArbitraryLength, isArbitraryNumber]
+        stroke: [isNumber$1, isArbitraryVariableLength, isArbitraryLength, isArbitraryNumber]
       }],
       /**
        * Stroke
@@ -31494,7 +32570,8 @@ const navItems = [
   { href: "/tv", label: "TV Shows" },
   { href: "/anime", label: "Anime" },
   { href: "/watchlist", label: "Watchlist" },
-  { href: "/history", label: "History" }
+  { href: "/history", label: "History" },
+  { href: "/downloads", label: "Downloads" }
 ];
 function MainNav({ className, isInSheet, ...props }) {
   const location = useLocation();
@@ -32044,7 +33121,7 @@ function getElementRef$6(element) {
   }
   return element.props.ref || element.ref;
 }
-var Root$g = Slot$5;
+var Root$h = Slot$5;
 var NODES = [
   "a",
   "button",
@@ -32078,7 +33155,7 @@ var Primitive = NODES.reduce((primitive, node) => {
 function dispatchDiscreteCustomEvent(target, event) {
   if (target) reactDomExports.flushSync(() => target.dispatchEvent(event));
 }
-var Root$f = Primitive;
+var Root$g = Primitive;
 function useEscapeKeydown(onEscapeKeyDownProp, ownerDocument = globalThis?.document) {
   const onEscapeKeyDown = useCallbackRef$1(onEscapeKeyDownProp);
   reactExports.useEffect(() => {
@@ -32294,7 +33371,7 @@ function handleAndDispatchCustomEvent$1(name, handler, detail, { discrete }) {
     target.dispatchEvent(event);
   }
 }
-var Root$e = DismissableLayer;
+var Root$f = DismissableLayer;
 var Branch = DismissableLayerBranch;
 "use client";
 var AUTOFOCUS_ON_MOUNT = "focusScope.autoFocusOnMount";
@@ -32497,7 +33574,7 @@ function arrayRemove(array, item) {
 function removeLinks(items) {
   return items.filter((item) => item.tagName !== "A");
 }
-var Root$d = FocusScope;
+var Root$e = FocusScope;
 "use client";
 var PORTAL_NAME$5 = "Portal";
 var Portal$3 = reactExports.forwardRef((props, forwardedRef) => {
@@ -32508,7 +33585,7 @@ var Portal$3 = reactExports.forwardRef((props, forwardedRef) => {
   return container ? ReactDOM.createPortal(/* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.div, { ...portalProps, ref: forwardedRef }), container) : null;
 });
 Portal$3.displayName = PORTAL_NAME$5;
-var Root$c = Portal$3;
+var Root$d = Portal$3;
 "use client";
 function useStateMachine(initialState, machine) {
   return reactExports.useReducer((state, event) => {
@@ -32662,7 +33739,7 @@ function createFocusGuard() {
   element.style.pointerEvents = "none";
   return element;
 }
-var Root$b = FocusGuards;
+var Root$c = FocusGuards;
 var extendStatics = function(d, b) {
   extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b2) {
     d2.__proto__ = b2;
@@ -34165,7 +35242,7 @@ function getElementRef$4(element) {
   }
   return element.props.ref || element.ref;
 }
-var Root$a = Slot$4;
+var Root$b = Slot$4;
 "use client";
 var DIALOG_NAME = "Dialog";
 var [createDialogContext, createDialogScope] = createContextScope(DIALOG_NAME);
@@ -34459,7 +35536,7 @@ var DescriptionWarning$1 = ({ contentRef, descriptionId }) => {
   }, [MESSAGE, contentRef, descriptionId]);
   return null;
 };
-var Root$9 = Dialog$1;
+var Root$a = Dialog$1;
 var Trigger$3 = DialogTrigger$1;
 var Portal$2 = DialogPortal$1;
 var Overlay = DialogOverlay$1;
@@ -34468,7 +35545,7 @@ var Title$1 = DialogTitle$1;
 var Description$1 = DialogDescription$1;
 var Close$1 = DialogClose$1;
 "use client";
-const Sheet = Root$9;
+const Sheet = Root$a;
 const SheetTrigger = Trigger$3;
 const SheetClose = Close$1;
 const SheetPortal = Portal$2;
@@ -34639,7 +35716,7 @@ function getElementRef$3(element) {
   }
   return element.props.ref || element.ref;
 }
-var Root$8 = Slot$3;
+var Root$9 = Slot$3;
 "use client";
 function createCollection(name) {
   const PROVIDER_NAME2 = name + "CollectionProvider";
@@ -36800,7 +37877,7 @@ var Arrow$1 = reactExports.forwardRef((props, forwardedRef) => {
   );
 });
 Arrow$1.displayName = NAME$2;
-var Root$7 = Arrow$1;
+var Root$8 = Arrow$1;
 function useSize(element) {
   const [size2, setSize] = reactExports.useState(void 0);
   useLayoutEffect2(() => {
@@ -37044,7 +38121,7 @@ var PopperArrow = reactExports.forwardRef(function PopperArrow2(props, forwarded
           visibility: contentContext.shouldHideArrow ? "hidden" : void 0
         },
         children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Root$7,
+          Root$8,
           {
             ...arrowProps,
             ref: forwardedRef,
@@ -37307,7 +38384,7 @@ function focusFirst$2(candidates, preventScroll = false) {
 function wrapArray$1(array, startIndex) {
   return array.map((_, index2) => array[(startIndex + index2) % array.length]);
 }
-var Root$6 = RovingFocusGroup;
+var Root$7 = RovingFocusGroup;
 var Item$1 = RovingFocusGroupItem;
 var Slot$2 = reactExports.forwardRef((props, forwardedRef) => {
   const { children, ...slotProps } = props;
@@ -37383,7 +38460,7 @@ function getElementRef$2(element) {
   }
   return element.props.ref || element.ref;
 }
-var Root$5 = Slot$2;
+var Root$6 = Slot$2;
 "use client";
 var SELECTION_KEYS = ["Enter", " "];
 var FIRST_KEYS = ["ArrowDown", "PageUp", "Home"];
@@ -37632,7 +38709,7 @@ var MenuContentImpl = reactExports.forwardRef(
                 onInteractOutside,
                 onDismiss,
                 children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  Root$6,
+                  Root$7,
                   {
                     asChild: true,
                     ...rovingFocusGroupScope,
@@ -38367,13 +39444,13 @@ var DropdownMenuRadioItem$1 = reactExports.forwardRef((props, forwardedRef) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(RadioItem, { ...menuScope, ...radioItemProps, ref: forwardedRef });
 });
 DropdownMenuRadioItem$1.displayName = RADIO_ITEM_NAME;
-var INDICATOR_NAME = "DropdownMenuItemIndicator";
+var INDICATOR_NAME$1 = "DropdownMenuItemIndicator";
 var DropdownMenuItemIndicator = reactExports.forwardRef((props, forwardedRef) => {
   const { __scopeDropdownMenu, ...itemIndicatorProps } = props;
   const menuScope = useMenuScope(__scopeDropdownMenu);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(ItemIndicator, { ...menuScope, ...itemIndicatorProps, ref: forwardedRef });
 });
-DropdownMenuItemIndicator.displayName = INDICATOR_NAME;
+DropdownMenuItemIndicator.displayName = INDICATOR_NAME$1;
 var SEPARATOR_NAME = "DropdownMenuSeparator";
 var DropdownMenuSeparator$1 = reactExports.forwardRef((props, forwardedRef) => {
   const { __scopeDropdownMenu, ...separatorProps } = props;
@@ -38628,7 +39705,7 @@ function SourceSelector({ buttonVariant, className }) {
   ] });
 }
 "use client";
-const Dialog = Root$9;
+const Dialog = Root$a;
 const DialogTrigger = Trigger$3;
 const DialogPortal = Portal$2;
 const DialogClose = Close$1;
@@ -39146,8 +40223,301 @@ function MobileNav({ isAndroid: isAndroid2 = false }) {
     /* @__PURE__ */ jsxRuntimeExports.jsx(ApiKeyDialog, { isOpen: isApiKeyDialogOpen, onOpenChange: setIsApiKeyDialogOpen })
   ] });
 }
+const isElectron = typeof window !== "undefined" && window.electronDownload !== void 0;
+const isCapacitor = typeof window !== "undefined" && Capacitor && Capacitor.getPlatform() !== "web";
+function getDownloadAPI() {
+  if (isElectron) {
+    return window.electronDownload;
+  }
+  if (isCapacitor) {
+    return getCapacitorDownloadAPI();
+  }
+  return getWebDownloadAPI();
+}
+function getCapacitorDownloadAPI() {
+  const { HLSDownloader } = Capacitor.Plugins;
+  return {
+    getCapturedStreams: async () => {
+      try {
+        const result = await HLSDownloader.getCapturedStreams();
+        return result.streams || [];
+      } catch (e) {
+        console.error("[Download] getCapturedStreams error:", e);
+        return [];
+      }
+    },
+    getQualityVariants: async (url) => {
+      try {
+        const result = await HLSDownloader.getQualityVariants({ url });
+        return result.variants || [];
+      } catch (e) {
+        console.error("[Download] getQualityVariants error:", e);
+        return [{
+          url,
+          bandwidth: 0,
+          label: "Default Quality"
+        }];
+      }
+    },
+    startDownload: async (url, filename, quality) => {
+      try {
+        const result = await HLSDownloader.startDownload({
+          url,
+          filename,
+          quality
+        });
+        return result;
+      } catch (e) {
+        return { success: false, error: e.message };
+      }
+    },
+    cancelDownload: async () => {
+      try {
+        return await HLSDownloader.cancelDownload();
+      } catch (e) {
+        return { success: false };
+      }
+    },
+    getDownloadsList: async () => {
+      try {
+        const result = await HLSDownloader.getDownloadsList();
+        return result.downloads || [];
+      } catch (e) {
+        console.error("[Download] getDownloadsList error:", e);
+        return [];
+      }
+    },
+    removeDownload: async (id) => {
+      try {
+        return await HLSDownloader.removeDownload({ id });
+      } catch (e) {
+        return { success: false };
+      }
+    },
+    clearCompletedDownloads: async () => {
+      try {
+        return await HLSDownloader.clearCompletedDownloads();
+      } catch (e) {
+        return { success: false };
+      }
+    },
+    onStreamCaptured: (callback) => {
+      const listener = HLSDownloader.addListener("stream-captured", (data2) => {
+        callback(data2);
+      });
+      return () => listener.remove();
+    },
+    onDownloadProgress: (callback) => {
+      const listener = HLSDownloader.addListener("download-progress", (data2) => {
+        callback(data2);
+      });
+      return () => listener.remove();
+    },
+    onDownloadsUpdated: (callback) => {
+      const listener = HLSDownloader.addListener("downloads-updated", (data2) => {
+        callback(data2.downloads || []);
+      });
+      return () => listener.remove();
+    }
+  };
+}
+function getWebDownloadAPI() {
+  return {
+    getCapturedStreams: async () => {
+      console.warn("[Download] Downloads not available in browser");
+      return [];
+    },
+    getQualityVariants: async (url) => {
+      console.warn("[Download] Downloads not available in browser");
+      return [];
+    },
+    startDownload: async () => {
+      return { success: false, error: "Downloads require desktop or mobile app" };
+    },
+    cancelDownload: async () => ({ success: false }),
+    getDownloadsList: async () => [],
+    removeDownload: async () => ({ success: false }),
+    clearCompletedDownloads: async () => ({ success: false }),
+    onStreamCaptured: () => () => {
+    },
+    onDownloadProgress: () => () => {
+    },
+    onDownloadsUpdated: () => () => {
+    }
+  };
+}
+function isDownloadAvailable() {
+  return isElectron || isCapacitor;
+}
+function getPlatform() {
+  if (isElectron) return "electron";
+  if (isCapacitor) return "capacitor";
+  return "web";
+}
 "use client";
-logger$1.info("HEADER", "Header component module loaded");
+function DownloadButton() {
+  const { video, currentSeason, currentEpisode, mediaType } = useWatch$1();
+  const { toast: toast2 } = useToast();
+  const [isLoading, setIsLoading] = reactExports.useState(false);
+  const [platform2, setPlatform2] = reactExports.useState("");
+  const hasLoggedRef = reactExports.useRef(false);
+  reactExports.useEffect(() => {
+    if (!hasLoggedRef.current) {
+      const p = getPlatform();
+      setPlatform2(p);
+      console.log("[DOWNLOAD] Platform:", p, "Available:", isDownloadAvailable());
+      hasLoggedRef.current = true;
+    }
+  }, []);
+  const handleDownload = async () => {
+    if (isLoading) return;
+    console.log("[DOWNLOAD] Button clicked - platform:", platform2);
+    setIsLoading(true);
+    const api = getDownloadAPI();
+    if (!api) {
+      toast2({
+        title: "Download unavailable",
+        description: "Download feature not available on this platform",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+    try {
+      toast2({
+        title: "Checking for streams...",
+        description: "Looking for video streams"
+      });
+      const streams = await api.getCapturedStreams();
+      console.log("[DOWNLOAD] Got streams:", streams?.length || 0, streams);
+      let streamUrl = null;
+      if (streams && streams.length > 0) {
+        for (const stream of streams) {
+          const url = stream.url || stream;
+          if (typeof url === "string" && url.toLowerCase().includes(".m3u8")) {
+            if (!url.match(/\d{3,4}p/) && !url.match(/\/\d{3,4}\//)) {
+              streamUrl = url;
+              console.log("[DOWNLOAD] Found master playlist:", url.substring(0, 80));
+              break;
+            }
+            if (!streamUrl) {
+              streamUrl = url;
+            }
+          }
+        }
+      }
+      if (!streamUrl && platform2 === "electron") {
+        const iframes = document.querySelectorAll("iframe");
+        for (const iframe of iframes) {
+          const src = iframe.getAttribute("src");
+          if (src && (src.includes("vidsrc") || src.includes("vidlink") || src.includes("mostream") || src.includes("godriveplayer"))) {
+            streamUrl = src;
+            console.log("[DOWNLOAD] Using iframe URL for Electron:", src.substring(0, 80));
+            break;
+          }
+        }
+      }
+      if (!streamUrl) {
+        toast2({
+          title: "No stream found",
+          description: "Make sure the video is playing, then try again",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+      toast2({
+        title: "Fetching qualities...",
+        description: "Getting available resolutions"
+      });
+      const variants = await api.getQualityVariants(streamUrl);
+      console.log("[DOWNLOAD] Got variants:", variants?.length || 0);
+      if (!variants || variants.length === 0) {
+        toast2({
+          title: "Starting download...",
+          description: "Downloading stream directly"
+        });
+        const filename2 = buildFilename();
+        const result2 = await api.startDownload(streamUrl, filename2, "default");
+        handleDownloadResult(result2, filename2);
+        return;
+      }
+      const bestVariant = variants.reduce(
+        (best, current) => (current.bandwidth || 0) > (best.bandwidth || 0) ? current : best,
+        variants[0]
+      );
+      const filename = buildFilename();
+      const qualityLabel = bestVariant.resolution || bestVariant.label || "Best";
+      toast2({
+        title: "Download started!",
+        description: `${qualityLabel} - ${filename}`
+      });
+      const result = await api.startDownload(
+        bestVariant.url || streamUrl,
+        filename,
+        bestVariant.label || "best"
+      );
+      handleDownloadResult(result, filename);
+    } catch (e) {
+      console.error("[DOWNLOAD] Error:", e);
+      toast2({
+        title: "Download error",
+        description: e.message || "Something went wrong",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const buildFilename = () => {
+    return `${video?.title?.replace(/[^a-zA-Z0-9]/g, "_") || "video"}${mediaType !== "movie" ? `_S${currentSeason}E${currentEpisode}` : ""}`;
+  };
+  const handleDownloadResult = (result, filename) => {
+    if (result.success) {
+      toast2({
+        title: "Download in progress",
+        description: `${filename} - Check Downloads page`
+      });
+    } else if (result.error !== "Cancelled") {
+      toast2({
+        title: "Download failed",
+        description: result.error || "Unknown error",
+        variant: "destructive"
+      });
+    }
+  };
+  const available = isDownloadAvailable();
+  if (!available) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Button,
+      {
+        variant: "ghost",
+        size: "icon",
+        disabled: true,
+        className: "h-9 w-9 text-gray-400",
+        title: "Downloads not available on this platform",
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "h-4 w-4" })
+      }
+    );
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Button,
+    {
+      variant: "ghost",
+      size: "icon",
+      onClick: (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleDownload();
+      },
+      disabled: isLoading,
+      className: "h-9 w-9 text-white hover:bg-white/20",
+      title: `Download Video (${platform2})`,
+      children: isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-4 w-4 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "h-4 w-4" })
+    }
+  );
+}
+"use client";
 const isAndroid = () => {
   if (typeof navigator === "undefined") return false;
   return /Android/i.test(navigator.userAgent);
@@ -39165,7 +40535,6 @@ function Header$1() {
     currentSeason,
     currentEpisode,
     mediaType,
-    playerUrl,
     isSheetOpen,
     setIsSheetOpen,
     onNext,
@@ -39177,189 +40546,95 @@ function Header$1() {
   const isSeries = video && (mediaType === "tv" || mediaType === "anime");
   const canGoBack = window.history.length > 1;
   reactExports.useEffect(() => {
-    logger$1.info("HEADER", "Header component mounted");
     setIsAndroidDevice(isAndroid());
-    return () => {
-      logger$1.debug("HEADER", "Header component unmounted");
-    };
   }, []);
-  logger$1.debug("HEADER", "Header rendering", { isWatchPage: isOnWatchPage, videoTitle: video?.title, isAndroid: isAndroidDevice });
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       "header",
       {
         className: "sticky top-0 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
-        style: { zIndex: 999999, position: "sticky" },
+        style: { zIndex: 999999 },
         "data-app-element": "header",
-        children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "div",
-          {
-            className: "container flex h-24 max-w-screen-2xl gap-2 md:gap-4",
-            style: {
-              alignItems: "flex-end",
-              paddingBottom: "8px"
-            },
-            children: [
-              (isOnWatchPage || isOnMediaPage || isOnGenrePage) && !isAndroidDevice && /* @__PURE__ */ jsxRuntimeExports.jsx(
-                Button,
-                {
-                  variant: "ghost",
-                  size: "icon",
-                  onClick: () => {
-                    if (canGoBack) {
-                      navigate(-1);
-                    } else {
-                      navigate("/");
-                    }
-                  },
-                  className: "h-9 w-9 text-white hover:bg-white/20",
-                  title: "Go back",
-                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "h-4 w-4" })
-                }
-              ),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Logo, {}),
-              !isAndroidDevice && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden lg:flex lg:gap-4", style: { alignItems: "flex-end" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(MainNav, {}) }),
-              isOnWatchPage && video && !isAndroidDevice && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden xl:block ml-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                "div",
-                {
-                  onClick: () => navigate(`/media/${video.id}?type=${mediaType}`),
-                  className: "block cursor-pointer",
-                  title: "Go to series details",
-                  children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-sm font-bold text-white truncate hover:text-primary transition-colors", children: video.title }),
-                    isSeries && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-white/80 hover:text-primary/80 transition-colors", children: [
-                      "S",
-                      currentSeason,
-                      ":E",
-                      currentEpisode
-                    ] })
-                  ]
-                }
-              ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1" }),
-              isOnWatchPage && isSeries && onNext && onPrev && onOpenEpisodes && !isAndroidDevice && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "gap-0 p-1 bg-black/40 rounded-lg border border-white/10 hidden lg:flex", style: { alignItems: "flex-end" }, children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  Button,
-                  {
-                    variant: "ghost",
-                    size: "icon",
-                    onClick: () => {
-                      logger$1.info("HEADER", "Previous button clicked");
-                      onPrev();
-                    },
-                    disabled: !hasPrev,
-                    className: "text-white hover:bg-white/20 disabled:opacity-30 h-8 w-8",
-                    title: "Previous episode",
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronLeft, { className: "h-4 w-4" })
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  Button,
-                  {
-                    variant: "ghost",
-                    size: "icon",
-                    onClick: () => {
-                      logger$1.info("HEADER", "Episode list button clicked");
-                      onOpenEpisodes();
-                    },
-                    className: "text-white hover:bg-white/20 h-8 w-8",
-                    title: "Episode list",
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(List, { className: "h-4 w-4" })
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  Button,
-                  {
-                    variant: "ghost",
-                    size: "icon",
-                    onClick: () => {
-                      logger$1.info("HEADER", "Next button clicked");
-                      onNext();
-                    },
-                    disabled: !hasNext,
-                    className: "text-white hover:bg-white/20 disabled:opacity-30 h-8 w-8",
-                    title: "Next episode",
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "h-4 w-4" })
-                  }
-                )
-              ] }),
-              isOnWatchPage && isSeries && onNext && onPrev && onOpenEpisodes && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex lg:hidden gap-0 p-1 bg-black/40 rounded-lg border border-white/10", style: { alignItems: "flex-end" }, children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  Button,
-                  {
-                    variant: "ghost",
-                    size: "icon",
-                    onClick: () => {
-                      logger$1.info("HEADER", "Previous button clicked (mobile)");
-                      onPrev();
-                    },
-                    disabled: !hasPrev,
-                    className: "text-white hover:bg-white/20 disabled:opacity-30 h-8 w-8",
-                    title: "Previous episode",
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronLeft, { className: "h-4 w-4" })
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  Button,
-                  {
-                    variant: "ghost",
-                    size: "icon",
-                    onClick: () => {
-                      logger$1.info("HEADER", "Episode list button clicked (mobile)");
-                      onOpenEpisodes();
-                    },
-                    className: "text-white hover:bg-white/20 h-8 w-8",
-                    title: "Episode list",
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(List, { className: "h-4 w-4" })
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  Button,
-                  {
-                    variant: "ghost",
-                    size: "icon",
-                    onClick: () => {
-                      logger$1.info("HEADER", "Next button clicked (mobile)");
-                      onNext();
-                    },
-                    disabled: !hasNext,
-                    className: "text-white hover:bg-white/20 disabled:opacity-30 h-8 w-8",
-                    title: "Next episode",
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "h-4 w-4" })
-                  }
-                )
-              ] }),
-              !isAndroidDevice && /* @__PURE__ */ jsxRuntimeExports.jsx(SourceSelector, { className: "hidden md:block" }),
-              !isAndroidDevice && /* @__PURE__ */ jsxRuntimeExports.jsx(
-                Button,
-                {
-                  variant: "ghost",
-                  size: "icon",
-                  title: "Manage TMDB API Key",
-                  onClick: () => setIsApiKeyDialogOpen(true),
-                  className: "h-9 w-9 hidden lg:flex",
-                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(KeyRound, { className: "h-4 w-4" })
-                }
-              ),
-              isOnWatchPage && playerUrl && /* @__PURE__ */ jsxRuntimeExports.jsx(
-                Button,
-                {
-                  variant: "secondary",
-                  size: "icon",
-                  title: "Open in new tab",
-                  onClick: () => {
-                    logger$1.info("HEADER", "Open in new tab clicked", { url: playerUrl });
-                    window.open(playerUrl, "_blank");
-                  },
-                  className: "h-9 w-9",
-                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(ExternalLink, { className: "h-4 w-4" })
-                }
-              ),
-              !isAndroidDevice && /* @__PURE__ */ jsxRuntimeExports.jsx(SearchInput, {}),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "lg:hidden ml-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(MobileNav, { isAndroid: isAndroidDevice }) })
-            ]
-          }
-        )
+        children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "container flex items-center max-w-screen-2xl gap-2 md:gap-4 h-14 lg:h-16 px-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "lg:hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(MobileNav, { isAndroid: isAndroidDevice }) }),
+          (isOnWatchPage || isOnMediaPage || isOnGenrePage) && !isAndroidDevice && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Button,
+            {
+              variant: "ghost",
+              size: "icon",
+              onClick: () => canGoBack ? navigate(-1) : navigate("/"),
+              className: "h-9 w-9 text-white hover:bg-white/20 hidden lg:flex",
+              title: "Go back",
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "h-4 w-4" })
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Logo, {}),
+          !isAndroidDevice && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden lg:flex lg:gap-4 items-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(MainNav, {}) }),
+          isOnWatchPage && video && !isAndroidDevice && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden xl:block ml-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "div",
+            {
+              onClick: () => navigate(`/media/${video.id}?type=${mediaType}`),
+              className: "cursor-pointer",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-sm font-bold text-white truncate hover:text-primary transition-colors", children: video.title }),
+                isSeries && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-white/80", children: [
+                  "S",
+                  currentSeason,
+                  ":E",
+                  currentEpisode
+                ] })
+              ]
+            }
+          ) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1" }),
+          isOnWatchPage && isSeries && onNext && onPrev && onOpenEpisodes && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-0 p-1 bg-black/40 rounded-lg border border-white/10 items-center", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                variant: "ghost",
+                size: "icon",
+                onClick: onPrev,
+                disabled: !hasPrev,
+                className: "text-white hover:bg-white/20 disabled:opacity-30 h-8 w-8",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronLeft, { className: "h-4 w-4" })
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                variant: "ghost",
+                size: "icon",
+                onClick: onOpenEpisodes,
+                className: "text-white hover:bg-white/20 h-8 w-8",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(List, { className: "h-4 w-4" })
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                variant: "ghost",
+                size: "icon",
+                onClick: onNext,
+                disabled: !hasNext,
+                className: "text-white hover:bg-white/20 disabled:opacity-30 h-8 w-8",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "h-4 w-4" })
+              }
+            )
+          ] }),
+          isOnWatchPage && video && /* @__PURE__ */ jsxRuntimeExports.jsx(DownloadButton, {}),
+          !isAndroidDevice && /* @__PURE__ */ jsxRuntimeExports.jsx(SourceSelector, { className: "hidden md:block" }),
+          !isAndroidDevice && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Button,
+            {
+              variant: "ghost",
+              size: "icon",
+              onClick: () => setIsApiKeyDialogOpen(true),
+              className: "h-9 w-9 hidden lg:flex",
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx(KeyRound, { className: "h-4 w-4" })
+            }
+          ),
+          !isAndroidDevice && /* @__PURE__ */ jsxRuntimeExports.jsx(SearchInput, {})
+        ] })
       }
     ),
     /* @__PURE__ */ jsxRuntimeExports.jsx(ApiKeyDialog, { isOpen: isApiKeyDialogOpen, onOpenChange: setIsApiKeyDialogOpen })
@@ -39392,7 +40667,7 @@ var VisuallyHidden = reactExports.forwardRef(
   }
 );
 VisuallyHidden.displayName = NAME$1;
-var Root$4 = VisuallyHidden;
+var Root$5 = VisuallyHidden;
 "use client";
 var PROVIDER_NAME$1 = "ToastProvider";
 var [Collection$1, useCollection$1, createCollectionScope$1] = createCollection("Toast");
@@ -39752,7 +41027,7 @@ var ToastImpl = reactExports.forwardRef(
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(ToastInteractiveProvider, { scope: __scopeToast, onClose: handleClose, children: reactDomExports.createPortal(
         /* @__PURE__ */ jsxRuntimeExports.jsx(Collection$1.ItemSlot, { scope: __scopeToast, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Root$e,
+          Root$f,
           {
             asChild: true,
             onEscapeKeyDown: composeEventHandlers(onEscapeKeyDown, () => {
@@ -40234,7 +41509,7 @@ function getElementRef$1(element) {
   }
   return element.props.ref || element.ref;
 }
-var Root$3 = Slot$1;
+var Root$4 = Slot$1;
 "use client";
 var [createTooltipContext, createTooltipScope] = createContextScope("Tooltip", [
   createPopperScope
@@ -40562,7 +41837,7 @@ var TooltipContentImpl = reactExports.forwardRef(
             },
             children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(Slottable$1, { children }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(VisuallyHiddenContentContextProvider, { scope: __scopeTooltip, isInside: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root$4, { id: context.contentId, role: "tooltip", children: ariaLabel || children }) })
+              /* @__PURE__ */ jsxRuntimeExports.jsx(VisuallyHiddenContentContextProvider, { scope: __scopeTooltip, isInside: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root$5, { id: context.contentId, role: "tooltip", children: ariaLabel || children }) })
             ]
           }
         )
@@ -40834,7 +42109,7 @@ function getElementRef(element) {
   }
   return element.props.ref || element.ref;
 }
-var Root$2 = Slot;
+var Root$3 = Slot;
 "use client";
 var ROOT_NAME = "AlertDialog";
 var [createAlertDialogContext, createAlertDialogScope] = createContextScope(ROOT_NAME, [
@@ -40844,7 +42119,7 @@ var useDialogScope = createDialogScope();
 var AlertDialog$1 = (props) => {
   const { __scopeAlertDialog, ...alertDialogProps } = props;
   const dialogScope = useDialogScope(__scopeAlertDialog);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root$9, { ...dialogScope, ...alertDialogProps, modal: true });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root$a, { ...dialogScope, ...alertDialogProps, modal: true });
 };
 AlertDialog$1.displayName = ROOT_NAME;
 var TRIGGER_NAME$2 = "AlertDialogTrigger";
@@ -41480,6 +42755,7 @@ function WatchHistoryCard({ item }) {
 "use client";
 function ContinueWatchingCarousel() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [history, setHistory] = reactExports.useState([]);
   const [isMounted, setIsMounted] = reactExports.useState(false);
   const updateHistory = async () => {
@@ -41532,6 +42808,11 @@ function ContinueWatchingCarousel() {
       window.removeEventListener("history-updated", handleHistoryUpdate);
     };
   }, []);
+  reactExports.useEffect(() => {
+    if (location.pathname === "/") {
+      updateHistory();
+    }
+  }, [location.pathname]);
   if (!isMounted || history.length === 0) {
     return null;
   }
@@ -42995,11 +44276,6 @@ function VidlinkPlayer({
         seasons: video.seasons,
         episodes: video.episodes
       });
-      console.log("[PLAYER] Initial watch progress saved immediately", {
-        title: video.title,
-        season,
-        episode
-      });
     }
     const interval = setInterval(() => {
       progressRef.current.watched += 15;
@@ -43024,25 +44300,21 @@ function VidlinkPlayer({
     hasInitialSaveRef.current = false;
   }, [video?.id, season, episode]);
   if (!video || !playerUrl) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-full w-full bg-black flex justify-center items-center text-white", children: "Loading Player..." });
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "video-player video-player--loading", children: "Loading Player..." });
   }
   const cleanUrl = playerUrl.includes("?") ? playerUrl.replace(/&autoplay=\d/g, "") : playerUrl;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-full w-full flex flex-col overflow-hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
     "iframe",
     {
       title: "Video Player",
       src: cleanUrl,
+      className: "video-player",
       allowFullScreen: true,
-      allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen; payment; microphone; camera; display-capture; geolocation; midi; sync-xhr; usb; xr-spatial-tracking",
-      className: "w-full h-full flex-1 border-none",
-      referrerPolicy: "no-referrer-when-downgrade",
-      style: {
-        maxHeight: "100%",
-        objectFit: "contain"
-      }
+      allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen",
+      referrerPolicy: "no-referrer-when-downgrade"
     },
     playerUrl
-  ) });
+  );
 }
 "use client";
 var COLLAPSIBLE_NAME = "Collapsible";
@@ -43173,7 +44445,7 @@ var CollapsibleContentImpl = reactExports.forwardRef((props, forwardedRef) => {
 function getState$1(open) {
   return open ? "open" : "closed";
 }
-var Root$1 = Collapsible;
+var Root$2 = Collapsible;
 var Trigger = CollapsibleTrigger;
 var Content = CollapsibleContent;
 "use client";
@@ -43368,7 +44640,7 @@ var AccordionItem$1 = React.forwardRef(
         disabled,
         triggerId,
         children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Root$1,
+          Root$2,
           {
             "data-orientation": accordionContext.orientation,
             "data-state": getState(open),
@@ -43526,413 +44798,6 @@ function ExpandableText({ text, className, charLimit = 200 }) {
       }
     )
   ] });
-}
-const INTERCEPTOR_PATTERNS = {
-  // Class patterns that ad networks commonly use
-  classPatterns: [
-    /overlay/i,
-    /intercept/i,
-    /click[-_]?catcher/i,
-    /ad[-_]?layer/i,
-    /popup[-_]?layer/i,
-    /blocker/i,
-    /shield/i,
-    /mask/i
-  ],
-  // ID patterns
-  idPatterns: [
-    /overlay/i,
-    /intercept/i,
-    /ad[-_]?container/i,
-    /popup/i
-  ],
-  // Style patterns (elements that cover the viewport)
-  stylePatterns: {
-    position: ["fixed", "absolute"],
-    zIndex: (z) => z > 1e3,
-    // High z-index
-    coveringViewport: (el) => {
-      const rect = el.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      return rect.width >= viewportWidth * 0.8 && rect.height >= viewportHeight * 0.8;
-    }
-  }
-};
-const PROTECTED_SELECTORS = [
-  "[data-app-element]",
-  // App-marked elements
-  "header",
-  // Site header
-  "nav",
-  // Navigation elements
-  ".sticky",
-  // Sticky positioned elements (like header)
-  "[data-radix-portal]",
-  // Radix UI portals (modals, sheets, etc.)
-  "[data-radix-dialog-overlay]",
-  "[data-radix-sheet-overlay]"
-];
-class OverlayNeutralizer {
-  config;
-  isInitialized = false;
-  isPaused = false;
-  playerElements = /* @__PURE__ */ new Set();
-  neutralizedElements = /* @__PURE__ */ new WeakSet();
-  observer = null;
-  debounceTimer = null;
-  pendingMutations = [];
-  constructor(config2 = {}) {
-    this.config = {
-      enableLogging: config2.enableLogging ?? false,
-      playerZIndex: config2.playerZIndex ?? 9999,
-      // Lower than header (999999)
-      interceptorZIndex: config2.interceptorZIndex ?? -1,
-      watchSubtree: config2.watchSubtree ?? true,
-      watchAttributes: config2.watchAttributes ?? true,
-      debounceMs: config2.debounceMs ?? 50
-    };
-    this.log("[OVERLAY-NEUTRALIZER] Constructor called with MutationObserver strategy");
-  }
-  log(message, ...args) {
-    if (this.config.enableLogging) {
-      console.log(message, ...args);
-    }
-  }
-  /**
-   * Check if an element is protected (should not be modified)
-   */
-  isProtectedElement(el) {
-    for (const selector of PROTECTED_SELECTORS) {
-      if (el.matches(selector) || el.closest(selector)) {
-        return true;
-      }
-    }
-    return false;
-  }
-  /**
-   * Initialize the overlay neutralizer with MutationObserver
-   */
-  initialize() {
-    if (this.isInitialized) {
-      this.log("[OVERLAY-NEUTRALIZER] Already initialized");
-      return;
-    }
-    this.log("[OVERLAY-NEUTRALIZER] Initializing with MutationObserver");
-    this.elevatePlayerLayer();
-    this.scanAndNeutralizeInterceptors();
-    this.setupMutationObserver();
-    this.isInitialized = true;
-    this.log("[OVERLAY-NEUTRALIZER] Initialization complete");
-  }
-  /**
-   * Set up the MutationObserver to watch for DOM changes
-   */
-  setupMutationObserver() {
-    if (this.observer) {
-      this.observer.disconnect();
-    }
-    this.observer = new MutationObserver((mutations) => {
-      if (this.isPaused) return;
-      this.pendingMutations.push(...mutations);
-      this.debouncedProcessMutations();
-    });
-    this.observer.observe(document.body, {
-      childList: true,
-      // Watch for added/removed nodes
-      subtree: this.config.watchSubtree,
-      // Watch all descendants
-      attributes: this.config.watchAttributes,
-      // Watch attribute changes
-      attributeFilter: ["style", "class", "id"]
-      // Only these attributes
-    });
-    this.log("[OVERLAY-NEUTRALIZER] MutationObserver started");
-  }
-  /**
-   * Debounce mutation processing to avoid performance issues
-   * from rapid DOM changes
-   */
-  debouncedProcessMutations() {
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-    }
-    this.debounceTimer = setTimeout(() => {
-      this.processPendingMutations();
-    }, this.config.debounceMs);
-  }
-  /**
-   * Process all pending mutations
-   */
-  processPendingMutations() {
-    if (this.pendingMutations.length === 0) return;
-    const mutations = this.pendingMutations;
-    this.pendingMutations = [];
-    let hasNewNodes = false;
-    let hasRelevantChanges = false;
-    for (const mutation of mutations) {
-      if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-        hasNewNodes = true;
-        mutation.addedNodes.forEach((node) => {
-          if (node instanceof HTMLElement) {
-            if (this.isProtectedElement(node)) return;
-            if (this.isPotentialInterceptor(node)) {
-              this.neutralizeElement(node);
-              hasRelevantChanges = true;
-            }
-            if (this.isVideoPlayer(node)) {
-              this.elevateElement(node);
-              hasRelevantChanges = true;
-            }
-            this.scanNodeAndDescendants(node);
-          }
-        });
-      }
-      if (mutation.type === "attributes" && mutation.target instanceof HTMLElement) {
-        const el = mutation.target;
-        if (this.isProtectedElement(el)) continue;
-        if (this.isPotentialInterceptor(el) && !this.neutralizedElements.has(el)) {
-          this.neutralizeElement(el);
-          hasRelevantChanges = true;
-        }
-      }
-    }
-    if (hasRelevantChanges) {
-      this.elevatePlayerLayer();
-    }
-    if (hasNewNodes) {
-      this.log("[OVERLAY-NEUTRALIZER] Processed mutations:", {
-        total: mutations.length,
-        relevantChanges: hasRelevantChanges
-      });
-    }
-  }
-  /**
-   * Scan a node and all its descendants for interceptors and players
-   */
-  scanNodeAndDescendants(node) {
-    if (this.isProtectedElement(node)) return;
-    const allElements = node.querySelectorAll("*");
-    allElements.forEach((el) => {
-      if (el instanceof HTMLElement) {
-        if (this.isProtectedElement(el)) return;
-        if (this.isPotentialInterceptor(el)) {
-          this.neutralizeElement(el);
-        }
-        if (this.isVideoPlayer(el)) {
-          this.elevateElement(el);
-        }
-      }
-    });
-  }
-  /**
-   * Detect if an element is likely a click interceptor overlay
-   */
-  isPotentialInterceptor(el) {
-    if (this.neutralizedElements.has(el)) return false;
-    if (this.isVideoPlayer(el)) return false;
-    if (this.isProtectedElement(el)) return false;
-    const className = el.className || "";
-    const id = el.id || "";
-    const style = window.getComputedStyle(el);
-    for (const pattern of INTERCEPTOR_PATTERNS.classPatterns) {
-      if (pattern.test(className)) {
-        this.log("[OVERLAY-NEUTRALIZER] Detected interceptor by class:", className);
-        return true;
-      }
-    }
-    for (const pattern of INTERCEPTOR_PATTERNS.idPatterns) {
-      if (pattern.test(id)) {
-        this.log("[OVERLAY-NEUTRALIZER] Detected interceptor by ID:", id);
-        return true;
-      }
-    }
-    const position = style.position;
-    const zIndex = parseInt(style.zIndex) || 0;
-    if (INTERCEPTOR_PATTERNS.stylePatterns.position.includes(position)) {
-      if (INTERCEPTOR_PATTERNS.stylePatterns.zIndex(zIndex)) {
-        if (INTERCEPTOR_PATTERNS.stylePatterns.coveringViewport(el)) {
-          const opacity = parseFloat(style.opacity) || 1;
-          const bgColor = style.backgroundColor;
-          const isTransparent = opacity < 0.1 || bgColor === "transparent" || bgColor === "rgba(0, 0, 0, 0)";
-          if (isTransparent) {
-            this.log("[OVERLAY-NEUTRALIZER] Detected transparent overlay interceptor:", {
-              position,
-              zIndex,
-              opacity,
-              bgColor
-            });
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
-  /**
-   * Check if an element is a video player
-   */
-  isVideoPlayer(el) {
-    if (el.tagName === "IFRAME") {
-      const title = el.getAttribute("title") || "";
-      const src = el.getAttribute("src") || "";
-      if (title.toLowerCase().includes("video") || title.toLowerCase().includes("player") || src.includes("vidlink") || src.includes("vidsrc") || src.includes("godrive") || src.includes("mostream")) {
-        return true;
-      }
-    }
-    if (el.tagName === "VIDEO") {
-      return true;
-    }
-    const className = el.className || "";
-    if (/video[-_]?player|player[-_]?container|vidlink/i.test(className)) {
-      return true;
-    }
-    return false;
-  }
-  /**
-   * Neutralize a click interceptor element
-   */
-  neutralizeElement(el) {
-    if (this.neutralizedElements.has(el)) return;
-    if (this.isProtectedElement(el)) return;
-    el.style.zIndex = String(this.config.interceptorZIndex);
-    el.style.pointerEvents = "none";
-    this.neutralizedElements.add(el);
-    this.log("[OVERLAY-NEUTRALIZER] Neutralized element:", el.tagName, el.className);
-  }
-  /**
-   * Elevate a video player element
-   */
-  elevateElement(el) {
-    el.style.position = el.style.position || "relative";
-    el.style.zIndex = String(this.config.playerZIndex);
-    this.playerElements.add(el);
-  }
-  /**
-   * Elevate all player/video iframe elements to top z-index
-   */
-  elevatePlayerLayer() {
-    const selectors = [
-      'iframe[title*="Video"]',
-      'iframe[title*="Player"]',
-      'iframe[src*="vidlink"]',
-      'iframe[src*="vidsrc"]',
-      'iframe[src*="godrive"]',
-      'iframe[src*="mostream"]',
-      "video",
-      ".video-player",
-      ".player-container",
-      "[data-video-player]"
-    ];
-    const players = document.querySelectorAll(selectors.join(", "));
-    players.forEach((el) => {
-      if (el instanceof HTMLElement) {
-        this.elevateElement(el);
-      }
-    });
-    if (players.length > 0) {
-      this.log("[OVERLAY-NEUTRALIZER] Elevated", players.length, "player elements to z-index", this.config.playerZIndex);
-    }
-  }
-  /**
-   * Scan the entire document for interceptors
-   */
-  scanAndNeutralizeInterceptors() {
-    const allElements = document.querySelectorAll("*");
-    let neutralizedCount = 0;
-    allElements.forEach((el) => {
-      if (el instanceof HTMLElement && this.isPotentialInterceptor(el)) {
-        this.neutralizeElement(el);
-        neutralizedCount++;
-      }
-    });
-    if (neutralizedCount > 0) {
-      this.log("[OVERLAY-NEUTRALIZER] Initial scan neutralized", neutralizedCount, "elements");
-    }
-  }
-  /**
-   * Pause the MutationObserver (useful when opening modals)
-   */
-  pause() {
-    this.log("[OVERLAY-NEUTRALIZER] Pausing");
-    this.isPaused = true;
-    if (this.observer) {
-      this.observer.disconnect();
-    }
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-      this.debounceTimer = null;
-    }
-  }
-  /**
-   * Resume the MutationObserver
-   */
-  resume() {
-    this.log("[OVERLAY-NEUTRALIZER] Resuming");
-    this.isPaused = false;
-    this.setupMutationObserver();
-    this.elevatePlayerLayer();
-    this.scanAndNeutralizeInterceptors();
-  }
-  /**
-   * Force a manual scan (useful after dynamic content loads)
-   */
-  forceScan() {
-    this.log("[OVERLAY-NEUTRALIZER] Force scan triggered");
-    this.elevatePlayerLayer();
-    this.scanAndNeutralizeInterceptors();
-  }
-  /**
-   * Clean up all resources
-   */
-  cleanup() {
-    this.log("[OVERLAY-NEUTRALIZER] Cleaning up");
-    if (this.observer) {
-      this.observer.disconnect();
-      this.observer = null;
-    }
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-      this.debounceTimer = null;
-    }
-    this.playerElements.clear();
-    this.pendingMutations = [];
-    this.isInitialized = false;
-  }
-  /**
-   * Get current status
-   */
-  getStatus() {
-    return {
-      initialized: this.isInitialized,
-      paused: this.isPaused,
-      observerActive: this.observer !== null,
-      playerElementsCount: this.playerElements.size,
-      playerZIndex: this.config.playerZIndex
-    };
-  }
-}
-let overlayNeutralizerInstance = null;
-function initializeOverlayNeutralizer(config2) {
-  if (!overlayNeutralizerInstance) {
-    overlayNeutralizerInstance = new OverlayNeutralizer(config2);
-    overlayNeutralizerInstance.initialize();
-  }
-  return overlayNeutralizerInstance;
-}
-function neutralizeProviderOverlays(provider) {
-  if (overlayNeutralizerInstance) {
-    overlayNeutralizerInstance.forceScan();
-  }
-}
-function getOverlayNeutralizer() {
-  return overlayNeutralizerInstance;
-}
-function cleanupOverlayNeutralizer() {
-  if (overlayNeutralizerInstance) {
-    overlayNeutralizerInstance.cleanup();
-    overlayNeutralizerInstance = null;
-  }
 }
 "use client";
 function EpisodeSelectionSheet({
@@ -44155,14 +45020,10 @@ function WatchPageContent() {
       search: location.search
     });
     return () => {
-      logger.warn("WATCH_NAV", `Watch page unmounting. Navigation is occurring.`);
+      logger.warn("WATCH_NAV", `Watch page unmounting.`);
       clearWatchData();
     };
   }, [location, clearWatchData]);
-  logger.info("WATCH_RENDER", `Component rendered`, {
-    pathname: location.pathname,
-    search: location.search
-  });
   const tmdbId = searchParams.get("id");
   const mediaType = searchParams.get("type") || "movie";
   const initialSeason = searchParams.get("s") ? parseInt(searchParams.get("s"), 10) : void 0;
@@ -44289,9 +45150,7 @@ function WatchPageContent() {
         url = defaultUrl;
         break;
     }
-    const finalUrl = url || defaultUrl;
-    logger.debug("WATCH", `Generated player URL for "${video.title}" (Source: ${source})`, { url: finalUrl });
-    return finalUrl;
+    return url || defaultUrl;
   }, [video, currentSeason, currentEpisode, source]);
   const seasonsToDisplay = reactExports.useMemo(() => {
     if (!video) return [];
@@ -44433,22 +45292,22 @@ function WatchPageContent() {
     setWatchData
   ]);
   if (!tmdbId || !mediaType) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "h-screen w-screen bg-black flex flex-col justify-center items-center", children: [
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "watch-page watch-page--error", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-white text-2xl mb-4", children: "Invalid Parameters" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: () => navigate("/"), children: "Return to Home" })
     ] });
   }
   if (isLoading) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-screen w-screen bg-black flex justify-center items-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-full w-full" }) });
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "watch-page watch-page--loading", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "w-full h-full" }) });
   }
   if (!video) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "h-screen w-screen bg-black flex flex-col justify-center items-center", children: [
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "watch-page watch-page--error", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-white text-2xl mb-4", children: "Content Not Found" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: () => navigate("/"), children: "Return to Home" })
     ] });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen w-full bg-black flex flex-col", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full bg-black", style: { minHeight: "calc(100vh - 96px)", height: "calc(100vh - 96px)" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "watch-page", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "video-container", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
       VidlinkPlayer,
       {
         video,
@@ -44457,7 +45316,6 @@ function WatchPageContent() {
         episode: currentEpisode
       }
     ) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-24 w-full bg-black flex-shrink-0" }),
     mediaType !== "movie" && /* @__PURE__ */ jsxRuntimeExports.jsx(
       EpisodeSelectionSheet,
       {
@@ -44474,7 +45332,7 @@ function WatchPageContent() {
   ] });
 }
 function WatchPage() {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, { fallback: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-screen w-screen bg-black flex justify-center items-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-full w-full" }) }), children: /* @__PURE__ */ jsxRuntimeExports.jsx(WatchPageContent, {}) });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, { fallback: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "watch-page watch-page--loading", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "w-full h-full" }) }), children: /* @__PURE__ */ jsxRuntimeExports.jsx(WatchPageContent, {}) });
 }
 "use client";
 var NAME = "Label";
@@ -44494,20 +45352,20 @@ var Label$1 = reactExports.forwardRef((props, forwardedRef) => {
   );
 });
 Label$1.displayName = NAME;
-var Root = Label$1;
+var Root$1 = Label$1;
 "use client";
 const labelVariants = cva(
   "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 );
 const Label = reactExports.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-  Root,
+  Root$1,
   {
     ref,
     className: cn(labelVariants(), className),
     ...props
   }
 ));
-Label.displayName = Root.displayName;
+Label.displayName = Root$1.displayName;
 var isCheckBoxInput = (element) => element.type === "checkbox";
 var isDateObject = (value) => value instanceof Date;
 var isNullOrUndefined = (value) => value == null;
@@ -47083,28 +47941,330 @@ function AnimeGenre() {
     }
   );
 }
+"use client";
+var PROGRESS_NAME = "Progress";
+var DEFAULT_MAX = 100;
+var [createProgressContext, createProgressScope] = createContextScope(PROGRESS_NAME);
+var [ProgressProvider, useProgressContext] = createProgressContext(PROGRESS_NAME);
+var Progress$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const {
+      __scopeProgress,
+      value: valueProp = null,
+      max: maxProp,
+      getValueLabel = defaultGetValueLabel,
+      ...progressProps
+    } = props;
+    if ((maxProp || maxProp === 0) && !isValidMaxNumber(maxProp)) {
+      console.error(getInvalidMaxError(`${maxProp}`, "Progress"));
+    }
+    const max2 = isValidMaxNumber(maxProp) ? maxProp : DEFAULT_MAX;
+    if (valueProp !== null && !isValidValueNumber(valueProp, max2)) {
+      console.error(getInvalidValueError(`${valueProp}`, "Progress"));
+    }
+    const value = isValidValueNumber(valueProp, max2) ? valueProp : null;
+    const valueLabel = isNumber(value) ? getValueLabel(value, max2) : void 0;
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(ProgressProvider, { scope: __scopeProgress, value, max: max2, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Primitive.div,
+      {
+        "aria-valuemax": max2,
+        "aria-valuemin": 0,
+        "aria-valuenow": isNumber(value) ? value : void 0,
+        "aria-valuetext": valueLabel,
+        role: "progressbar",
+        "data-state": getProgressState(value, max2),
+        "data-value": value ?? void 0,
+        "data-max": max2,
+        ...progressProps,
+        ref: forwardedRef
+      }
+    ) });
+  }
+);
+Progress$1.displayName = PROGRESS_NAME;
+var INDICATOR_NAME = "ProgressIndicator";
+var ProgressIndicator = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeProgress, ...indicatorProps } = props;
+    const context = useProgressContext(INDICATOR_NAME, __scopeProgress);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Primitive.div,
+      {
+        "data-state": getProgressState(context.value, context.max),
+        "data-value": context.value ?? void 0,
+        "data-max": context.max,
+        ...indicatorProps,
+        ref: forwardedRef
+      }
+    );
+  }
+);
+ProgressIndicator.displayName = INDICATOR_NAME;
+function defaultGetValueLabel(value, max2) {
+  return `${Math.round(value / max2 * 100)}%`;
+}
+function getProgressState(value, maxValue) {
+  return value == null ? "indeterminate" : value === maxValue ? "complete" : "loading";
+}
+function isNumber(value) {
+  return typeof value === "number";
+}
+function isValidMaxNumber(max2) {
+  return isNumber(max2) && !isNaN(max2) && max2 > 0;
+}
+function isValidValueNumber(value, max2) {
+  return isNumber(value) && !isNaN(value) && value <= max2 && value >= 0;
+}
+function getInvalidMaxError(propValue, componentName) {
+  return `Invalid prop \`max\` of value \`${propValue}\` supplied to \`${componentName}\`. Only numbers greater than 0 are valid max values. Defaulting to \`${DEFAULT_MAX}\`.`;
+}
+function getInvalidValueError(propValue, componentName) {
+  return `Invalid prop \`value\` of value \`${propValue}\` supplied to \`${componentName}\`. The \`value\` prop must be:
+  - a positive number
+  - less than the value passed to \`max\` (or ${DEFAULT_MAX} if no \`max\` prop is set)
+  - \`null\` or \`undefined\` if the progress is indeterminate.
+
+Defaulting to \`null\`.`;
+}
+var Root = Progress$1;
+var Indicator = ProgressIndicator;
+"use client";
+const Progress = reactExports.forwardRef(({ className, value, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+  Root,
+  {
+    ref,
+    className: cn(
+      "relative h-4 w-full overflow-hidden rounded-full bg-secondary",
+      className
+    ),
+    ...props,
+    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Indicator,
+      {
+        className: "h-full w-full flex-1 bg-primary transition-all",
+        style: { transform: `translateX(-${100 - (value || 0)}%)` }
+      }
+    )
+  }
+));
+Progress.displayName = Root.displayName;
+"use client";
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+};
+const formatDuration = (ms) => {
+  const seconds = Math.floor(ms / 1e3);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  if (hours > 0) return `${hours}h ${minutes % 60}m`;
+  if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+  return `${seconds}s`;
+};
+const statusLabels = {
+  idle: "Waiting",
+  fetching: "Fetching Stream...",
+  parsing: "Analyzing...",
+  downloading: "Downloading...",
+  merging: "Merging Segments...",
+  converting: "Converting to MKV...",
+  complete: "Complete",
+  error: "Failed",
+  cancelled: "Cancelled"
+};
+const StatusIcon = ({ status }) => {
+  switch (status) {
+    case "complete":
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheckBig, { className: "h-5 w-5 text-green-500" });
+    case "error":
+    case "cancelled":
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(CircleX, { className: "h-5 w-5 text-red-500" });
+    case "downloading":
+    case "fetching":
+    case "parsing":
+    case "merging":
+    case "converting":
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-5 w-5 text-blue-500 animate-spin" });
+    default:
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "h-5 w-5 text-muted-foreground" });
+  }
+};
+function DownloadsPage() {
+  const [downloads, setDownloads] = reactExports.useState([]);
+  const [platform2, setPlatform2] = reactExports.useState("");
+  const navigate = useNavigate();
+  const available = isDownloadAvailable();
+  reactExports.useEffect(() => {
+    setPlatform2(getPlatform());
+    if (!available) return;
+    const api = getDownloadAPI();
+    if (!api) return;
+    api.getDownloadsList().then((list) => {
+      setDownloads(list || []);
+    });
+    const unsub = api.onDownloadsUpdated((list) => {
+      setDownloads(list || []);
+    });
+    return () => unsub?.();
+  }, [available]);
+  const handleRemove = async (id) => {
+    const api = getDownloadAPI();
+    if (api) {
+      await api.removeDownload(id);
+    }
+  };
+  const handleClearCompleted = async () => {
+    const api = getDownloadAPI();
+    if (api) {
+      await api.clearCompletedDownloads();
+    }
+  };
+  const activeDownloads = downloads.filter(
+    (d) => d.status === "downloading" || d.status === "fetching" || d.status === "parsing" || d.status === "merging"
+  );
+  const completedDownloads = downloads.filter(
+    (d) => d.status === "complete" || d.status === "error" || d.status === "cancelled"
+  );
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-h-screen bg-background pt-16", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: "container mx-auto px-4 py-8", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between mb-8", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Button,
+          {
+            variant: "ghost",
+            size: "icon",
+            className: "h-10 w-10 hover:bg-accent",
+            onClick: () => navigate(-1),
+            title: "Go back",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "h-5 w-5" })
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("h1", { className: "text-2xl font-bold flex items-center gap-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "h-7 w-7" }),
+          "Downloads",
+          platform2 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs font-normal text-muted-foreground", children: [
+            "(",
+            platform2,
+            ")"
+          ] })
+        ] })
+      ] }),
+      completedDownloads.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs(Button, { variant: "outline", size: "sm", onClick: handleClearCompleted, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "h-4 w-4 mr-2" }),
+        "Clear Completed"
+      ] })
+    ] }),
+    !available && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-lg border bg-yellow-500/10 border-yellow-500/30 p-8 text-center", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "h-12 w-12 mx-auto mb-4 text-yellow-500 opacity-50" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-yellow-400 font-medium text-lg", children: "Downloads require the app" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground mt-2", children: "The download feature is only available in the desktop or mobile app." })
+    ] }),
+    available && downloads.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-lg border border-dashed p-16 text-center", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "h-16 w-16 mx-auto mb-4 opacity-20" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-xl font-medium mb-2", children: "No downloads yet" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground max-w-md mx-auto", children: "When you download a video, it will appear here. You can track progress and access completed downloads." })
+    ] }),
+    available && downloads.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-8", children: [
+      activeDownloads.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4", children: [
+          "Active Downloads (",
+          activeDownloads.length,
+          ")"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3", children: activeDownloads.map((download) => /* @__PURE__ */ jsxRuntimeExports.jsx(DownloadCard, { download, onRemove: handleRemove }, download.id)) })
+      ] }),
+      completedDownloads.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4", children: [
+          "History (",
+          completedDownloads.length,
+          ")"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3", children: completedDownloads.map((download) => /* @__PURE__ */ jsxRuntimeExports.jsx(DownloadCard, { download, onRemove: handleRemove }, download.id)) })
+      ] })
+    ] })
+  ] }) });
+}
+function DownloadCard({ download, onRemove }) {
+  const elapsed = Date.now() - download.startTime;
+  const isActive = ["downloading", "fetching", "parsing", "merging"].includes(download.status);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `rounded-xl border p-5 transition-colors ${download.status === "complete" ? "bg-green-500/5 border-green-500/20" : download.status === "error" ? "bg-red-500/5 border-red-500/20" : "bg-card hover:bg-accent/50"}`, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx(StatusIcon, { status: download.status }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 min-w-0", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-semibold truncate text-lg", children: download.filename }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "flex items-center gap-1", children: statusLabels[download.status] }),
+            download.quality && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-blue-400", children: download.quality })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Button,
+          {
+            variant: "ghost",
+            size: "icon",
+            className: "h-8 w-8 flex-shrink-0 hover:bg-red-500/20 hover:text-red-400",
+            onClick: () => onRemove(download.id),
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "h-4 w-4" })
+          }
+        )
+      ] }),
+      isActive && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 space-y-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between text-sm", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground", children: "Progress" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-mono font-semibold text-primary", children: [
+            download.progress,
+            "%"
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Progress, { value: download.progress, className: "h-2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between text-xs text-muted-foreground", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-1", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(HardDrive, { className: "h-3 w-3" }),
+            formatFileSize(download.downloadedBytes)
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-1", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Clock, { className: "h-3 w-3" }),
+            formatDuration(elapsed)
+          ] })
+        ] })
+      ] }),
+      download.filePath && download.status === "complete" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 flex items-center gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 p-3 rounded-lg bg-green-500/10 border border-green-500/20", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground mb-1", children: "Saved to:" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-mono text-green-400 break-all", children: download.filePath })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-semibold text-green-400", children: formatFileSize(download.downloadedBytes) }) })
+      ] }),
+      download.error && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20", children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-red-400", children: download.error }) })
+    ] })
+  ] }) });
+}
 logger$1.info("APP", "App.tsx loading...");
 if (typeof window !== "undefined") {
-  document.addEventListener(
-    "click",
-    (e) => {
-      const target = e.target;
-      const text = target.textContent?.substring(0, 50) || "no text";
-      const classes = target.className;
-      const id = target.id || "no-id";
-      console.log("[GLOBAL-CLICK]", {
-        tag: target.tagName,
-        text,
-        classes,
-        id,
-        dataAttrs: Object.fromEntries(
-          Array.from(target.attributes).filter((a) => a.name.startsWith("data-")).map((a) => [a.name, a.value])
-        )
-      });
-    },
-    true
-    // Use capture phase to catch before other listeners
-  );
+  initializeAdCapture({
+    enableLogging: true,
+    // ? ENABLE - Was false, now true!
+    closureDelay: 600,
+    muteAudio: true,
+    maxConcurrentAds: 5
+  });
+  initializeOverlayNeutralizer({
+    enableLogging: true,
+    // ? ENABLE - Was false, now true!
+    playerZIndex: 9999,
+    interceptorZIndex: -1,
+    watchSubtree: true,
+    watchAttributes: true,
+    debounceMs: 50
+  });
+  if (Capacitor.getPlatform() === "android") {
+    console.log("[APP] Initializing Android stream detector");
+    initializeAndroidStreamDetector();
+  }
 }
 function App() {
   const location = useLocation();
@@ -47112,6 +48272,7 @@ function App() {
     console.log("[APP] ========== APP STARTED ==========");
     console.log("[APP] React app is running");
     console.log("[APP] Location: " + location.pathname);
+    console.log("[APP] Platform: " + Capacitor.getPlatform());
     logger$1.info("APP", "App component rendering");
   }, [location.pathname]);
   reactExports.useEffect(() => {
@@ -47136,6 +48297,7 @@ function App() {
           /* @__PURE__ */ jsxRuntimeExports.jsx(Route$1, { path: "/anime/genre/:id", element: /* @__PURE__ */ jsxRuntimeExports.jsx(AnimeGenre, {}) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(Route$1, { path: "/watchlist", element: /* @__PURE__ */ jsxRuntimeExports.jsx(Watchlist, {}) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(Route$1, { path: "/history", element: /* @__PURE__ */ jsxRuntimeExports.jsx(HistoryPage, {}) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Route$1, { path: "/downloads", element: /* @__PURE__ */ jsxRuntimeExports.jsx(DownloadsPage, {}) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(Route$1, { path: "/search", element: /* @__PURE__ */ jsxRuntimeExports.jsx(SearchPage, {}) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(Route$1, { path: "/watch", element: /* @__PURE__ */ jsxRuntimeExports.jsx(WatchPage, {}) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(Route$1, { path: "/media/:id", element: /* @__PURE__ */ jsxRuntimeExports.jsx(MediaDetailsPage, {}) })
