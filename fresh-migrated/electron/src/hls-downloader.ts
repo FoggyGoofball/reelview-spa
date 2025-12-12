@@ -50,6 +50,8 @@ export interface DownloadProgress {
   downloadedBytes?: number;
   error?: string;
   filePath?: string;
+  estimatedQuality?: string;  // NEW: Quality estimated from bitrate
+  bitrateMbps?: number;       // NEW: Average bitrate in Mbps
 }
 
 export interface DownloadItem {
@@ -57,6 +59,10 @@ export interface DownloadItem {
   filename: string;
   url: string;
   quality?: string;
+  resolution?: string;        // NEW: Detected resolution like "1920x1080"
+  detectedQuality?: string;   // NEW: Derived quality like "1080p"
+  estimatedQuality?: string;  // NEW: Quality estimated from bitrate
+  bitrateMbps?: number;       // NEW: Average bitrate
   status: DownloadProgress['status'];
   progress: number;
   downloadedBytes: number;
@@ -97,6 +103,30 @@ function detectStreamType(url: string): StreamType {
   if (lowerUrl.includes('.mpd')) return 'dash';
   if (lowerUrl.includes('.mp4') || lowerUrl.includes('googlevideo')) return 'mp4';
   return 'unknown';
+}
+
+/**
+ * Estimate video quality based on bitrate
+ */
+function estimateQualityFromBitrate(bitrateMbps: number): string {
+  if (bitrateMbps >= 8) return '1080p';
+  if (bitrateMbps >= 4) return '720p';
+  if (bitrateMbps >= 2) return '480p';
+  if (bitrateMbps >= 1) return '360p';
+  return '240p';
+}
+
+/**
+ * Estimate video quality based on file size and duration
+ */
+function estimateQualityFromSize(fileSizeBytes: number, durationSeconds: number): { quality: string; bitrateMbps: number } {
+  const bitrateBps = (fileSizeBytes * 8) / durationSeconds;
+  const bitrateMbps = bitrateBps / 1000000;
+  const quality = estimateQualityFromBitrate(bitrateMbps);
+  
+  logDL(`Quality estimation: ${fileSizeBytes} bytes, ${durationSeconds}s = ${bitrateMbps.toFixed(2)} Mbps = ${quality}`);
+  
+  return { quality, bitrateMbps };
 }
 
 // =====================================================
@@ -379,12 +409,12 @@ async function downloadHLSStream(
   outputPath: string,
   onProgress: ProgressCallback,
   ses: Electron.Session
-): Promise<string> {
+): Promise<{ filePath: string; estimatedQuality: string; bitrateMbps: number }> {
   onProgress({ status: 'parsing', progress: 5 });
   
-  logDL(`\n========== STARTING DOWNLOAD ==========`);
-  logDL(`URL: ${variantUrl.substring(0, 100)}`);
-  logDL(`Output: ${outputPath}`);
+  logDL('\n========== STARTING DOWNLOAD ==========');
+  logDL('URL: ' + variantUrl.substring(0, 100));
+  logDL('Output: ' + outputPath);
   
   const content = await fetchWithSession(variantUrl, ses);
   let playlist = parseM3U8(content, variantUrl);
@@ -400,6 +430,13 @@ async function downloadHLSStream(
   if (!playlist.segments?.length) {
     throw new Error('No segments found in playlist');
   }
+  
+  // Calculate total duration from segments
+  let totalDuration = 0;
+  for (const segment of playlist.segments) {
+    totalDuration += segment.duration;
+  }
+  logDL(`Total video duration: ${totalDuration.toFixed(1)} seconds (${Math.floor(totalDuration / 60)}m ${Math.floor(totalDuration % 60)}s)`);
   
   const totalSegments = playlist.segments.length;
   logDL(`Downloading ${totalSegments} segments...`);
@@ -433,12 +470,27 @@ async function downloadHLSStream(
       downloadedBytes += data.length;
       
       const progress = 10 + Math.round((i + 1) / totalSegments * 70);
+      
+      // Estimate quality periodically during download
+      let estimatedQuality: string | undefined;
+      let bitrateMbps: number | undefined;
+      if (i > 0 && totalDuration > 0) {
+        const downloadedDuration = (i + 1) / totalSegments * totalDuration;
+        if (downloadedDuration > 0) {
+          const result = estimateQualityFromSize(downloadedBytes, downloadedDuration);
+          estimatedQuality = result.quality;
+          bitrateMbps = result.bitrateMbps;
+        }
+      }
+      
       onProgress({
         status: 'downloading',
         progress,
         currentSegment: i + 1,
         totalSegments,
-        downloadedBytes
+        downloadedBytes,
+        estimatedQuality,
+        bitrateMbps
       });
     } catch (err: any) {
       logDL(`Segment ${i} failed: ${err.message}`);
@@ -449,8 +501,12 @@ async function downloadHLSStream(
     throw new Error('Failed to download any segments');
   }
   
+  // Calculate final quality estimate
+  const { quality: finalQuality, bitrateMbps: finalBitrate } = estimateQualityFromSize(downloadedBytes, totalDuration);
+  logDL(`Final quality estimate: ${finalQuality} @ ${finalBitrate.toFixed(2)} Mbps`);
+  
   // Merge segments to temp TS file
-  onProgress({ status: 'merging', progress: 82, downloadedBytes });
+  onProgress({ status: 'merging', progress: 82, downloadedBytes, estimatedQuality: finalQuality, bitrateMbps: finalBitrate });
   logDL(`Merging ${segmentFiles.length} segments...`);
   
   const tempTsPath = path.join(tempDir, 'merged.ts');
@@ -486,7 +542,7 @@ async function downloadHLSStream(
   }
   
   // ALWAYS convert to MKV (bundled FFmpeg)
-  onProgress({ status: 'converting', progress: 90, downloadedBytes });
+  onProgress({ status: 'converting', progress: 90, downloadedBytes, estimatedQuality: finalQuality, bitrateMbps: finalBitrate });
   logDL('Converting to MKV using bundled FFmpeg...');
   
   // Ensure output path ends with .mkv
@@ -500,16 +556,18 @@ async function downloadHLSStream(
   try { fs.rmdirSync(tempDir, { recursive: true }); } catch (e) {}
   
   const finalSize = fs.statSync(finalPath).size;
-  logDL(`? COMPLETE: ${path.basename(finalPath)} (${(finalSize / 1024 / 1024).toFixed(2)} MB)`);
+  logDL(`? COMPLETE: ${path.basename(finalPath)} (${(finalSize / 1024 / 1024).toFixed(2)} MB) - ${finalQuality}`);
   
   onProgress({
     status: 'complete',
     progress: 100,
     downloadedBytes: finalSize,
-    filePath: finalPath
+    filePath: finalPath,
+    estimatedQuality: finalQuality,
+    bitrateMbps: finalBitrate
   });
   
-  return finalPath;
+  return { filePath: finalPath, estimatedQuality: finalQuality, bitrateMbps: finalBitrate };
 }
 
 export async function downloadStream(
@@ -517,13 +575,13 @@ export async function downloadStream(
   outputPath: string,
   onProgress: ProgressCallback,
   window?: BrowserWindow
-): Promise<string> {
+): Promise<{ filePath: string; estimatedQuality: string; bitrateMbps: number }> {
   currentDownload = new AbortController();
   
   try {
     const ses = window?.webContents.session || session.defaultSession;
-    const resultPath = await downloadHLSStream(variantUrl, outputPath, onProgress, ses);
-    return resultPath;
+    const result = await downloadHLSStream(variantUrl, outputPath, onProgress, ses);
+    return result;
   } catch (error: any) {
     logDL(`ERROR: ${error.message}`);
     onProgress({

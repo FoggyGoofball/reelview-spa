@@ -19,6 +19,7 @@ import Watch from './app/watch/page'
 import Search from './app/search/page'
 import Watchlist from './app/watchlist/page'
 import History from './app/history/page'
+import Downloads from './app/downloads/page' // New Downloads page import
 
 function ClientLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
@@ -60,6 +61,7 @@ function AppRoutes() {
       <Route path="/search" element={<Search />} />
       <Route path="/watchlist" element={<Watchlist />} />
       <Route path="/history" element={<History />} />
+      <Route path="/downloads" element={<Downloads />} /> {/* New Downloads route */}
       {/* Fallback for dynamic routes */}
       <Route path="*" element={<Home />} />
     </Routes>
