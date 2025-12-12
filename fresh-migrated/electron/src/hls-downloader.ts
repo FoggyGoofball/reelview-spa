@@ -87,6 +87,7 @@ try {
 
 // Store for captured streams
 let capturedStreams: Map<string, CapturedStream[]> = new Map();
+let capturedMasterPlaylists: Map<string, string> = new Map(); // NEW: Store master playlist URLs separately
 let currentDownload: AbortController | null = null;
 let downloadsList: DownloadItem[] = [];
 
@@ -217,14 +218,73 @@ function parseM3U8(content: string, baseUrl: string): HLSPlaylist {
   logDL(`First 20 lines of playlist:`);
   lines.slice(0, 20).forEach((line, i) => logDL(`  ${i}: ${line.substring(0, 100)}`));
   
-  const isMaster = lines.some(l => l.startsWith('#EXT-X-STREAM-INF') || l.startsWith('#EXT-X-MEDIA'));
+  const hasStreamInf = lines.some(l => l.startsWith('#EXT-X-STREAM-INF'));
   const hasSegments = lines.some(l => l.startsWith('#EXTINF'));
   
-  logDL(`Playlist analysis: isMaster=${isMaster}, hasSegments=${hasSegments}, lines=${lines.length}`);
+  logDL(`Playlist analysis: hasStreamInf=${hasStreamInf}, hasSegments=${hasSegments}, lines=${lines.length}`);
   
-  // If it has EXTINF tags, treat it as a media playlist even if it looks like master
+  // If it has #EXT-X-STREAM-INF, it's definitely a master playlist with variants
+  if (hasStreamInf) {
+    logDL(`MASTER playlist detected (has #EXT-X-STREAM-INF)`);
+    const variants: QualityVariant[] = [];
+    const seenUrls = new Set<string>();
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      if (line.startsWith('#EXT-X-STREAM-INF')) {
+        const bandwidthMatch = line.match(/BANDWIDTH[=:](\d+)/i);
+        const resolutionMatch = line.match(/RESOLUTION[=:]([0-9]+x[0-9]+)/i);
+        const fpsMatch = line.match(/FRAME-RATE[=:]([0-9.]+)/i);
+        
+        // Find the URL line
+        let urlLine = '';
+        for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+          const candidate = lines[j];
+          if (!candidate.startsWith('#') && candidate.length > 0) {
+            urlLine = candidate;
+            break;
+          }
+        }
+        
+        if (urlLine && !urlLine.includes('.key')) {
+          const variantUrl = urlLine.startsWith('http') ? urlLine : new URL(urlLine, baseUrl).href;
+          
+          if (!seenUrls.has(variantUrl)) {
+            seenUrls.add(variantUrl);
+            
+            const bandwidth = bandwidthMatch ? parseInt(bandwidthMatch[1]) : 0;
+            const resolution = resolutionMatch ? resolutionMatch[1] : undefined;
+            const fps = fpsMatch ? parseFloat(fpsMatch[1]) : undefined;
+            
+            let label = 'Stream';
+            if (resolution) {
+              const height = resolution.split('x')[1];
+              label = `${height}p`;
+            }
+            if (fps) {
+              label += `@${fps}fps`;
+            }
+            if (bandwidth > 0) {
+              const mbps = (bandwidth / 1000000).toFixed(1);
+              label += ` (${mbps}Mbps)`;
+            }
+            
+            variants.push({ url: variantUrl, bandwidth, resolution, label });
+            logDL(`Found variant: ${label}`);
+          }
+        }
+      }
+    }
+    
+    variants.sort((a, b) => b.bandwidth - a.bandwidth);
+    logDL(`Total variants found: ${variants.length}`);
+    return { type: 'master', baseUrl, variants };
+  }
+  
+  // If it has EXTINF tags, treat it as a media playlist
   if (hasSegments) {
-    logDL(`Treating as MEDIA playlist (has #EXTINF segments)`);
+    logDL(`MEDIA playlist detected (has #EXTINF segments)`);
     const segments: HLSSegment[] = [];
     let sequence = 0;
     
@@ -233,7 +293,6 @@ function parseM3U8(content: string, baseUrl: string): HLSPlaylist {
         const durationMatch = lines[i].match(/:([0-9.]+)/);
         const duration = durationMatch ? parseFloat(durationMatch[1]) : 0;
         
-        // Find URL line (next non-comment line)
         for (let j = i + 1; j < lines.length; j++) {
           if (!lines[j].startsWith('#')) {
             const urlLine = lines[j];
@@ -251,110 +310,7 @@ function parseM3U8(content: string, baseUrl: string): HLSPlaylist {
     return { type: 'media', baseUrl, segments };
   }
   
-  const variants: QualityVariant[] = [];
-  const seenUrls = new Set<string>();
-  
-  // Enhanced variant detection - look for all stream info lines
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    
-    // Match multiple variant tag patterns (more aggressive)
-    if (line.startsWith('#EXT-X-STREAM-INF') || 
-        line.startsWith('#EXT-X-I-FRAME-STREAM-INF') ||
-        (line.includes('BANDWIDTH') && line.includes('RESOLUTION'))) {
-      
-      // Extract bandwidth and resolution from the tag
-      const bandwidthMatch = line.match(/BANDWIDTH[=:](\d+)/i);
-      const resolutionMatch = line.match(/RESOLUTION[=:]([0-9]+x[0-9]+)/i);
-      const fpsMatch = line.match(/FRAME-RATE[=:]([0-9.]+)/i);
-      
-      // Find the URL line (skip any other tags)
-      let urlLine = '';
-      for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
-        const candidate = lines[j];
-        if (!candidate.startsWith('#') && candidate.length > 0) {
-          urlLine = candidate;
-          break;
-        }
-      }
-      
-      if (urlLine && !urlLine.includes('.key')) { // Skip key/subtitle files
-        const variantUrl = urlLine.startsWith('http') ? urlLine : new URL(urlLine, baseUrl).href;
-        
-        // Skip if we've seen this URL before
-        if (seenUrls.has(variantUrl)) {
-          continue;
-        }
-        seenUrls.add(variantUrl);
-        
-        const bandwidth = bandwidthMatch ? parseInt(bandwidthMatch[1]) : 0;
-        const resolution = resolutionMatch ? resolutionMatch[1] : undefined;
-        const fps = fpsMatch ? parseFloat(fpsMatch[1]) : undefined;
-        
-        // Create user-friendly label
-        let label = 'Stream';
-        if (resolution) {
-          const height = resolution.split('x')[1];
-          label = `${height}p`;
-        }
-        if (fps) {
-          label += `@${fps}fps`;
-        }
-        if (bandwidth > 0) {
-          const mbps = (bandwidth / 1000000).toFixed(1);
-          label += ` (${mbps}Mbps)`;
-        }
-        
-        if (!label || label === 'Stream') {
-          label = `Variant ${variants.length + 1}`;
-          if (bandwidth > 0) {
-            label += ` (${(bandwidth / 1000000).toFixed(1)}Mbps)`;
-          }
-        }
-        
-        variants.push({ url: variantUrl, bandwidth, resolution, label });
-        logDL(`Found variant: ${resolution || 'unknown'} @ ${bandwidth} bps - ${label}`);
-      }
-    }
-  }
-  
-  // If no variants found with above method, try even more aggressive search
-  if (variants.length === 0) {
-    logDL(`?? No variants found with aggressive search, trying ultra-aggressive...`);
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      
-      // Look for any line with BANDWIDTH
-      if (line.includes('BANDWIDTH')) {
-        const bandwidthMatch = line.match(/BANDWIDTH[=:]?(\d+)/i);
-        const bandwidth = bandwidthMatch ? parseInt(bandwidthMatch[1]) : 0;
-        
-        // Next non-comment line is URL
-        for (let j = i + 1; j < lines.length; j++) {
-          if (!lines[j].startsWith('#')) {
-            const urlLine = lines[j];
-            if (urlLine && !urlLine.includes('.key')) {
-              const variantUrl = urlLine.startsWith('http') ? urlLine : new URL(urlLine, baseUrl).href;
-              
-              if (!seenUrls.has(variantUrl)) {
-                seenUrls.add(variantUrl);
-                const label = bandwidth > 0 ? `${(bandwidth / 1000000).toFixed(1)}Mbps` : 'Variant';
-                variants.push({ url: variantUrl, bandwidth, resolution: undefined, label });
-                logDL(`Found variant (ultra-aggressive): ${label}`);
-              }
-            }
-            break;
-          }
-        }
-      }
-    }
-  }
-  
-  // Sort by bandwidth (highest first)
-  variants.sort((a, b) => b.bandwidth - a.bandwidth);
-  logDL(`Total variants found: ${variants.length}`);
-  return { type: 'master', baseUrl, variants };
+  throw new Error('Unknown playlist format');
 }
 
 // =====================================================
@@ -620,6 +576,17 @@ export function captureStream(url: string, content?: string, windowId: string = 
   const type = detectStreamType(url);
   if (type === 'unknown') return;
   
+  // Don't capture embed page URLs
+  const lowerUrl = url.toLowerCase();
+  if (lowerUrl.includes('/embed/') || 
+      lowerUrl.includes('vidsrc.net') || 
+      lowerUrl.includes('vidlink.pro') ||
+      lowerUrl.includes('.html') ||
+      lowerUrl.includes('.php')) {
+    logDL(`Skipping non-m3u8 URL: ${url.substring(0, 60)}`);
+    return;
+  }
+  
   logDL(`Captured: ${type} - ${url.substring(0, 80)}`);
   
   const stream: CapturedStream = { url, type, timestamp: Date.now(), content };
@@ -637,8 +604,36 @@ export function captureStream(url: string, content?: string, windowId: string = 
   }
 }
 
+// NEW: Store master playlist URL separately when detected
+export function captureMasterPlaylist(url: string, windowId: string = 'default'): void {
+  logDL(`Master playlist captured: ${url.substring(0, 80)}`);
+  capturedMasterPlaylists.set(windowId, url);
+}
+
 export function getCapturedStreams(windowId: string = 'default'): CapturedStream[] {
-  return capturedStreams.get(windowId) || [];
+  // Return master playlist first if available
+  const masterUrl = capturedMasterPlaylists.get(windowId);
+  const streams = capturedStreams.get(windowId) || [];
+  
+  // Filter out non-m3u8 URLs (like embed pages)
+  const filteredStreams = streams.filter(s => {
+    const url = s.url.toLowerCase();
+    // Only return actual m3u8 streams, not embed pages
+    return url.includes('.m3u8') || 
+           url.includes('/pl/') ||  // Common playlist path
+           url.includes('/hls/') ||
+           (!url.includes('/embed/') && !url.includes('vidsrc.net') && !url.includes('vidlink.pro'));
+  });
+  
+  if (masterUrl) {
+    // Check if master URL is already in streams
+    const hasMaster = filteredStreams.some(s => s.url === masterUrl);
+    if (!hasMaster) {
+      return [{ url: masterUrl, type: 'hls', timestamp: Date.now() }, ...filteredStreams];
+    }
+  }
+  
+  return filteredStreams;
 }
 
 export function clearCapturedStreams(windowId?: string): void {
@@ -655,21 +650,22 @@ export function setupNetworkInterception(window: BrowserWindow): void {
   
   logDL(`?? Setting up network interception for window ${windowId}`);
   
+  // Track which URLs we've already fetched to check for master playlist
+  const checkedUrls = new Set<string>();
+  
   // Capture ONLY actual m3u8 files, not embed pages or other URLs
   ses.webRequest.onBeforeRequest({ urls: ['*://*/*'] }, (details, callback) => {
     const url = details.url.toLowerCase();
     
-    // STRICT m3u8 detection - must have .m3u8 extension or be a manifest URL
     const isActualM3U8 = 
-      url.includes('.m3u8') ||                    // Standard HLS playlist file
-      url.includes('.m3u') ||                     // Legacy HLS
-      url.includes('/playlist.m3u') ||            // Playlist file
-      url.includes('/master.m3u') ||              // Master playlist file
-      url.includes('.mpd') ||                     // DASH manifest
-      (url.includes('/hls/') && !url.includes('.html')) ||  // HLS path
-      (url.includes('/manifest') && !url.includes('.html')); // Manifest path
+      url.includes('.m3u8') ||
+      url.includes('.m3u') ||
+      url.includes('/playlist.m3u') ||
+      url.includes('/master.m3u') ||
+      url.includes('.mpd') ||
+      (url.includes('/hls/') && !url.includes('.html')) ||
+      (url.includes('/manifest') && !url.includes('.html'));
     
-    // Exclude known non-playlist URLs
     const isExcluded = 
       url.includes('.css') || 
       url.includes('.js') || 
@@ -677,9 +673,9 @@ export function setupNetworkInterception(window: BrowserWindow): void {
       url.includes('.htm') ||
       url.includes('.php') ||
       url.includes('.asp') ||
-      url.includes('/embed/') ||                  // Embed pages
-      url.includes('vidsrc.net/embed') ||         // VidSrc embed
-      url.includes('vidlink.pro/embed') ||        // Vidlink embed
+      url.includes('/embed/') ||
+      url.includes('vidsrc.net/embed') ||
+      url.includes('vidlink.pro/embed') ||
       url.includes('imdb.com') ||
       url.includes('tmdb.org') ||
       url.includes('google') ||
@@ -690,17 +686,24 @@ export function setupNetworkInterception(window: BrowserWindow): void {
       logDL(`? M3U8 URL captured: ${url.substring(0, 150)}`);
       captureStream(details.url, undefined, windowId);
       
-      try {
-        const streams = getCapturedStreams(windowId);
-        logDL(`?? Total streams captured: ${streams.length}`);
-        window.webContents.send('stream-detected', {
-          url: details.url,
-          type: 'hls',
-          timestamp: Date.now()
-        });
-      } catch (e) {
-        logDL(`Error sending stream-detected: ${e}`);
+      // Check if this might be a master playlist (async, don't block request)
+      if (!checkedUrls.has(details.url)) {
+        checkedUrls.add(details.url);
+        
+        // Fetch the playlist to see if it has variants
+        fetchWithSession(details.url, ses).then(content => {
+          if (content.includes('#EXT-X-STREAM-INF')) {
+            logDL(`? Master playlist confirmed: ${details.url.substring(0, 80)}`);
+            captureMasterPlaylist(details.url, windowId);
+          }
+        }).catch(() => {});
       }
+      
+      window.webContents.send('stream-detected', {
+        url: details.url,
+        type: 'hls',
+        timestamp: Date.now()
+      });
     }
     
     callback({ cancel: false });
@@ -717,10 +720,9 @@ export function setupNetworkInterception(window: BrowserWindow): void {
       ctValue.includes('audio/mpegurl')
     )) {
       const url = details.url.toLowerCase();
-      // Skip if already captured or is an embed page
       if (!url.includes('/embed/') && !url.includes('.html')) {
         logDL(`? M3U8 by content-type: ${details.url.substring(0, 150)}`);
-        captureStream(details.url, undefined, String(window.id));
+        captureStream(details.url, undefined, windowId);
         
         window.webContents.send('stream-detected', {
           url: details.url,
