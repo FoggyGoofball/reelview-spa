@@ -41,7 +41,10 @@ public class ReelViewWebViewClient extends BridgeWebViewClient {
         return lowerUrl.contains(".m3u8") ||
                lowerUrl.contains("/hls/") ||
                lowerUrl.contains("/playlist") ||
-               lowerUrl.contains("/manifest");
+               lowerUrl.contains("/manifest") ||
+               lowerUrl.contains("/pl/") ||           // Common playlist path
+               lowerUrl.contains("/master.") ||       // Master playlist
+               lowerUrl.contains("stream") && lowerUrl.contains("m3u");  // Various stream patterns
     }
     
     /**
