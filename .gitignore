@@ -1,0 +1,45 @@
+﻿# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+www/
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.pem
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# Mobile/Native
+android/.gradle/
+android/local.properties
+android/app/debug/
+android/app/release/
+
+# OS
+Thumbs.db
+
+# Testing
+coverage/
+
+# Misc
+*.jks
+
+.vs/
