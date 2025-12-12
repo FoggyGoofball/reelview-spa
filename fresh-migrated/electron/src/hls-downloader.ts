@@ -1,0 +1,738 @@
+/**
+ * Stream Downloader Module
+ * 
+ * Downloads HLS streams using Electron's session for authentication
+ * Converts to MKV using FFmpeg for broad compatibility
+ */
+
+import * as fs from 'fs';
+import * as path from 'path';
+import { URL } from 'url';
+import { app, BrowserWindow, net, session } from 'electron';
+import * as os from 'os';
+import * as zlib from 'zlib';
+import { getFFmpegPath, hasFFmpeg, convertToMKV, logFFmpeg } from './ffmpeg-manager';
+
+export type StreamType = 'hls' | 'mp4' | 'dash' | 'unknown';
+
+export interface CapturedStream {
+  url: string;
+  type: StreamType;
+  timestamp: number;
+  content?: string;
+}
+
+export interface QualityVariant {
+  url: string;
+  bandwidth: number;
+  resolution?: string;
+  label: string;
+}
+
+export interface HLSSegment {
+  uri: string;
+  duration: number;
+  sequence: number;
+}
+
+export interface HLSPlaylist {
+  type: 'master' | 'media';
+  baseUrl: string;
+  segments?: HLSSegment[];
+  variants?: QualityVariant[];
+}
+
+export interface DownloadProgress {
+  status: 'idle' | 'fetching' | 'parsing' | 'downloading' | 'merging' | 'converting' | 'complete' | 'error' | 'cancelled';
+  progress: number;
+  currentSegment?: number;
+  totalSegments?: number;
+  downloadedBytes?: number;
+  error?: string;
+  filePath?: string;
+}
+
+export interface DownloadItem {
+  id: string;
+  filename: string;
+  url: string;
+  quality?: string;
+  status: DownloadProgress['status'];
+  progress: number;
+  downloadedBytes: number;
+  filePath?: string;
+  error?: string;
+  startTime: number;
+}
+
+type ProgressCallback = (progress: DownloadProgress) => void;
+
+// =====================================================
+// FILE LOGGING
+// =====================================================
+const logFile = path.join(os.homedir(), 'reelview-downloader.log');
+
+function logDL(msg: string) {
+  const line = `[${new Date().toISOString()}] ${msg}\n`;
+  try {
+    fs.appendFileSync(logFile, line);
+  } catch (e) {}
+  console.log('[DL]', msg);
+}
+
+// Start logging
+try {
+  fs.writeFileSync(logFile, `=== DOWNLOADER STARTED ${new Date().toISOString()} ===\n`);
+} catch (e) {}
+
+// Store for captured streams
+let capturedStreams: Map<string, CapturedStream[]> = new Map();
+let currentDownload: AbortController | null = null;
+let downloadsList: DownloadItem[] = [];
+
+function detectStreamType(url: string): StreamType {
+  const lowerUrl = url.toLowerCase();
+  if (lowerUrl.includes('.m3u8')) return 'hls';
+  if (lowerUrl.includes('.mpd')) return 'dash';
+  if (lowerUrl.includes('.mp4') || lowerUrl.includes('googlevideo')) return 'mp4';
+  return 'unknown';
+}
+
+// =====================================================
+// FFMPEG HANDLING - Now uses ffmpeg-manager
+// =====================================================
+// Conversion is handled by ffmpeg-manager.ts which uses bundled FFmpeg
+
+// =====================================================
+// NETWORK FETCHING
+// =====================================================
+
+function fetchWithSession(url: string, ses: Electron.Session): Promise<string> {
+  return new Promise((resolve, reject) => {
+    logDL(`fetchWithSession: ${url.substring(0, 100)}`);
+    
+    const request = net.request({
+      url,
+      session: ses,
+      useSessionCookies: true,
+    });
+    
+    request.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    request.setHeader('Accept', '*/*');
+    request.setHeader('Accept-Encoding', 'gzip, deflate');
+    
+    const chunks: Buffer[] = [];
+    
+    request.on('response', (response) => {
+      logDL(`Response status: ${response.statusCode}`);
+      
+      if (response.statusCode === 301 || response.statusCode === 302) {
+        const location = response.headers['location'];
+        if (location) {
+          fetchWithSession(Array.isArray(location) ? location[0] : location, ses)
+            .then(resolve)
+            .catch(reject);
+          return;
+        }
+      }
+      
+      response.on('data', (chunk) => chunks.push(chunk));
+      
+      response.on('end', () => {
+        const buffer = Buffer.concat(chunks);
+        const encoding = response.headers['content-encoding'];
+        
+        if (encoding === 'gzip' || (Array.isArray(encoding) && encoding.includes('gzip'))) {
+          try {
+            const decompressed = zlib.gunzipSync(buffer);
+            resolve(decompressed.toString('utf-8'));
+          } catch (e) {
+            resolve(buffer.toString('utf-8'));
+          }
+        } else {
+          resolve(buffer.toString('utf-8'));
+        }
+      });
+      
+      response.on('error', reject);
+    });
+    
+    request.on('error', reject);
+    request.end();
+  });
+}
+
+function downloadWithSession(url: string, ses: Electron.Session): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const request = net.request({
+      url,
+      session: ses,
+      useSessionCookies: true,
+    });
+    
+    request.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+    request.setHeader('Accept', '*/*');
+    
+    const chunks: Buffer[] = [];
+    
+    request.on('response', (response) => {
+      if (response.statusCode === 301 || response.statusCode === 302) {
+        const location = response.headers['location'];
+        if (location) {
+          downloadWithSession(Array.isArray(location) ? location[0] : location, ses)
+            .then(resolve)
+            .catch(reject);
+          return;
+        }
+      }
+      
+      response.on('data', (chunk) => chunks.push(chunk));
+      response.on('end', () => resolve(Buffer.concat(chunks)));
+      response.on('error', reject);
+    });
+    
+    request.on('error', reject);
+    request.end();
+  });
+}
+
+// =====================================================
+// M3U8 PARSING
+// =====================================================
+
+function parseM3U8(content: string, baseUrl: string): HLSPlaylist {
+  logDL(`parseM3U8: ${content.length} bytes from ${baseUrl.substring(0, 80)}`);
+  
+  if (content.includes('<!DOCTYPE') || content.includes('<html')) {
+    throw new Error('Blocked by Cloudflare - got HTML instead of m3u8');
+  }
+  
+  if (!content.includes('#EXTM3U')) {
+    throw new Error('Invalid m3u8 format');
+  }
+  
+  const lines = content.split('\n').map(l => l.trim()).filter(l => l);
+  
+  // Log first 20 lines to understand format
+  logDL(`First 20 lines of playlist:`);
+  lines.slice(0, 20).forEach((line, i) => logDL(`  ${i}: ${line.substring(0, 100)}`));
+  
+  const isMaster = lines.some(l => l.startsWith('#EXT-X-STREAM-INF') || l.startsWith('#EXT-X-MEDIA'));
+  const hasSegments = lines.some(l => l.startsWith('#EXTINF'));
+  
+  logDL(`Playlist analysis: isMaster=${isMaster}, hasSegments=${hasSegments}, lines=${lines.length}`);
+  
+  // If it has EXTINF tags, treat it as a media playlist even if it looks like master
+  if (hasSegments) {
+    logDL(`Treating as MEDIA playlist (has #EXTINF segments)`);
+    const segments: HLSSegment[] = [];
+    let sequence = 0;
+    
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].startsWith('#EXTINF')) {
+        const durationMatch = lines[i].match(/:([0-9.]+)/);
+        const duration = durationMatch ? parseFloat(durationMatch[1]) : 0;
+        
+        // Find URL line (next non-comment line)
+        for (let j = i + 1; j < lines.length; j++) {
+          if (!lines[j].startsWith('#')) {
+            const urlLine = lines[j];
+            if (urlLine && !urlLine.includes('.key')) {
+              const segmentUrl = urlLine.startsWith('http') ? urlLine : new URL(urlLine, baseUrl).href;
+              segments.push({ uri: segmentUrl, duration, sequence: sequence++ });
+            }
+            break;
+          }
+        }
+      }
+    }
+    
+    logDL(`Found ${segments.length} segments`);
+    return { type: 'media', baseUrl, segments };
+  }
+  
+  const variants: QualityVariant[] = [];
+  const seenUrls = new Set<string>();
+  
+  // Enhanced variant detection - look for all stream info lines
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Match multiple variant tag patterns (more aggressive)
+    if (line.startsWith('#EXT-X-STREAM-INF') || 
+        line.startsWith('#EXT-X-I-FRAME-STREAM-INF') ||
+        (line.includes('BANDWIDTH') && line.includes('RESOLUTION'))) {
+      
+      // Extract bandwidth and resolution from the tag
+      const bandwidthMatch = line.match(/BANDWIDTH[=:](\d+)/i);
+      const resolutionMatch = line.match(/RESOLUTION[=:]([0-9]+x[0-9]+)/i);
+      const fpsMatch = line.match(/FRAME-RATE[=:]([0-9.]+)/i);
+      
+      // Find the URL line (skip any other tags)
+      let urlLine = '';
+      for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+        const candidate = lines[j];
+        if (!candidate.startsWith('#') && candidate.length > 0) {
+          urlLine = candidate;
+          break;
+        }
+      }
+      
+      if (urlLine && !urlLine.includes('.key')) { // Skip key/subtitle files
+        const variantUrl = urlLine.startsWith('http') ? urlLine : new URL(urlLine, baseUrl).href;
+        
+        // Skip if we've seen this URL before
+        if (seenUrls.has(variantUrl)) {
+          continue;
+        }
+        seenUrls.add(variantUrl);
+        
+        const bandwidth = bandwidthMatch ? parseInt(bandwidthMatch[1]) : 0;
+        const resolution = resolutionMatch ? resolutionMatch[1] : undefined;
+        const fps = fpsMatch ? parseFloat(fpsMatch[1]) : undefined;
+        
+        // Create user-friendly label
+        let label = 'Stream';
+        if (resolution) {
+          const height = resolution.split('x')[1];
+          label = `${height}p`;
+        }
+        if (fps) {
+          label += `@${fps}fps`;
+        }
+        if (bandwidth > 0) {
+          const mbps = (bandwidth / 1000000).toFixed(1);
+          label += ` (${mbps}Mbps)`;
+        }
+        
+        if (!label || label === 'Stream') {
+          label = `Variant ${variants.length + 1}`;
+          if (bandwidth > 0) {
+            label += ` (${(bandwidth / 1000000).toFixed(1)}Mbps)`;
+          }
+        }
+        
+        variants.push({ url: variantUrl, bandwidth, resolution, label });
+        logDL(`Found variant: ${resolution || 'unknown'} @ ${bandwidth} bps - ${label}`);
+      }
+    }
+  }
+  
+  // If no variants found with above method, try even more aggressive search
+  if (variants.length === 0) {
+    logDL(`?? No variants found with aggressive search, trying ultra-aggressive...`);
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      // Look for any line with BANDWIDTH
+      if (line.includes('BANDWIDTH')) {
+        const bandwidthMatch = line.match(/BANDWIDTH[=:]?(\d+)/i);
+        const bandwidth = bandwidthMatch ? parseInt(bandwidthMatch[1]) : 0;
+        
+        // Next non-comment line is URL
+        for (let j = i + 1; j < lines.length; j++) {
+          if (!lines[j].startsWith('#')) {
+            const urlLine = lines[j];
+            if (urlLine && !urlLine.includes('.key')) {
+              const variantUrl = urlLine.startsWith('http') ? urlLine : new URL(urlLine, baseUrl).href;
+              
+              if (!seenUrls.has(variantUrl)) {
+                seenUrls.add(variantUrl);
+                const label = bandwidth > 0 ? `${(bandwidth / 1000000).toFixed(1)}Mbps` : 'Variant';
+                variants.push({ url: variantUrl, bandwidth, resolution: undefined, label });
+                logDL(`Found variant (ultra-aggressive): ${label}`);
+              }
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+  
+  // Sort by bandwidth (highest first)
+  variants.sort((a, b) => b.bandwidth - a.bandwidth);
+  logDL(`Total variants found: ${variants.length}`);
+  return { type: 'master', baseUrl, variants };
+}
+
+// =====================================================
+// QUALITY VARIANTS
+// =====================================================
+
+/**
+ * Get available quality variants for a stream
+ * Always fetches fresh from the master playlist
+ */
+export async function getQualityVariants(
+  m3u8Url: string,
+  window: BrowserWindow
+): Promise<QualityVariant[]> {
+  const ses = window.webContents.session;
+  
+  logDL(`\n========== GET QUALITY VARIANTS ==========`);
+  logDL(`Input URL: ${m3u8Url.substring(0, 120)}`);
+  
+  try {
+    const content = await fetchWithSession(m3u8Url, ses);
+    logDL(`? Fetched m3u8 content: ${content.length} bytes`);
+    
+    if (content.includes('<html') || content.includes('<!DOCTYPE')) {
+      logDL(`? Got HTML instead of m3u8 - content is blocked/invalid`);
+      logDL(`Content: ${content.substring(0, 200)}`);
+      throw new Error('Got HTML instead of m3u8 - Cloudflare or access issue');
+    }
+    
+    const playlist = parseM3U8(content, m3u8Url);
+    
+    if (playlist.type === 'master' && playlist.variants?.length) {
+      logDL(`? Master playlist - found ${playlist.variants.length} variants:`);
+      playlist.variants.forEach((v, i) => {
+        logDL(`  [${i}] ${v.label}`);
+        logDL(`      URL: ${v.url.substring(0, 100)}`);
+      });
+      return playlist.variants;
+    }
+    
+    logDL(`Single quality stream - will use as-is`);
+    return [{
+      url: m3u8Url,
+      bandwidth: 0,
+      resolution: undefined,
+      label: 'Default Quality'
+    }];
+  } catch (error: any) {
+    logDL(`? Error: ${error.message}`);
+    logDL(`Falling back to original URL`);
+    return [{
+      url: m3u8Url,
+      bandwidth: 0,
+      resolution: undefined,
+      label: 'Default Quality'
+    }];
+  }
+}
+
+// =====================================================
+// DOWNLOAD FUNCTION
+// =====================================================
+
+async function downloadHLSStream(
+  variantUrl: string,
+  outputPath: string,
+  onProgress: ProgressCallback,
+  ses: Electron.Session
+): Promise<string> {
+  onProgress({ status: 'parsing', progress: 5 });
+  
+  logDL(`\n========== STARTING DOWNLOAD ==========`);
+  logDL(`URL: ${variantUrl.substring(0, 100)}`);
+  logDL(`Output: ${outputPath}`);
+  
+  const content = await fetchWithSession(variantUrl, ses);
+  let playlist = parseM3U8(content, variantUrl);
+  
+  // Handle master playlist
+  if (playlist.type === 'master' && playlist.variants?.length) {
+    const bestVariant = playlist.variants[0];
+    logDL(`Master playlist - using: ${bestVariant.label}`);
+    const variantContent = await fetchWithSession(bestVariant.url, ses);
+    playlist = parseM3U8(variantContent, bestVariant.url);
+  }
+  
+  if (!playlist.segments?.length) {
+    throw new Error('No segments found in playlist');
+  }
+  
+  const totalSegments = playlist.segments.length;
+  logDL(`Downloading ${totalSegments} segments...`);
+  
+  onProgress({
+    status: 'downloading',
+    progress: 10,
+    currentSegment: 0,
+    totalSegments,
+    downloadedBytes: 0
+  });
+  
+  const tempDir = path.join(app.getPath('temp'), `reelview-${Date.now()}`);
+  fs.mkdirSync(tempDir, { recursive: true });
+  
+  const segmentFiles: string[] = [];
+  let downloadedBytes = 0;
+  
+  for (let i = 0; i < playlist.segments.length; i++) {
+    if (currentDownload?.signal.aborted) {
+      throw new Error('Download cancelled');
+    }
+    
+    const segment = playlist.segments[i];
+    const segmentPath = path.join(tempDir, `seg_${String(i).padStart(6, '0')}.ts`);
+    
+    try {
+      const data = await downloadWithSession(segment.uri, ses);
+      fs.writeFileSync(segmentPath, data);
+      segmentFiles.push(segmentPath);
+      downloadedBytes += data.length;
+      
+      const progress = 10 + Math.round((i + 1) / totalSegments * 70);
+      onProgress({
+        status: 'downloading',
+        progress,
+        currentSegment: i + 1,
+        totalSegments,
+        downloadedBytes
+      });
+    } catch (err: any) {
+      logDL(`Segment ${i} failed: ${err.message}`);
+    }
+  }
+  
+  if (segmentFiles.length === 0) {
+    throw new Error('Failed to download any segments');
+  }
+  
+  // Merge segments to temp TS file
+  onProgress({ status: 'merging', progress: 82, downloadedBytes });
+  logDL(`Merging ${segmentFiles.length} segments...`);
+  
+  const tempTsPath = path.join(tempDir, 'merged.ts');
+  const outputStream = fs.createWriteStream(tempTsPath);
+  
+  await new Promise<void>((resolve, reject) => {
+    let fileIndex = 0;
+    
+    const writeNext = () => {
+      if (fileIndex >= segmentFiles.length) {
+        outputStream.end();
+        return;
+      }
+      
+      const segmentPath = segmentFiles[fileIndex++];
+      const data = fs.readFileSync(segmentPath);
+      
+      if (!outputStream.write(data)) {
+        outputStream.once('drain', writeNext);
+      } else {
+        writeNext();
+      }
+    };
+    
+    outputStream.on('finish', resolve);
+    outputStream.on('error', reject);
+    writeNext();
+  });
+  
+  // Cleanup segment files
+  for (const file of segmentFiles) {
+    try { fs.unlinkSync(file); } catch (e) {}
+  }
+  
+  // ALWAYS convert to MKV (bundled FFmpeg)
+  onProgress({ status: 'converting', progress: 90, downloadedBytes });
+  logDL('Converting to MKV using bundled FFmpeg...');
+  
+  // Ensure output path ends with .mkv
+  const mkvPath = outputPath.replace(/\.[^.]+$/, '.mkv');
+  
+  const finalPath = await convertToMKV(tempTsPath, mkvPath, (status) => {
+    logDL(`Conversion: ${status}`);
+  });
+  
+  // Cleanup temp directory
+  try { fs.rmdirSync(tempDir, { recursive: true }); } catch (e) {}
+  
+  const finalSize = fs.statSync(finalPath).size;
+  logDL(`? COMPLETE: ${path.basename(finalPath)} (${(finalSize / 1024 / 1024).toFixed(2)} MB)`);
+  
+  onProgress({
+    status: 'complete',
+    progress: 100,
+    downloadedBytes: finalSize,
+    filePath: finalPath
+  });
+  
+  return finalPath;
+}
+
+export async function downloadStream(
+  variantUrl: string,
+  outputPath: string,
+  onProgress: ProgressCallback,
+  window?: BrowserWindow
+): Promise<string> {
+  currentDownload = new AbortController();
+  
+  try {
+    const ses = window?.webContents.session || session.defaultSession;
+    const resultPath = await downloadHLSStream(variantUrl, outputPath, onProgress, ses);
+    return resultPath;
+  } catch (error: any) {
+    logDL(`ERROR: ${error.message}`);
+    onProgress({
+      status: 'error',
+      progress: 0,
+      error: error.message
+    });
+    throw error;
+  } finally {
+    currentDownload = null;
+  }
+}
+
+export function cancelDownload(): void {
+  if (currentDownload) {
+    currentDownload.abort();
+    currentDownload = null;
+  }
+}
+
+// Downloads list management
+export function getDownloadsList(): DownloadItem[] {
+  return downloadsList;
+}
+
+export function addDownload(item: DownloadItem): void {
+  downloadsList.unshift(item);
+  if (downloadsList.length > 50) downloadsList.pop();
+}
+
+export function updateDownload(id: string, update: Partial<DownloadItem>): void {
+  const idx = downloadsList.findIndex(d => d.id === id);
+  if (idx >= 0) {
+    downloadsList[idx] = { ...downloadsList[idx], ...update };
+  }
+}
+
+export function removeDownload(id: string): void {
+  downloadsList = downloadsList.filter(d => d.id !== id);
+}
+
+export function clearCompletedDownloads(): void {
+  downloadsList = downloadsList.filter(d => 
+    d.status !== 'complete' && d.status !== 'error' && d.status !== 'cancelled'
+  );
+}
+
+// Stream capture
+export function captureStream(url: string, content?: string, windowId: string = 'default'): void {
+  const type = detectStreamType(url);
+  if (type === 'unknown') return;
+  
+  logDL(`Captured: ${type} - ${url.substring(0, 80)}`);
+  
+  const stream: CapturedStream = { url, type, timestamp: Date.now(), content };
+  
+  if (!capturedStreams.has(windowId)) {
+    capturedStreams.set(windowId, []);
+  }
+  
+  const streams = capturedStreams.get(windowId)!;
+  
+  // Avoid duplicates
+  if (!streams.some(s => s.url === url)) {
+    streams.unshift(stream);
+    if (streams.length > 10) streams.pop();
+  }
+}
+
+export function getCapturedStreams(windowId: string = 'default'): CapturedStream[] {
+  return capturedStreams.get(windowId) || [];
+}
+
+export function clearCapturedStreams(windowId?: string): void {
+  if (windowId) {
+    capturedStreams.delete(windowId);
+  } else {
+    capturedStreams.clear();
+  }
+}
+
+export function setupNetworkInterception(window: BrowserWindow): void {
+  const ses = window.webContents.session;
+  const windowId = String(window.id);
+  
+  logDL(`?? Setting up network interception for window ${windowId}`);
+  
+  // Capture ONLY actual m3u8 files, not embed pages or other URLs
+  ses.webRequest.onBeforeRequest({ urls: ['*://*/*'] }, (details, callback) => {
+    const url = details.url.toLowerCase();
+    
+    // STRICT m3u8 detection - must have .m3u8 extension or be a manifest URL
+    const isActualM3U8 = 
+      url.includes('.m3u8') ||                    // Standard HLS playlist file
+      url.includes('.m3u') ||                     // Legacy HLS
+      url.includes('/playlist.m3u') ||            // Playlist file
+      url.includes('/master.m3u') ||              // Master playlist file
+      url.includes('.mpd') ||                     // DASH manifest
+      (url.includes('/hls/') && !url.includes('.html')) ||  // HLS path
+      (url.includes('/manifest') && !url.includes('.html')); // Manifest path
+    
+    // Exclude known non-playlist URLs
+    const isExcluded = 
+      url.includes('.css') || 
+      url.includes('.js') || 
+      url.includes('.html') ||
+      url.includes('.htm') ||
+      url.includes('.php') ||
+      url.includes('.asp') ||
+      url.includes('/embed/') ||                  // Embed pages
+      url.includes('vidsrc.net/embed') ||         // VidSrc embed
+      url.includes('vidlink.pro/embed') ||        // Vidlink embed
+      url.includes('imdb.com') ||
+      url.includes('tmdb.org') ||
+      url.includes('google') ||
+      url.includes('facebook') ||
+      url.includes('twitter');
+    
+    if (isActualM3U8 && !isExcluded) {
+      logDL(`? M3U8 URL captured: ${url.substring(0, 150)}`);
+      captureStream(details.url, undefined, windowId);
+      
+      try {
+        const streams = getCapturedStreams(windowId);
+        logDL(`?? Total streams captured: ${streams.length}`);
+        window.webContents.send('stream-detected', {
+          url: details.url,
+          type: 'hls',
+          timestamp: Date.now()
+        });
+      } catch (e) {
+        logDL(`Error sending stream-detected: ${e}`);
+      }
+    }
+    
+    callback({ cancel: false });
+  });
+  
+  // Also intercept responses to catch m3u8 content type
+  ses.webRequest.onHeadersReceived({ urls: ['*://*/*'] }, (details, callback) => {
+    const contentType = details.responseHeaders?.['content-type'] || details.responseHeaders?.['Content-Type'];
+    const ctValue = Array.isArray(contentType) ? contentType[0] : contentType;
+    
+    if (ctValue && (
+      ctValue.includes('application/vnd.apple.mpegurl') ||
+      ctValue.includes('application/x-mpegURL') ||
+      ctValue.includes('audio/mpegurl')
+    )) {
+      const url = details.url.toLowerCase();
+      // Skip if already captured or is an embed page
+      if (!url.includes('/embed/') && !url.includes('.html')) {
+        logDL(`? M3U8 by content-type: ${details.url.substring(0, 150)}`);
+        captureStream(details.url, undefined, String(window.id));
+        
+        window.webContents.send('stream-detected', {
+          url: details.url,
+          type: 'hls',
+          timestamp: Date.now()
+        });
+      }
+    }
+    
+    callback({ responseHeaders: details.responseHeaders });
+  });
+  
+  console.log(`? Network interception enabled for window ${windowId}`);
+  logDL(`? Network interception enabled`);
+}
