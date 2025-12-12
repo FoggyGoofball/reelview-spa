@@ -13,13 +13,23 @@ permissions:
   id-token: write
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: cd spa && npm install
+        
+      - name: Build for GitHub Pages
+        run: cd spa && VITE_BASE_URL=/reelview-spa/ npm run build
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
