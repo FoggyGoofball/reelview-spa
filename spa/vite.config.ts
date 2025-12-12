@@ -11,7 +11,8 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
   },
-  base: './',
+  // For GitHub Pages deployment - use repo name as base
+  base: '/reelview-spa/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
