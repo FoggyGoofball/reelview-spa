@@ -134,7 +134,7 @@ export default function DownloadsPage() {
 
   const handleRemove = async (id: string) => {
     const api = (window as any).electronDownload;
-    if api) {
+    if (api) {
       await api.removeDownload(id);
     }
   };

@@ -1,6 +1,7 @@
 import React, { useEffect, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { App as CapacitorApp } from '@capacitor/app'
+import { Capacitor } from '@capacitor/core'
 
 // Import layout and context providers
 import { Header } from '@/components/layout/header'
@@ -9,6 +10,11 @@ import { WatchlistProvider } from '@/context/watchlist-context'
 import { DismissedProvider } from '@/context/dismissed-context'
 import { SourceProvider } from '@/context/source-context'
 import { LoadingBar } from '@/components/layout/loading-bar'
+
+// Import ad-blocking and stream detection systems
+import { initializeAdCapture } from '@/lib/ad-capture'
+import { initializeOverlayNeutralizer } from '@/lib/overlay-neutralizer'
+import { initializeAndroidStreamDetector } from '@/lib/android-stream-detector'
 
 // Import all page components
 import Home from './app/page'
@@ -19,7 +25,30 @@ import Watch from './app/watch/page'
 import Search from './app/search/page'
 import Watchlist from './app/watchlist/page'
 import History from './app/history/page'
-import Downloads from './app/downloads/page' // New Downloads page import
+import Downloads from './pages/Downloads'
+
+// Initialize ad-blocking and stream detection systems
+// IMPORTANT: enableLogging MUST be true for systems to work properly
+initializeAdCapture({
+  enableLogging: true,
+  closureDelay: 600,
+  muteAudio: true,
+  maxConcurrentAds: 5,
+})
+
+initializeOverlayNeutralizer({
+  enableLogging: true,
+  playerZIndex: 9999,
+  interceptorZIndex: -1,
+  watchSubtree: true,
+  watchAttributes: true,
+  debounceMs: 50,
+})
+
+// Initialize Android stream detector (only on Android)
+if (typeof window !== 'undefined' && Capacitor.getPlatform() === 'android') {
+  initializeAndroidStreamDetector()
+}
 
 function ClientLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
@@ -61,7 +90,7 @@ function AppRoutes() {
       <Route path="/search" element={<Search />} />
       <Route path="/watchlist" element={<Watchlist />} />
       <Route path="/history" element={<History />} />
-      <Route path="/downloads" element={<Downloads />} /> {/* New Downloads route */}
+      <Route path="/downloads" element={<Downloads />} />
       {/* Fallback for dynamic routes */}
       <Route path="*" element={<Home />} />
     </Routes>
