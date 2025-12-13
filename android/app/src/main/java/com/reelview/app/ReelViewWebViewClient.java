@@ -23,15 +23,10 @@ public class ReelViewWebViewClient extends BridgeWebViewClient {
         
         Log.d(TAG, "shouldInterceptRequest called for: " + url.substring(0, Math.min(100, url.length())));
         
-        // Capture HLS streams
+        // Capture HLS streams by URL pattern
         if (isHLSStream(url)) {
-            Log.d(TAG, "? HLS stream MATCHED: " + url.substring(0, Math.min(100, url.length())));
+            Log.d(TAG, "? HLS stream MATCHED (URL pattern): " + url.substring(0, Math.min(100, url.length())));
             captureStreamUrl(url);
-        } else {
-            // Log non-HLS for debugging - show what we ARE intercepting
-            if (url.toLowerCase().contains("vidsrc") || url.toLowerCase().contains("vidlink") || url.toLowerCase().contains("mostream")) {
-                Log.d(TAG, "?? Player iframe URL: " + url.substring(0, Math.min(120, url.length())));
-            }
         }
         
         return super.shouldInterceptRequest(view, request);
@@ -78,11 +73,16 @@ public class ReelViewWebViewClient extends BridgeWebViewClient {
     public void onPageFinished(WebView view, String url) {
         super.onPageFinished(view, url);
         
+        // Inject JavaScript to capture streams at the network level
+        // This catches streams that shouldInterceptRequest might miss
+        if (url != null && url.contains("/watch")) {
+            injectStreamCaptureScript(view);
+        }
+        
         MainActivity activity = (MainActivity) bridge.getActivity();
         if (activity == null) return;
 
         // On watch pages, inject a smart listener to disable timers on first interaction.
-        // On other pages, we do not throttle timers.
         if (url != null && url.contains("/watch")) {
             String smartThrottleJs = 
                 "(function() { " +
@@ -94,11 +94,67 @@ public class ReelViewWebViewClient extends BridgeWebViewClient {
                 "           console.log('Executing full timer block.'); " +
                 "           window.setInterval = function() {}; " +
                 "           window.setTimeout = function() {}; " +
-                "       }, 500); " + // 500ms DELAY TO ALLOW POPUP SCRIPT TO FIRE
+                "       }, 500); " +
                 "   }; " +
                 "   document.addEventListener('click', disableTimersWithDelay, { once: true }); " +
                 "})();";
             view.evaluateJavascript(smartThrottleJs, null);
         } 
+    }
+    
+    /**
+     * Inject JavaScript to capture streams via Fetch/XHR interception
+     * This is the third capture method - catches streams shouldInterceptRequest misses
+     */
+    private void injectStreamCaptureScript(WebView view) {
+        String captureScript = 
+            "(function() {" +
+            "  if (window.__hlsCaptureInstalled) return;" +
+            "  window.__hlsCaptureInstalled = true;" +
+            "" +
+            "  function captureStream(url) {" +
+            "    if (url && (url.includes('.m3u8') || url.includes('/pl/') || url.includes('/hls/') || url.includes('/manifest'))) {" +
+            "      console.log('[HLS-CAPTURE-JS] Captured:', url.substring(0, 100));" +
+            "      if (window.Capacitor) {" +
+            "        window.Capacitor.Plugins.HLSDownloader.captureStream({ url: url }).catch(() => {});" +
+            "      }" +
+            "    }" +
+            "  }" +
+            "" +
+            "  // Capture fetch requests" +
+            "  const originalFetch = window.fetch;" +
+            "  window.fetch = function(...args) {" +
+            "    const url = args[0];" +
+            "    const urlStr = typeof url === 'string' ? url : url.url;" +
+            "    captureStream(urlStr);" +
+            "    return originalFetch.apply(this, args);" +
+            "  };" +
+            "" +
+            "  // Capture XMLHttpRequest" +
+            "  const originalXhrOpen = XMLHttpRequest.prototype.open;" +
+            "  XMLHttpRequest.prototype.open = function(method, url, ...args) {" +
+            "    captureStream(url);" +
+            "    return originalXhrOpen.apply(this, [method, url, ...args]);" +
+            "  };" +
+            "" +
+            "  // Capture src attribute changes on video/audio elements" +
+            "  const observer = new MutationObserver(function(mutations) {" +
+            "    mutations.forEach(function(mutation) {" +
+            "      if (mutation.target.tagName === 'SOURCE') {" +
+            "        captureStream(mutation.target.src);" +
+            "      }" +
+            "    });" +
+            "  });" +
+            "" +
+            "  observer.observe(document, { subtree: true, attributes: true, attributeFilter: ['src'] });" +
+            "  console.log('[HLS-CAPTURE-JS] Stream capture interceptors installed');" +
+            "})();";
+        
+        try {
+            view.evaluateJavascript(captureScript, null);
+            Log.d(TAG, "? Stream capture script injected with Capacitor bridge");
+        } catch (Exception e) {
+            Log.e(TAG, "Error injecting capture script: " + e.getMessage());
+        }
     }
 }
