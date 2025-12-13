@@ -28,7 +28,10 @@ public class ReelViewWebViewClient extends BridgeWebViewClient {
             Log.d(TAG, "? HLS stream MATCHED: " + url.substring(0, Math.min(100, url.length())));
             captureStreamUrl(url);
         } else {
-            Log.d(TAG, "? Not HLS stream: " + url.substring(0, Math.min(80, url.length())));
+            // Log non-HLS for debugging - show what we ARE intercepting
+            if (url.toLowerCase().contains("vidsrc") || url.toLowerCase().contains("vidlink") || url.toLowerCase().contains("mostream")) {
+                Log.d(TAG, "?? Player iframe URL: " + url.substring(0, Math.min(120, url.length())));
+            }
         }
         
         return super.shouldInterceptRequest(view, request);
@@ -57,14 +60,17 @@ public class ReelViewWebViewClient extends BridgeWebViewClient {
     private void captureStreamUrl(String url) {
         try {
             HLSDownloaderPlugin plugin = HLSDownloaderPlugin.getInstance();
+            
             if (plugin != null) {
                 plugin.captureStreamFromNative(url);
-                Log.d(TAG, "Stream captured and sent to plugin");
+                Log.d(TAG, "? Stream captured: " + url.substring(0, Math.min(80, url.length())));
             } else {
-                Log.w(TAG, "HLSDownloaderPlugin not available");
+                // Plugin not yet loaded - queue for later
+                Log.w(TAG, "? HLSDownloaderPlugin not yet available, queuing stream");
+                PendingStreamCapture.queueStream(url);
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error capturing stream: " + e.getMessage());
+            Log.e(TAG, "Error capturing stream: " + e.getMessage(), e);
         }
     }
 

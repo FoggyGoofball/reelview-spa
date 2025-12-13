@@ -48,6 +48,9 @@ public class HLSDownloaderPlugin extends Plugin {
         mainThreadHandler = new Handler(Looper.getMainLooper());
         loadDownloadsFromPreferences();
         Log.d(TAG, "HLSDownloaderPlugin loaded");
+        
+        // Process any streams that were captured before plugin initialized
+        PendingStreamCapture.processPendingStreams(this);
     }
     
     public static HLSDownloaderPlugin getInstance() {
