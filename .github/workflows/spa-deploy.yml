@@ -26,13 +26,17 @@ jobs:
           node-version: '20'
       
       - name: Debug - List directories
-        run: ls -la
+        run: |
+          echo "Current directory:"
+          pwd
+          echo -e "\nRoot contents:"
+          ls -la
       
       - name: Debug - Check fresh-migrated exists
         run: |
           if [ -d "fresh-migrated" ]; then
             echo "✓ fresh-migrated directory exists"
-            ls -la fresh-migrated/ | head -20
+            ls -la fresh-migrated/ | head -15
           else
             echo "✗ fresh-migrated directory NOT found!"
             exit 1
@@ -48,7 +52,7 @@ jobs:
           cd fresh-migrated
           export VITE_BASE_URL=/reelview-spa/
           npm run build
-      
+          
       - name: Debug - Check build output
         run: |
           if [ -d "fresh-migrated/dist" ]; then
@@ -59,12 +63,30 @@ jobs:
             exit 1
           fi
       
-      - name: Copy 404.html and .nojekyll to dist
+      - name: Copy SPA routing files to dist
         run: |
+          echo "Current directory before copy: $(pwd)"
+          echo "Checking if 404.html exists: $(ls -la 404.html)"
+          echo "Checking if .nojekyll exists: $(ls -la .nojekyll)"
+          
           cp 404.html fresh-migrated/dist/404.html
+          if [ $? -eq 0 ]; then
+            echo "✓ 404.html copied successfully"
+          else
+            echo "✗ Failed to copy 404.html"
+            exit 1
+          fi
+          
           cp .nojekyll fresh-migrated/dist/.nojekyll
-          echo "✓ SPA routing files copied"
-          ls -la fresh-migrated/dist/ | grep -E "404|nojekyll"
+          if [ $? -eq 0 ]; then
+            echo "✓ .nojekyll copied successfully"
+          else
+            echo "✗ Failed to copy .nojekyll"
+            exit 1
+          fi
+          
+          echo -e "\nVerifying files in dist:"
+          ls -la fresh-migrated/dist/ | grep -E "404|nojekyll|index.html"
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
