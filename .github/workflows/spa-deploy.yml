@@ -29,7 +29,9 @@ jobs:
         run: cd fresh-migrated && npm install
         
       - name: Build for GitHub Pages
-        run: cd fresh-migrated && VITE_BASE_URL=/reelview-spa/ npm run build
+        run: cd fresh-migrated && npm run build
+        env:
+          VITE_BASE_URL: /reelview-spa/
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
