@@ -1,7 +1,6 @@
-
 'use client';
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useLocation } from 'react-router-dom';
 import { searchVideos, tmdbMediaToBasicVideo, tmdbMediaToVideo } from '@/lib/api';
 import type { Video } from '@/lib/data';
 import { VideoCard } from '@/components/video/video-card';
@@ -10,9 +9,13 @@ import { ApiKeyNotice } from '@/components/api-key-notice';
 import { Skeleton } from '@/components/ui/skeleton';
 
 function SearchPageContent() {
-  const searchParams = useSearchParams();
-  const query = searchParams.get('q') || '';
-  const isAnimeSearch = searchParams.get('is_anime_search') === 'true';
+  const location = useLocation();
+  
+  // Parse query params from React Router location
+  const params = new URLSearchParams(location.search);
+  const query = params.get('q') || '';
+  const isAnimeSearch = params.get('is_anime_search') === 'true';
+  
   const [videos, setVideos] = useState<Video[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [apiKey, setApiKey] = useState<string | null>(null);
@@ -137,5 +140,3 @@ export default function SearchPage() {
     </Suspense>
   );
 }
-
-    
