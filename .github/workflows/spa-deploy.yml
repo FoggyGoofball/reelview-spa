@@ -26,10 +26,10 @@ jobs:
           node-version: '20'
           
       - name: Install dependencies
-        run: cd spa && npm install
+        run: cd fresh-migrated && npm install
         
       - name: Build for GitHub Pages
-        run: cd spa && VITE_BASE_URL=/reelview-spa/ npm run build
+        run: cd fresh-migrated && VITE_BASE_URL=/reelview-spa/ npm run build
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -37,7 +37,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'spa/dist'
+          path: 'fresh-migrated/dist'
           
       - name: Deploy to GitHub Pages
         id: deployment
