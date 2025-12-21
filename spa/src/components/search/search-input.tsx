@@ -1,16 +1,17 @@
-
 'use client';
 
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import React from 'react';
 
 export function SearchInput() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const defaultQuery = searchParams.get('q') || '';
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Parse query from URL
+  const params = new URLSearchParams(location.search);
+  const defaultQuery = params.get('q') || '';
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -20,11 +21,11 @@ export function SearchInput() {
     let searchUrl = '/search';
     if (query) {
       searchUrl += `?q=${encodeURIComponent(query)}`;
-      if (pathname === '/anime') {
+      if (location.pathname === '/anime') {
         searchUrl += `&is_anime_search=true`;
       }
     }
-    router.push(searchUrl);
+    navigate(searchUrl);
   };
 
   return (

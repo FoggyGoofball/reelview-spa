@@ -1,12 +1,10 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useLocation } from 'react-router-dom';
 
 export function LoadingBar() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -17,14 +15,13 @@ export function LoadingBar() {
     const handleComplete = () => setIsLoading(false);
     
     // We use a short timeout to allow the new page to render before hiding the bar.
-    // In a real app, you might use more sophisticated logic or a library like nprogress.
-    const timer = setTimeout(handleComplete, 200); // Adjust delay as needed
+    const timer = setTimeout(handleComplete, 200);
 
     return () => {
       clearTimeout(timer);
-      handleComplete(); // Ensure it's hidden on cleanup
+      handleComplete();
     };
-  }, [pathname, searchParams]);
+  }, [location.pathname]);
 
   if (!isLoading) {
     return null;
