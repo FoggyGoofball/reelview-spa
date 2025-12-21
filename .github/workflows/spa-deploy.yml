@@ -24,17 +24,47 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          
+      
+      - name: Debug - List directories
+        run: ls -la
+      
+      - name: Debug - Check fresh-migrated exists
+        run: |
+          if [ -d "fresh-migrated" ]; then
+            echo "✓ fresh-migrated directory exists"
+            ls -la fresh-migrated/ | head -20
+          else
+            echo "✗ fresh-migrated directory NOT found!"
+            exit 1
+          fi
+      
       - name: Install dependencies
-        run: cd fresh-migrated && npm install
+        run: |
+          cd fresh-migrated
+          npm install --legacy-peer-deps
         
       - name: Build for GitHub Pages
-        run: cd fresh-migrated && npm run build
-        env:
-          VITE_BASE_URL: /reelview-spa/
+        run: |
+          cd fresh-migrated
+          export VITE_BASE_URL=/reelview-spa/
+          npm run build
       
-      - name: Copy 404.html for SPA routing
-        run: cp 404.html fresh-migrated/dist/404.html
+      - name: Debug - Check build output
+        run: |
+          if [ -d "fresh-migrated/dist" ]; then
+            echo "✓ Build succeeded, dist folder exists"
+            ls -la fresh-migrated/dist/
+          else
+            echo "✗ Build failed, dist folder not found!"
+            exit 1
+          fi
+      
+      - name: Copy 404.html and .nojekyll to dist
+        run: |
+          cp 404.html fresh-migrated/dist/404.html
+          cp .nojekyll fresh-migrated/dist/.nojekyll
+          echo "✓ SPA routing files copied"
+          ls -la fresh-migrated/dist/ | grep -E "404|nojekyll"
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
