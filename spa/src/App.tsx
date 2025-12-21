@@ -16,15 +16,16 @@ import { initializeAdCapture } from '@/lib/ad-capture'
 import { initializeOverlayNeutralizer } from '@/lib/overlay-neutralizer'
 import { initializeAndroidStreamDetector } from '@/lib/android-stream-detector'
 
-// Import all page components
-import Home from './app/page'
-import Movies from './app/movies/page'
-import TV from './app/tv/page'
-import Anime from './app/anime/page'
-import Watch from './app/watch/page'
-import Search from './app/search/page'
-import Watchlist from './app/watchlist/page'
-import History from './app/history/page'
+// Import all page components from pages/ (Vite-native)
+import Home from './pages/Home'
+import Movies from './pages/Movies'
+import TV from './pages/TV'
+import Anime from './pages/Anime'
+import Watch from './pages/Watch'
+import Search from './pages/Search'
+import Watchlist from './pages/Watchlist'
+import History from './pages/History'
+import Media from './pages/Media'
 import Downloads from './pages/Downloads'
 
 // Initialize ad-blocking and stream detection systems
@@ -90,6 +91,7 @@ function AppRoutes() {
       <Route path="/search" element={<Search />} />
       <Route path="/watchlist" element={<Watchlist />} />
       <Route path="/history" element={<History />} />
+      <Route path="/media/:media_type/:id" element={<Media />} />
       <Route path="/downloads" element={<Downloads />} />
       {/* Fallback for dynamic routes */}
       <Route path="*" element={<Home />} />
