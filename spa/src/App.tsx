@@ -28,26 +28,33 @@ import History from './pages/History'
 import Media from './pages/Media'
 import Downloads from './pages/Downloads'
 
-// Initialize ad-blocking and stream detection systems
-// IMPORTANT: enableLogging MUST be true for systems to work properly
-initializeAdCapture({
-  enableLogging: true,
-  closureDelay: 600,
-  muteAudio: true,
-  maxConcurrentAds: 5,
-})
+// Detect platform
+const isElectron = typeof window !== 'undefined' && !!(window as any).electronDownload
+const isAndroid = typeof window !== 'undefined' && Capacitor.getPlatform() === 'android'
 
-initializeOverlayNeutralizer({
-  enableLogging: true,
-  playerZIndex: 9999,
-  interceptorZIndex: -1,
-  watchSubtree: true,
-  watchAttributes: true,
-  debounceMs: 50,
-})
+// Initialize ad-blocking and stream detection systems
+// IMPORTANT: Only initialize on Android and GitHub Pages, NOT on Electron
+// Electron has its own ad-blocking via network interception
+if (!isElectron) {
+  initializeAdCapture({
+    enableLogging: isAndroid,
+    closureDelay: 600,
+    muteAudio: true,
+    maxConcurrentAds: 5,
+  })
+
+  initializeOverlayNeutralizer({
+    enableLogging: isAndroid,
+    playerZIndex: 9999,
+    interceptorZIndex: -1,
+    watchSubtree: true,
+    watchAttributes: true,
+    debounceMs: 50,
+  })
+}
 
 // Initialize Android stream detector (only on Android)
-if (typeof window !== 'undefined' && Capacitor.getPlatform() === 'android') {
+if (isAndroid) {
   initializeAndroidStreamDetector()
 }
 
