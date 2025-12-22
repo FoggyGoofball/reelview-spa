@@ -1,29 +1,72 @@
 import React, { useEffect, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 
-// Comprehensive error boundary
+// Comprehensive error boundary with terminal logging
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
   constructor(props: {children: React.ReactNode}) {
     super(props)
     this.state = { hasError: false, error: null }
+    console.log('[ERROR BOUNDARY] Constructor initialized')
   }
 
   static getDerivedStateFromError(error: any) {
+    const errorMsg = error?.toString()
+    const errorStack = error?.stack
+    console.error('[ERROR BOUNDARY] ? getDerivedStateFromError caught:', errorMsg)
+    console.error('[ERROR BOUNDARY] Stack:', errorStack)
+    
+    // Send to terminal via ipcRenderer
+    try {
+      const msg = `[ERROR BOUNDARY] ${errorMsg}\n${errorStack}`
+      window.ipcRenderer?.send?.('console-log', { level: 'error', message: msg })
+    } catch (e) {}
+    
     return { hasError: true, error }
   }
 
   componentDidCatch(error: any, errorInfo: any) {
-    console.error('[ERROR BOUNDARY] Caught error:', error)
-    console.error('[ERROR BOUNDARY] Error info:', errorInfo)
+    const errorMsg = error?.toString()
+    const errorStack = error?.stack
+    const componentStack = errorInfo?.componentStack
+    
+    console.error('[ERROR BOUNDARY] ? componentDidCatch - Error:', errorMsg)
+    console.error('[ERROR BOUNDARY] Stack:', errorStack)
+    console.error('[ERROR BOUNDARY] Component Stack:', componentStack)
+    
+    // Send full error to terminal
+    try {
+      const fullMsg = `[ERROR BOUNDARY] CAUGHT ERROR\nMessage: ${errorMsg}\nStack: ${errorStack}\nComponent Stack: ${componentStack}`
+      window.ipcRenderer?.send?.('console-log', { level: 'error', message: fullMsg })
+    } catch (e) {}
   }
 
   render() {
     if (this.state.hasError) {
+      const errorMsg = this.state.error?.toString()
+      const errorStack = this.state.error?.stack
+      
+      console.error('[ERROR BOUNDARY] ? Rendering error UI')
+      console.error('[ERROR BOUNDARY] Error:', errorMsg)
+      console.error('[ERROR BOUNDARY] Stack:', errorStack)
+      
       return (
-        <div style={{ padding: '20px', color: 'red', fontFamily: 'monospace', backgroundColor: '#000', minHeight: '100vh' }}>
-          <h1>React Error</h1>
-          <pre>{this.state.error?.toString()}</pre>
-          <pre>{this.state.error?.stack}</pre>
+        <div style={{ padding: '20px', color: '#ff0000', fontFamily: 'monospace', backgroundColor: '#000', minHeight: '100vh', overflowY: 'auto' }}>
+          <h1>?? React Error Caught by ErrorBoundary</h1>
+          <h2>Error Message:</h2>
+          <pre style={{ backgroundColor: '#111', padding: '10px', overflow: 'auto', color: '#ff6b6b' }}>
+            {errorMsg}
+          </pre>
+          <h2>Error Stack:</h2>
+          <pre style={{ backgroundColor: '#111', padding: '10px', overflow: 'auto', color: '#0f0' }}>
+            {errorStack}
+          </pre>
+          <h2 style={{ color: '#ffff00' }}>Check Terminal/Console for Full Diagnostic Information</h2>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{ padding: '10px 20px', fontSize: '16px', cursor: 'pointer', marginTop: '20px', backgroundColor: '#ff0000', color: '#fff' }}
+          >
+            Reload Page
+          </button>
         </div>
       )
     }
@@ -61,7 +104,6 @@ console.log('[APP] Starting ReelView initialization...')
 const isElectron = typeof window !== 'undefined' && !!(window as any).electronDownload
 
 console.log('[APP] Platform detection: isElectron =', isElectron)
-console.log('[APP] Skipping overlay-neutralizer - will re-enable after fixing root cause')
 
 function ClientLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
@@ -87,7 +129,7 @@ function ClientLayout({ children }: { children: React.ReactNode }) {
       </Suspense>
     )
   } catch (error) {
-    console.error('[LAYOUT] Error rendering ClientLayout:', error)
+    console.error('[LAYOUT] ? Error rendering ClientLayout:', error)
     throw error
   }
 }
@@ -118,7 +160,7 @@ function AppRoutes() {
       </Routes>
     )
   } catch (error) {
-    console.error('[ROUTES] Error rendering routes:', error)
+    console.error('[ROUTES] ? Error rendering routes:', error)
     throw error
   }
 }
@@ -127,9 +169,7 @@ export default function App() {
   console.log('[APP] Rendering App component')
 
   useEffect(() => {
-    console.log('[APP] React mounted - overlay-neutralizer disabled for now')
-    // Overlay-neutralizer causes crash after ~1 second, disable it temporarily
-    // TODO: Fix overlay-neutralizer and re-enable
+    console.log('[APP] React mounted')
   }, [])
 
   try {
@@ -143,7 +183,7 @@ export default function App() {
       </ErrorBoundary>
     )
   } catch (error) {
-    console.error('[APP] Error rendering App:', error)
+    console.error('[APP] ? Error rendering App:', error)
     throw error
   }
 }

@@ -5,19 +5,16 @@ import { useNavigate } from 'react-router-dom';
 import { getVideos, getPopularTvShows, getLatestAnime, tmdbMediaToVideo } from '@/lib/api';
 import type { Video } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { VideoCarousel } from '@/components/video/video-carousel';
+// DISABLE ALL CAROUSELS TO TEST
+// import { VideoCarousel } from '@/components/video/video-carousel';
 import { PlayCircle } from 'lucide-react';
 import { ApiKeyNotice } from '@/components/api-key-notice';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ContinueWatchingCarousel } from '@/components/video/continue-watching-carousel';
-import { WatchlistCarousel } from '@/components/video/watchlist-carousel';
 import { useDismissed } from '@/context/dismissed-context';
 import { TMDBMovie, TMDBTvShow } from '@/lib/tmdb';
 import { cn } from '@/lib/utils';
 
-
 console.log('[HOME] Home page loading...')
-
 
 export default function Home() {
   console.log('[HOME] Rendering Home component')
@@ -172,26 +169,6 @@ export default function Home() {
     return <ApiKeyNotice />;
   }
 
-  const filterDismissed = (videos: Video[]) => {
-    return videos.filter(video => 
-        !dismissedItems[`${video.media_type}-${video.id}`]
-    );
-  }
-
-  const handleDismiss = (video: Video) => {
-    switch (video.media_type) {
-      case 'movie':
-        setPopularMovies(prev => prev.filter(m => m.id !== video.id));
-        break;
-      case 'tv':
-        setPopularSeries(prev => prev.filter(s => s.id !== video.id));
-        break;
-      case 'anime':
-        setTopAnime(prev => prev.filter(a => a.id !== video.id));
-        break;
-    }
-  }
-    
   const currentFeaturedVideo = featuredVideo && !dismissedItems[`${featuredVideo.media_type}-${featuredVideo.id}`]
     ? featuredVideo
     : featuredPool.find(v => !dismissedItems[`${v.media_type}-${v.id}`]) || null;
@@ -205,7 +182,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col bg-black">
       {isFeaturedLoading ? (
          <Skeleton className="h-[60vh] w-full" />
       ) : currentFeaturedVideo && (
@@ -239,29 +216,8 @@ export default function Home() {
       )}
 
       <div className="container max-w-screen-2xl flex flex-col gap-8 md:gap-12 lg:gap-16 py-8 md:py-12">
-        <ContinueWatchingCarousel />
-        <WatchlistCarousel />
-        <VideoCarousel 
-            category={{ id: 'popular-movies', name: 'Popular Movies' }}
-            href="/movies"
-            videos={filterDismissed(popularMovies)}
-            isLoading={isLoadingMovies && popularMovies.length === 0}
-            onDismiss={handleDismiss} 
-        />
-        <VideoCarousel 
-            category={{ id: 'popular-series', name: 'Popular TV Series' }}
-            href="/tv"
-            videos={filterDismissed(popularSeries)}
-            isLoading={isLoadingSeries && popularSeries.length === 0}
-            onDismiss={handleDismiss}
-        />
-        <VideoCarousel 
-            category={{ id: 'top-anime', name: 'Top Airing Anime' }}
-            href="/anime"
-            videos={filterDismissed(topAnime)}
-            isLoading={isLoadingAnime && topAnime.length === 0}
-            onDismiss={handleDismiss}
-        />
+        <p className="text-white text-lg">? Featured video + data fetching working!</p>
+        <p className="text-white text-sm">Carousels temporarily disabled - one is causing 'd is not a function' error</p>
       </div>
     </div>
   );
