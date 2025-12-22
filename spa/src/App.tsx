@@ -61,7 +61,7 @@ console.log('[APP] Starting ReelView initialization...')
 const isElectron = typeof window !== 'undefined' && !!(window as any).electronDownload
 
 console.log('[APP] Platform detection: isElectron =', isElectron)
-console.log('[APP] Deferring all system initialization to after React mount')
+console.log('[APP] Skipping overlay-neutralizer - will re-enable after fixing root cause')
 
 function ClientLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
@@ -126,37 +126,11 @@ function AppRoutes() {
 export default function App() {
   console.log('[APP] Rendering App component')
 
-  // Defer ALL initialization to after React mounts and renders
   useEffect(() => {
-    console.log('[APP] React mounted, initializing systems after 1 second...')
-    
-    // Wait a full second to ensure everything is rendered
-    const timer = setTimeout(() => {
-      try {
-        console.log('[APP] Initializing overlay-neutralizer...')
-        // Lazy load and initialize overlay neutralizer
-        import('./lib/overlay-neutralizer').then(({ initializeOverlayNeutralizer }) => {
-          try {
-            initializeOverlayNeutralizer({
-              enableLogging: false,
-              playerZIndex: 9999,
-              interceptorZIndex: -1,
-              watchSubtree: true,
-              watchAttributes: true,
-              debounceMs: 50,
-            })
-            console.log('[APP] ? Overlay-neutralizer initialized')
-          } catch (error) {
-            console.error('[APP] ? Overlay-neutralizer initialization failed:', error)
-          }
-        })
-      } catch (error) {
-        console.error('[APP] Error deferring initialization:', error)
-      }
-    }, 1000)
-
-    return () => clearTimeout(timer)
-  }, []) // Run only once on mount
+    console.log('[APP] React mounted - overlay-neutralizer disabled for now')
+    // Overlay-neutralizer causes crash after ~1 second, disable it temporarily
+    // TODO: Fix overlay-neutralizer and re-enable
+  }, [])
 
   try {
     return (
