@@ -14,7 +14,6 @@ import { WatchlistCarousel } from '@/components/video/watchlist-carousel';
 import { useDismissed } from '@/context/dismissed-context';
 import { TMDBMovie, TMDBTvShow } from '@/lib/tmdb';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
 
 
 console.log('[HOME] Home page loading...')
@@ -41,7 +40,6 @@ export default function Home() {
   const [featuredPool, setFeaturedPool] = useState<Video[]>([]);
 
   const { dismissedItems } = useDismissed();
-  const { toast } = useToast();
 
   useEffect(() => {
     console.log('[HOME] Mounting, checking API key...')

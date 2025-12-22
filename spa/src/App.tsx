@@ -1,6 +1,5 @@
 import React, { useEffect, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
-import { App as CapacitorApp } from '@capacitor/app'
 import { Capacitor } from '@capacitor/core'
 
 // Comprehensive error boundary
@@ -66,9 +65,9 @@ console.log('[APP] ? All page components imported successfully')
 // Comprehensive logging setup
 console.log('[APP] Starting ReelView initialization...')
 
-// Detect platform
+// Detect platform - Capacitor is Android ONLY, NOT Electron or web
 const isElectron = typeof window !== 'undefined' && !!(window as any).electronDownload
-const isAndroid = typeof window !== 'undefined' && Capacitor.getPlatform() === 'android'
+const isAndroid = !isElectron && typeof window !== 'undefined' && Capacitor.getPlatform() === 'android'
 
 console.log('[APP] Platform detection:', { isElectron, isAndroid, platform: Capacitor.getPlatform() })
 
@@ -76,7 +75,7 @@ console.log('[APP] Platform detection:', { isElectron, isAndroid, platform: Capa
 try {
   console.log('[APP] Initializing ad-capture system...')
   initializeAdCapture({
-    enableLogging: true,
+    enableLogging: isAndroid,
     closureDelay: 600,
     muteAudio: true,
     maxConcurrentAds: 5,
@@ -89,7 +88,7 @@ try {
 try {
   console.log('[APP] Initializing overlay-neutralizer system...')
   initializeOverlayNeutralizer({
-    enableLogging: true,
+    enableLogging: isAndroid,
     playerZIndex: 9999,
     interceptorZIndex: -1,
     watchSubtree: true,
@@ -101,7 +100,7 @@ try {
   console.error('[APP] ? Overlay-neutralizer initialization failed:', error)
 }
 
-// Initialize Android stream detector (only on Android)
+// Initialize Android stream detector (ONLY on Android, never on Electron)
 if (isAndroid) {
   try {
     console.log('[APP] Initializing Android stream detector...')
@@ -180,10 +179,18 @@ export default function App() {
   console.log('[APP] Rendering App component')
 
   useEffect(() => {
-    console.log('[APP] App mounted, initializing Capacitor...')
+    // ONLY initialize Capacitor on Android, NOT on Electron or web
+    if (!isAndroid) {
+      console.log('[APP] Skipping Capacitor initialization (not Android platform)')
+      return
+    }
+
+    console.log('[APP] App mounted, initializing Capacitor (Android only)...')
     
     const initCapacitor = async () => {
       try {
+        const { App: CapacitorApp } = await import('@capacitor/app')
+        
         CapacitorApp.addListener('appStateChange', ({ isActive }) => {
           console.log('[CAPACITOR] App state changed:', isActive)
         })
@@ -197,12 +204,12 @@ export default function App() {
 
         console.log('[APP] ? Capacitor listeners registered')
       } catch (error) {
-        console.log('[APP] Capacitor not available (web mode):', error)
+        console.log('[APP] Capacitor initialization failed (expected on non-Android):', error)
       }
     }
 
     initCapacitor()
-  }, [])
+  }, []) // Empty dependency array - run once on mount
 
   try {
     return (
