@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -81,30 +80,40 @@ export function WatchHistoryCard({ item }: { item: WatchProgress }) {
   const dismissedKey = `${video.media_type}-${video.id}`;
   if (dismissedItems[dismissedKey]) {
     return null;
-  }
-
-  const episodeLabel = item.type !== 'movie'
-    ? `S${item.last_season_watched || '?'}:E${item.last_episode_watched || '?'}`
-    : '';
+ }
 
   return (
     <div className="relative">
       <VideoCard video={video} watchHref={watchHref} />
+
+      {/* Overlay: place Continue Watching label and episode ON TOP of the poster */}
+      <div className="absolute left-3 bottom-3 z-40 text-left pointer-events-none">
+        {item.type !== 'movie' && (
+          <>
+            <div className="text-xs text-muted-foreground">Continue Watching</div>
+            <div className="text-sm font-semibold text-white">{`S${item.last_season_watched || '?'}E${item.last_episode_watched || '?'}`}</div>
+          </>
+        )}
+      </div>
+
+      {/* Progress bar at very bottom (inside card) */}
       <div className="absolute bottom-0 w-full px-2 pointer-events-none" style={{transform: 'translateY(1px)'}}>
           <Progress value={percentage} className="h-1 bg-black/50" />
       </div>
-      <div className='mt-2 space-y-1'>
-        <div className="flex items-center justify-between">
-             <p className="text-xs text-muted-foreground">{episodeLabel}</p>
-             {nextEpisode && (
-                <Button asChild variant="ghost" size="sm" className="h-auto px-1 py-0 text-xs text-muted-foreground hover:text-primary hover:bg-transparent">
-                    <Link href={`/watch?id=${video.id}&type=${video.media_type}&s=${nextEpisode.season}&e=${nextEpisode.episode}`}>
-                        Next Ep <SkipForward className="h-3 w-3 ml-1" />
-                    </Link>
-                </Button>
-            )}
+
+      {/* Next episode button shown below card area if available (keeps layout consistent) */}
+      {nextEpisode && (
+        <div className="mt-2 space-y-1 pointer-events-auto">
+          <div className="flex items-center justify-between">
+            <div />
+            <Button asChild variant="ghost" size="sm" className="h-auto px-1 py-0 text-xs text-muted-foreground hover:text-primary hover:bg-transparent">
+              <Link href={`/watch?id=${video.id}&type=${video.media_type}&s=${nextEpisode.season}&e=${nextEpisode.episode}`}>
+                Next Ep <SkipForward className="h-3 w-3 ml-1" />
+              </Link>
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
