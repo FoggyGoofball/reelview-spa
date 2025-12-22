@@ -40,9 +40,6 @@ import { DismissedProvider } from '@/context/dismissed-context'
 import { SourceProvider } from '@/context/source-context'
 import { LoadingBar } from '@/components/layout/loading-bar'
 
-// Import ad-blocking systems with error handling
-import { initializeOverlayNeutralizer } from '@/lib/overlay-neutralizer'
-
 console.log('[APP] Importing page components...')
 
 // Import all page components from pages/ (Vite-native)
@@ -64,24 +61,7 @@ console.log('[APP] Starting ReelView initialization...')
 const isElectron = typeof window !== 'undefined' && !!(window as any).electronDownload
 
 console.log('[APP] Platform detection: isElectron =', isElectron)
-
-// Initialize overlay neutralizer ONLY (skipping ad-capture for now)
-try {
-  console.log('[APP] Initializing overlay-neutralizer system...')
-  initializeOverlayNeutralizer({
-    enableLogging: false,
-    playerZIndex: 9999,
-    interceptorZIndex: -1,
-    watchSubtree: true,
-    watchAttributes: true,
-    debounceMs: 50,
-  })
-  console.log('[APP] ? Overlay-neutralizer initialized')
-} catch (error) {
-  console.error('[APP] ? Overlay-neutralizer initialization failed:', error)
-}
-
-console.log('[APP] All systems initialized')
+console.log('[APP] Deferring all system initialization to after React mount')
 
 function ClientLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
@@ -146,9 +126,37 @@ function AppRoutes() {
 export default function App() {
   console.log('[APP] Rendering App component')
 
+  // Defer ALL initialization to after React mounts and renders
   useEffect(() => {
-    console.log('[APP] App mounted')
-  }, [])
+    console.log('[APP] React mounted, initializing systems after 1 second...')
+    
+    // Wait a full second to ensure everything is rendered
+    const timer = setTimeout(() => {
+      try {
+        console.log('[APP] Initializing overlay-neutralizer...')
+        // Lazy load and initialize overlay neutralizer
+        import('./lib/overlay-neutralizer').then(({ initializeOverlayNeutralizer }) => {
+          try {
+            initializeOverlayNeutralizer({
+              enableLogging: false,
+              playerZIndex: 9999,
+              interceptorZIndex: -1,
+              watchSubtree: true,
+              watchAttributes: true,
+              debounceMs: 50,
+            })
+            console.log('[APP] ? Overlay-neutralizer initialized')
+          } catch (error) {
+            console.error('[APP] ? Overlay-neutralizer initialization failed:', error)
+          }
+        })
+      } catch (error) {
+        console.error('[APP] Error deferring initialization:', error)
+      }
+    }, 1000)
+
+    return () => clearTimeout(timer)
+  }, []) // Run only once on mount
 
   try {
     return (
