@@ -15,33 +15,38 @@ export function ContinueWatchingCarousel() {
   const { dismissedItems } = useDismissed();
 
   const updateHistory = async () => {
-    const rawHistory = getWatchHistory();
-    
-    const sortedHistory = Object.values(rawHistory)
-      .filter(item => {
-        if (!item || !item.id || !item.type) return false;
-        const dismissedKey = `${item.type}-${item.id}`;
-        const malDismissedKey = item.mal_id ? `${item.type}-${item.mal_id}` : null;
-        if (dismissedItems[dismissedKey] || (malDismissedKey && dismissedItems[malDismissedKey])) {
-          return false;
-        }
-        if (!item?.progress?.watched || !item?.progress?.duration) return false;
-        const percentage = (item.progress.watched / item.progress.duration) * 100;
-        // Keep shows in continue watching until they are done, movies are removed earlier.
-        if (item.type === 'tv' || item.type === 'anime') return percentage < 98;
-        return percentage < 95;
-      })
-      .sort((a, b) => (b.last_updated || 0) - (a.last_updated || 0));
-    
-    setHistory(sortedHistory);
-    
-    for (const item of sortedHistory) {
-      // Enrich items one by one to add season/episode data
-      enrichVideoDetails(item).then(enrichedItem => {
-          setHistory(prevHistory => 
-            prevHistory.map(h => (h.id === enrichedItem.id && h.type === enrichedItem.type) ? enrichedItem : h)
-          );
+    try {
+      const rawHistory = getWatchHistory();
+      
+      const sortedHistory = Object.values(rawHistory)
+        .filter(item => {
+          if (!item || !item.id || !item.type) return false;
+          const dismissedKey = `${item.type}-${item.id}`;
+          const malDismissedKey = item.mal_id ? `${item.type}-${item.mal_id}` : null;
+          if (dismissedItems[dismissedKey] || (malDismissedKey && dismissedItems[malDismissedKey])) {
+            return false;
+          }
+          if (!item?.progress?.watched || !item?.progress?.duration) return false;
+          const percentage = (item.progress.watched / item.progress.duration) * 100;
+          // Keep shows in continue watching until they are done, movies are removed earlier.
+          if (item.type === 'tv' || item.type === 'anime') return percentage < 98;
+          return percentage < 95;
+        })
+        .sort((a, b) => (b.last_updated || 0) - (a.last_updated || 0));
+      
+      setHistory(sortedHistory);
+      
+      // Enrich items asynchronously without blocking
+      Promise.all(sortedHistory.map(item => enrichVideoDetails(item)))
+        .then(enrichedItems => {
+          setHistory(enrichedItems);
+        })
+        .catch(err => {
+          console.error('[CONTINUE WATCHING] Error enriching items:', err);
+          // Keep original items if enrichment fails
         });
+    } catch (error) {
+      console.error('[CONTINUE WATCHING] Error updating history:', error);
     }
   };
 
@@ -82,9 +87,9 @@ export function ContinueWatchingCarousel() {
           onClick={() => navigate('/history')}
           className="bg-none border-none p-0 cursor-pointer"
         >
-          <h2 id="continue-watching-heading" className="text-2xl font-bold tracking-tight text-foreground flex items-center hover:text-primary transition-colors">
+          <h2 id="continue-watching-heading" className="text-2xl font-bold tracking-tight text-red-500 flex items-center hover:text-red-600 transition-colors">
             Continue Watching
-            <ChevronRight className="h-6 w-6 text-primary" />
+            <ChevronRight className="h-6 w-6 text-red-500 ml-2" />
           </h2>
         </button>
       </div>

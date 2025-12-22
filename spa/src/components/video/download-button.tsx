@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Download, Loader2 } from 'lucide-react';
 import { getDownloadAPI, isDownloadAvailable, getPlatform } from '@/lib/unified-download';
 
-// Download button for Watch page
+// Download button for Watch page - works on Electron and Capacitor
 export function DownloadButton() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -63,23 +63,24 @@ export function DownloadButton() {
     }
   }, []);
 
+  // Always show on Electron or Capacitor, hide on web
   if (!isDownloadAvailable()) {
     return null;
   }
 
   return (
-    <div className="flex flex-col gap-2 items-center">
+    <div className="flex flex-col gap-1 items-center">
       <Button
         onClick={handleClick}
         disabled={isLoading}
         variant="ghost"
         size="icon"
         className="h-9 w-9 text-white hover:bg-white/20"
-        title="Download"
+        title={`Download (${getPlatform()})`}
       >
         {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
       </Button>
-      {message && <div className="text-xs text-white bg-black/50 px-2 py-1 rounded">{message}</div>}
+      {message && <div className="text-xs text-white bg-black/50 px-2 py-1 rounded max-w-[100px]">{message}</div>}
     </div>
   );
 }

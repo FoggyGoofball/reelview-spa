@@ -1,5 +1,5 @@
 /**
- * SIMPLIFIED Download API - maximum clarity
+ * SIMPLIFIED Download API - works on Electron and Capacitor
  */
 
 export interface QualityVariant {
@@ -21,12 +21,71 @@ export interface DownloadProgress {
 
 // Platform detection
 const isCapacitor = typeof window !== 'undefined' && (window as any).Capacitor !== undefined;
+const isElectron = typeof window !== 'undefined' && !!(window as any).electronDownload;
 
 export function getDownloadAPI() {
+  if (isElectron) {
+    return getElectronAPI();
+  }
   if (isCapacitor) {
     return getCapacitorAPI();
   }
   return getWebAPI();
+}
+
+function getElectronAPI() {
+  const download = (window as any).electronDownload;
+  
+  return {
+    getCapturedStreams: async () => {
+      try {
+        const streams = await download?.getStreams?.();
+        return streams || [];
+      } catch (e) {
+        console.error('Electron getCapturedStreams error:', e);
+        return [];
+      }
+    },
+
+    startDownload: async (url: string, filename: string, quality?: string) => {
+      try {
+        const result = await download?.downloadStream?.({
+          url,
+          filename: `${filename}.mkv`,
+          quality
+        });
+        return result || { success: false, error: 'Download API not available' };
+      } catch (e: any) {
+        return { success: false, error: e.message };
+      }
+    },
+
+    getQualityVariants: async (url: string) => {
+      try {
+        const variants = await download?.getQualities?.({ url });
+        return variants || [{ url, bandwidth: 0, label: 'Default Quality' }];
+      } catch (e) {
+        return [{ url, bandwidth: 0, label: 'Default Quality' }];
+      }
+    },
+
+    cancelDownload: async () => {
+      try {
+        await download?.cancelDownload?.();
+        return { success: true };
+      } catch (e) {
+        return { success: false };
+      }
+    },
+    
+    getDownloadsList: async () => [],
+    removeDownload: async () => ({ success: false }),
+    clearCompletedDownloads: async () => ({ success: false }),
+
+    onStreamCaptured: () => () => {},
+    onDownloadProgress: () => () => {},
+    onDownloadsUpdated: () => () => {}
+  };
 }
 
 function getCapacitorAPI() {
@@ -87,9 +146,11 @@ function getWebAPI() {
 }
 
 export function isDownloadAvailable(): boolean {
-  return isCapacitor;
+  return isElectron || isCapacitor;
 }
 
-export function getPlatform(): 'capacitor' | 'web' {
-  return isCapacitor ? 'capacitor' : 'web';
+export function getPlatform(): 'electron' | 'capacitor' | 'web' {
+  if (isElectron) return 'electron';
+  if (isCapacitor) return 'capacitor';
+  return 'web';
 }
