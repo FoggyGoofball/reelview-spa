@@ -6,7 +6,7 @@ import { getVideos, getPopularTvShows, getLatestAnime, tmdbMediaToVideo } from '
 import type { Video } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { VideoCarousel } from '@/components/video/video-carousel';
-import { PlayCircle, Network } from 'lucide-react';
+import { PlayCircle } from 'lucide-react';
 import { ApiKeyNotice } from '@/components/api-key-notice';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContinueWatchingCarousel } from '@/components/video/continue-watching-carousel';
@@ -15,10 +15,14 @@ import { useDismissed } from '@/context/dismissed-context';
 import { TMDBMovie, TMDBTvShow } from '@/lib/tmdb';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { DownloadProjectButton } from '@/components/dev/DownloadProjectButton';
+
+
+console.log('[HOME] Home page loading...')
 
 
 export default function Home() {
+  console.log('[HOME] Rendering Home component')
+
   const navigate = useNavigate();
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -40,6 +44,7 @@ export default function Home() {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('[HOME] Mounting, checking API key...')
     setIsMounted(true);
     const key = localStorage.getItem('TMDB_API_KEY');
     setApiKey(key);
@@ -66,13 +71,15 @@ export default function Home() {
         : validItems;
 
     } catch (error) {
-      console.error("[Home page] Failed to process media list", error);
+      console.error("[HOME] Failed to process media list", error);
       return [];
     }
   }, []);
 
 
   useEffect(() => {
+    console.log('[HOME] Data fetch effect, apiKey:', !!apiKey, 'mounted:', isMounted)
+    
     if (!apiKey || !isMounted) {
       if(isMounted) {
         setIsLoadingMovies(false);
@@ -84,6 +91,7 @@ export default function Home() {
     }
     
     const fetchAllData = async () => {
+        console.log('[HOME] Fetching all data...')
         setIsLoadingMovies(true);
         setIsLoadingSeries(true);
         setIsLoadingAnime(true);
@@ -94,6 +102,8 @@ export default function Home() {
             processMediaList(getPopularTvShows, false),
             processMediaList(getLatestAnime, true)
         ]);
+
+        console.log('[HOME] Data fetched - movies:', movies.length, 'series:', series.length, 'anime:', anime.length)
 
         setPopularMovies(movies);
         setPopularSeries(series);
@@ -110,6 +120,7 @@ export default function Home() {
             [pool[i], pool[j]] = [pool[j], pool[i]];
         }
         
+        console.log('[HOME] Featured pool created with', pool.length, 'items')
         setFeaturedPool(pool);
         if (pool.length > 0) {
             setFeaturedVideo(pool[0]);
@@ -230,12 +241,6 @@ export default function Home() {
       )}
 
       <div className="container max-w-screen-2xl flex flex-col gap-8 md:gap-12 lg:gap-16 py-8 md:py-12">
-        <div className='my-4 p-4 border border-dashed border-secondary rounded-lg'>
-          <h3 className="text-lg font-semibold mb-4">Developer Tools</h3>
-          <div className="flex flex-col md:flex-row gap-4">
-            <DownloadProjectButton />
-          </div>
-        </div>
         <ContinueWatchingCarousel />
         <WatchlistCarousel />
         <VideoCarousel 
