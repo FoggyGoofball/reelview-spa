@@ -4,6 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { Play } from "lucide-react";
 import type { WatchProgress } from "@/lib/data";
 import { cn } from "@/lib/utils";
+import { Button } from '@/components/ui/button';
+import { AddToWatchlistButton } from './add-to-watchlist-button';
+import { DismissButton } from './dismiss-button';
 
 export interface WatchHistoryCardProps {
   item: WatchProgress;
@@ -27,9 +30,7 @@ export function WatchHistoryCard({
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     const url = isSeries
-      ? `/watch?id=${item.id}&type=${item.type}&s=${
-          item.last_season_watched || 1
-        }&e=${item.last_episode_watched || 1}`
+      ? `/watch?id=${item.id}&type=${item.type}&s=${item.last_season_watched || 1}&e=${item.last_episode_watched || 1}`
       : `/watch?id=${item.id}&type=${item.type}`;
     navigate(url);
   };
@@ -37,9 +38,7 @@ export function WatchHistoryCard({
   // For continue-watching carousel, clicking the card should go directly to the watch page
   const handleCardClick = () => {
     const url = isSeries
-      ? `/watch?id=${item.id}&type=${item.type}&s=${
-          item.last_season_watched || 1
-        }&e=${item.last_episode_watched || 1}`
+      ? `/watch?id=${item.id}&type=${item.type}&s=${item.last_season_watched || 1}&e=${item.last_episode_watched || 1}`
       : `/watch?id=${item.id}&type=${item.type}`;
     navigate(url);
   };
@@ -123,38 +122,31 @@ export function WatchHistoryCard({
           className="w-full h-full object-cover"
         />
 
-        {/* overlay */}
+        {/* overlay gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10" />
 
-        {/* bottom-left: Continue Watching label and current episode */}
+        {/* Current episode badge - separate entity on the poster */}
         {currSeason != null && currEpisode != null && (
-          <div className="absolute left-3 bottom-20 z-30 text-left">
-            <div className="text-xs text-muted-foreground">
-              Continue Watching
-            </div>
-            <div className="text-sm font-semibold text-white">
-              {formatEp(currSeason, currEpisode)}
+          <div className="absolute left-3 top-3 z-30 pointer-events-auto">
+            <div className="bg-black/70 px-3 py-1 rounded-md text-left">
+              <div className="text-xs text-muted-foreground">Continue</div>
+              <div className="text-sm font-semibold text-white">{formatEp(currSeason, currEpisode)}</div>
             </div>
           </div>
         )}
 
-        {/* right-justified small controls (keep only play for quick access) */}
-        <div className="absolute inset-y-0 right-3 flex flex-col items-end justify-center gap-2 z-20 md:opacity-0 md:pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handlePlayClick(e);
-            }}
-            title="Continue"
-            className="bg-black/70 hover:bg-red-600/80 text-white rounded-full p-2 h-8 w-8 flex items-center justify-center shadow transition-colors"
-          >
+        {/* top-right full hover controls (Play, Watchlist, Dismiss) */}
+        <div className="absolute top-2 right-2 z-40 flex flex-col items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={(e:any)=>{ e.stopPropagation(); handlePlayClick(e); }}>
             <Play className="h-4 w-4" />
-          </button>
+          </Button>
+          <AddToWatchlistButton video={{ id: String(item.id), mal_id: item.mal_id, media_type: item.type, title: item.title, description: '', categories: [], thumbnailSeed: '', poster_path: item.poster_path, rating: item.rating, seasons: item.seasons, episodes: item.episodes }} />
+          <DismissButton video={{ id: String(item.id), mal_id: item.mal_id, media_type: item.type, title: item.title, description: '', categories: [], thumbnailSeed: '', poster_path: item.poster_path, rating: item.rating, seasons: item.seasons, episodes: item.episodes }} onDismiss={() => {}} />
         </div>
 
         {/* Age rating badge */}
         {item.rating && (
-          <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/80 rounded px-2 py-1 z-30">
+          <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/80 rounded px-2 py-1 z-30">
             <span className="text-xs font-semibold text-white">{item.rating}</span>
           </div>
         )}
@@ -167,7 +159,7 @@ export function WatchHistoryCard({
         )}
       </div>
 
-      {/* Watch Next button at bottom */}
+      {/* Watch Next button at bottom (separate entity) */}
       {nextEpisodeHref && (
         <div className="mt-2 px-2">
           <div className="mt-2">
