@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Button } from '@/components/ui/button';
 import { AddToWatchlistButton } from './add-to-watchlist-button';
 import { DismissButton } from './dismiss-button';
+import React, { useEffect } from 'react';
 
 export interface WatchHistoryCardProps {
   item: WatchProgress;
@@ -17,6 +18,13 @@ export function WatchHistoryCard({
   item,
   variant = "default",
 }: WatchHistoryCardProps) {
+  // add debug log
+  useEffect(() => {
+    try {
+      console.log('[WATCH-CARD] render', { id: item.id, title: item.title, last_season: item.last_season_watched, last_episode: item.last_episode_watched });
+    } catch (e) { console.error('[WATCH-CARD] render log error', e); }
+  }, [item]);
+
   const navigate = useNavigate();
 
   const posterUrl = item.poster_path
