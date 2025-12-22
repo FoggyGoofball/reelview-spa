@@ -39,7 +39,7 @@ function getElectronAPI() {
   return {
     getCapturedStreams: async () => {
       try {
-        const streams = await download?.getStreams?.();
+        const streams = await download?.getCapturedStreams?.();
         return streams || [];
       } catch (e) {
         console.error('Electron getCapturedStreams error:', e);
@@ -49,11 +49,7 @@ function getElectronAPI() {
 
     startDownload: async (url: string, filename: string, quality?: string) => {
       try {
-        const result = await download?.downloadStream?.({
-          url,
-          filename: `${filename}.mkv`,
-          quality
-        });
+        const result = await download?.startDownload?.(url, filename, quality);
         return result || { success: false, error: 'Download API not available' };
       } catch (e: any) {
         return { success: false, error: e.message };
@@ -62,7 +58,7 @@ function getElectronAPI() {
 
     getQualityVariants: async (url: string) => {
       try {
-        const variants = await download?.getQualities?.({ url });
+        const variants = await download?.getQualityVariants?.(url);
         return variants || [{ url, bandwidth: 0, label: 'Default Quality' }];
       } catch (e) {
         return [{ url, bandwidth: 0, label: 'Default Quality' }];
@@ -78,13 +74,52 @@ function getElectronAPI() {
       }
     },
     
-    getDownloadsList: async () => [],
-    removeDownload: async () => ({ success: false }),
-    clearCompletedDownloads: async () => ({ success: false }),
+    getDownloadsList: async () => {
+      try {
+        const res = await download?.getDownloadsList?.();
+        // preload returns { downloads: [...] } or an array depending on implementation - normalize
+        if (!res) return [];
+        if (Array.isArray(res)) return res;
+        if (res.downloads) return res.downloads;
+        return [];
+      } catch (e) {
+        console.error('getDownloadsList error', e);
+        return [];
+      }
+    },
 
-    onStreamCaptured: () => () => {},
-    onDownloadProgress: () => () => {},
-    onDownloadsUpdated: () => () => {}
+    removeDownload: async (id: string, deleteFile: boolean = false) => {
+      try {
+        const res = await download?.removeDownload?.(id, deleteFile);
+        return res || { success: false };
+      } catch (e) {
+        return { success: false };
+      }
+    },
+
+    clearCompletedDownloads: async () => {
+      try {
+        const res = await download?.clearCompletedDownloads?.();
+        return res || { success: false };
+      } catch (e) {
+        return { success: false };
+      }
+    },
+
+    onStreamCaptured: (cb: (stream: any) => void) => {
+      if (!download?.onStreamCaptured) return () => {};
+      return download.onStreamCaptured(cb);
+    },
+
+    onDownloadProgress: (cb: (progress: any) => void) => {
+      if (!download?.onDownloadProgress) return () => {};
+      return download.onDownloadProgress(cb);
+    },
+
+    onDownloadsUpdated: (cb: (downloads: any[]) => void) => {
+      if (!download?.onDownloadsUpdated) return () => {};
+      return download.onDownloadsUpdated(cb);
+    }
   };
 }
 
