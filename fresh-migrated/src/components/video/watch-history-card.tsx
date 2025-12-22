@@ -85,7 +85,7 @@ export function WatchHistoryCard({ item }: { item: WatchProgress }) {
  }
 
   return (
-    <div className="relative group block">
+    <div className="relative group overflow-visible block"> {/* allow overlays/tooltips to escape card */}
       <Link href={watchHref}>
         <div>
           <VideoCard video={video} watchHref={watchHref} />
@@ -93,7 +93,7 @@ export function WatchHistoryCard({ item }: { item: WatchProgress }) {
       </Link>
 
       {/* Top-right small controls, same as other card hovers */}
-      <div className="absolute top-2 right-2 z-40 flex flex-col items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+      <div className="absolute top-2 right-2 z-50 flex flex-col items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto">
         <Button asChild variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={(e:any)=>{ e.stopPropagation(); }}>
           <Link href={watchHref}>
             <Play className="h-4 w-4" />
@@ -105,8 +105,8 @@ export function WatchHistoryCard({ item }: { item: WatchProgress }) {
 
       {/* Current episode badge - center bottom above next-episode button */}
       {item.type !== 'movie' && (
-        <div className="absolute left-1/2 transform -translate-x-1/2 bottom-14 z-30 pointer-events-none text-center">
-          <div className="bg-black/70 px-3 py-1 rounded-t-md text-left inline-block">
+        <div className="absolute left-1/2 transform -translate-x-1/2 bottom-16 z-50 pointer-events-none text-center w-full max-w-[160px]">
+          <div className="bg-black/80 px-3 py-1 rounded-md mx-auto inline-block text-center">
             <div className="text-xs text-muted-foreground">Continue Watching</div>
             <div className="text-sm font-semibold text-white">{`S${item.last_season_watched || '?'}E${item.last_episode_watched || '?'}`}</div>
           </div>
