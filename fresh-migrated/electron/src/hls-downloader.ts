@@ -702,6 +702,36 @@ export function clearCapturedStreams(windowId?: string): void {
   }
 }
 
+export function getAllCapturedStreams(): CapturedStream[] {
+  const combined: CapturedStream[] = [];
+
+  // include master playlists first
+  for (const [winId, masterUrl] of capturedMasterPlaylists.entries()) {
+    if (masterUrl) combined.push({ url: masterUrl, type: 'hls', timestamp: Date.now() });
+    const arr = capturedStreams.get(winId) || [];
+    for (const s of arr) combined.push(s);
+  }
+
+  // include any streams for windowIds that didn't have a master
+  for (const [winId, arr] of capturedStreams.entries()) {
+    if (!capturedMasterPlaylists.has(winId)) {
+      for (const s of arr) combined.push(s);
+    }
+  }
+
+  // dedupe by url preserving order
+  const seen = new Set<string>();
+  const deduped: CapturedStream[] = [];
+  for (const s of combined) {
+    if (!seen.has(s.url)) {
+      seen.add(s.url);
+      deduped.push(s);
+    }
+  }
+
+  return deduped;
+}
+
 export function setupNetworkInterception(window: BrowserWindow): void {
   const ses = window.webContents.session;
   const windowId = String(window.id);
@@ -744,6 +774,15 @@ export function setupNetworkInterception(window: BrowserWindow): void {
       logDL(`? M3U8 URL captured: ${url.substring(0, 150)}`);
       captureStream(details.url, undefined, windowId);
       
+      // Immediately send the updated captured streams list to renderer for debugging
+      try {
+        const all = getAllCapturedStreams();
+        window.webContents.send('captured-streams-list', all);
+        logDL(`Sent captured-streams-list to window ${windowId} (count=${all.length})`);
+      } catch (e:any) {
+        logDL(`Failed to send captured-streams-list: ${e?.message || e}`);
+      }
+      
       // Check if this might be a master playlist (async, don't block request)
       if (!checkedUrls.has(details.url)) {
         checkedUrls.add(details.url);
@@ -753,8 +792,17 @@ export function setupNetworkInterception(window: BrowserWindow): void {
           if (content.includes('#EXT-X-STREAM-INF')) {
             logDL(`? Master playlist confirmed: ${details.url.substring(0, 80)}`);
             captureMasterPlaylist(details.url, windowId);
+            try {
+              const all2 = getAllCapturedStreams();
+              window.webContents.send('captured-streams-list', all2);
+              logDL(`Sent captured-streams-list after master detection to window ${windowId} (count=${all2.length})`);
+            } catch (e:any) {
+              logDL(`Failed to send captured-streams-list after master detection: ${e?.message || e}`);
+            }
           }
-        }).catch(() => {});
+        }).catch((err:any) => {
+          logDL(`fetchWithSession error while checking master playlist: ${err?.message || err}`);
+        });
       }
       
       window.webContents.send('stream-detected', {
@@ -781,6 +829,14 @@ export function setupNetworkInterception(window: BrowserWindow): void {
       if (!url.includes('/embed/') && !url.includes('.html')) {
         logDL(`? M3U8 by content-type: ${details.url.substring(0, 150)}`);
         captureStream(details.url, undefined, windowId);
+        
+        try {
+          const all = getAllCapturedStreams();
+          window.webContents.send('captured-streams-list', all);
+          logDL(`Sent captured-streams-list to window ${windowId} (count=${all.length})`);
+        } catch (e:any) {
+          logDL(`Failed to send captured-streams-list onHeadersReceived: ${e?.message || e}`);
+        }
         
         window.webContents.send('stream-detected', {
           url: details.url,

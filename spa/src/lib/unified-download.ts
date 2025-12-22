@@ -111,6 +111,12 @@ function getElectronAPI() {
       return download.onStreamCaptured(cb);
     },
 
+    // Full captured streams list event
+    onCapturedStreamsList: (cb: (streams: any[]) => void) => {
+      if (!download?.onCapturedStreamsList) return () => {};
+      return download.onCapturedStreamsList(cb);
+    },
+
     onDownloadProgress: (cb: (progress: any) => void) => {
       if (!download?.onDownloadProgress) return () => {};
       return download.onDownloadProgress(cb);

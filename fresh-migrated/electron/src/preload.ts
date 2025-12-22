@@ -111,9 +111,21 @@ const downloadAPI = {
   
   // Event listeners
   onStreamCaptured: (callback: (stream: any) => void) => {
-    const handler = (_event: any, stream: any) => callback(stream);
-    ipcRenderer.on('stream-captured', handler);
-    return () => ipcRenderer.removeListener('stream-captured', handler);
+    const handlerCaptured = (_event: any, stream: any) => callback(stream);
+    const handlerDetected = (_event: any, stream: any) => callback(stream);
+    ipcRenderer.on('stream-captured', handlerCaptured);
+    ipcRenderer.on('stream-detected', handlerDetected);
+    return () => {
+      try { ipcRenderer.removeListener('stream-captured', handlerCaptured); } catch {}
+      try { ipcRenderer.removeListener('stream-detected', handlerDetected); } catch {}
+    };
+  },
+
+  // Full captured streams list (useful for renderer to get all streams at once)
+  onCapturedStreamsList: (callback: (streams: any[]) => void) => {
+    const handler = (_event: any, streams: any[]) => callback(streams || []);
+    ipcRenderer.on('captured-streams-list', handler);
+    return () => ipcRenderer.removeListener('captured-streams-list', handler);
   },
   
   onDownloadProgress: (callback: (progress: any) => void) => {
