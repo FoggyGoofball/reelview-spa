@@ -1,7 +1,7 @@
 import type { CapacitorElectronConfig } from '@capacitor-community/electron';
 import { getCapacitorElectronConfig, setupElectronDeepLinking } from '@capacitor-community/electron';
 import type { MenuItemConstructorOptions } from 'electron';
-import { app, MenuItem, ipcMain, dialog, BrowserWindow } from 'electron';
+import { app, MenuItem, ipcMain, dialog, BrowserWindow, shell } from 'electron';
 import electronIsDev from 'electron-is-dev';
 import unhandled from 'electron-unhandled';
 import * as path from 'path';
@@ -175,6 +175,28 @@ ipcMain.handle('clear-captured-urls', async (event) => {
   const windowId = String(BrowserWindow.fromWebContents(event.sender)?.id || 'default');
   clearCapturedStreams(windowId);
   return { success: true };
+});
+
+ipcMain.handle('open-file', async (event, filePath: string) => {
+  try {
+    if (!filePath) return { success: false, error: 'No path' };
+    // Reveal the file in folder. If that fails, try to open it directly.
+    try {
+      shell.showItemInFolder(filePath);
+      return { success: true };
+    } catch (e) {
+      try {
+        await shell.openPath(filePath);
+        return { success: true };
+      } catch (err:any) {
+        logToFile(`open-file failed: ${err.message}`);
+        return { success: false, error: err.message };
+      }
+    }
+  } catch (error:any) {
+    logToFile(`open-file handler error: ${error.message}`);
+    return { success: false, error: error.message };
+  }
 });
 
 logToFile('Download IPC handlers registered');
