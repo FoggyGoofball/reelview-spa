@@ -1,4 +1,3 @@
-
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Video } from '@/lib/data';
@@ -19,9 +18,10 @@ interface VideoCardProps {
   video: Video;
   onDismiss?: (video: Video) => void;
   watchHref?: string; // Optional href for resuming playback directly
+  allowOverflow?: boolean; // when true, allows overlays/tooltips to render outside poster
 }
 
-export function VideoCard({ video, onDismiss, watchHref }: VideoCardProps) {
+export function VideoCard({ video, onDismiss, watchHref, allowOverflow }: VideoCardProps) {
   const title = video.title || video.name;
   
   const imageUrl = video.poster_path && video.poster_path.startsWith('http')
@@ -51,7 +51,7 @@ export function VideoCard({ video, onDismiss, watchHref }: VideoCardProps) {
   return (
     <div className="group block relative">
       <Link href={primaryHref}>
-        <Card className="overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 transform group-hover:scale-105 group-hover:shadow-2xl group-hover:shadow-primary/20">
+        <Card className={`border-2 border-transparent ${allowOverflow ? 'overflow-visible' : 'overflow-hidden'} group-hover:border-primary transition-all duration-300 transform group-hover:scale-105 group-hover:shadow-2xl group-hover:shadow-primary/20`}> 
           <div className="aspect-[2/3] relative bg-secondary">
               <Image
                   src={imageUrl}
