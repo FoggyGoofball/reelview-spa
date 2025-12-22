@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import type { WatchProgress, Video } from '@/lib/data';
 import { useDismissed } from '@/context/dismissed-context';
 import { VideoCard } from './video-card';
-import { SkipForward } from 'lucide-react';
+import { SkipForward, Play } from 'lucide-react';
+import { AddToWatchlistButton } from './add-to-watchlist-button';
+import { DismissButton } from './dismiss-button';
 
 // Helper to determine the next episode
 const getNextEpisode = (item: WatchProgress) => {
@@ -83,18 +85,33 @@ export function WatchHistoryCard({ item }: { item: WatchProgress }) {
  }
 
   return (
-    <div className="relative">
-      <VideoCard video={video} watchHref={watchHref} />
+    <div className="relative group block">
+      <Link href={watchHref}>
+        <div>
+          <VideoCard video={video} watchHref={watchHref} />
+        </div>
+      </Link>
 
-      {/* Overlay: place Continue Watching label and episode ON TOP of the poster */}
-      <div className="absolute left-3 bottom-3 z-40 text-left pointer-events-none">
-        {item.type !== 'movie' && (
-          <>
+      {/* Top-right small controls, same as other card hovers */}
+      <div className="absolute top-2 right-2 z-40 flex flex-col items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <Button asChild variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={(e:any)=>{ e.stopPropagation(); }}>
+          <Link href={watchHref}>
+            <Play className="h-4 w-4" />
+          </Link>
+        </Button>
+        <AddToWatchlistButton video={video} />
+        <DismissButton video={video} onDismiss={() => {}} />
+      </div>
+
+      {/* Current episode badge - center bottom above next-episode button */}
+      {item.type !== 'movie' && (
+        <div className="absolute left-1/2 transform -translate-x-1/2 bottom-14 z-30 pointer-events-none text-center">
+          <div className="bg-black/70 px-3 py-1 rounded-t-md text-left inline-block">
             <div className="text-xs text-muted-foreground">Continue Watching</div>
             <div className="text-sm font-semibold text-white">{`S${item.last_season_watched || '?'}E${item.last_episode_watched || '?'}`}</div>
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
 
       {/* Progress bar at very bottom (inside card) */}
       <div className="absolute bottom-0 w-full px-2 pointer-events-none" style={{transform: 'translateY(1px)'}}>

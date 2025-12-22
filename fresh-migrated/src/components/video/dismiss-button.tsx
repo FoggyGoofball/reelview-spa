@@ -51,6 +51,8 @@ export function DismissButton({ video, className, variant, size, onDismiss, ...p
     } else {
       dismissItem(video);
       onDismiss?.(video);
+      // show undo hint
+      alert('Item dismissed. You can undo this action from the History page.');
     }
   };
 
@@ -64,6 +66,7 @@ export function DismissButton({ video, className, variant, size, onDismiss, ...p
     dismissItem(video);
     onDismiss?.(video);
     setIsAlertOpen(false);
+    alert('Item dismissed. You can undo this action from the History page.');
   };
   
   const tooltipText = isDismissed ? 'Already dismissed' : 'Not interested';
