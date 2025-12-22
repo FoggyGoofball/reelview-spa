@@ -61,10 +61,21 @@ console.log('[MAIN] IPC Logging listener ENABLED');
 
 ipcMain.handle('get-captured-streams', async (event) => {
   const windowId = String(BrowserWindow.fromWebContents(event.sender)?.id || 'default');
-  const streams = getCapturedStreams(windowId);
-  if (streams && streams.length > 0) return streams;
-  // fallback to returning all captured streams across windows
-  return getAllCapturedStreams();
+  try {
+    logToFile(`IPC: get-captured-streams requested by window ${windowId}`);
+    const streams = getCapturedStreams(windowId);
+    logToFile(`IPC: per-window streams count for ${windowId} = ${streams?.length || 0}`);
+    if (streams && streams.length > 0) {
+      logToFile(`IPC: returning ${streams.length} streams for window ${windowId}`);
+      return streams;
+    }
+    const all = getAllCapturedStreams();
+    logToFile(`IPC: per-window empty - returning all captured streams count=${all.length}`);
+    return all;
+  } catch (e:any) {
+    logToFile(`IPC get-captured-streams error: ${e?.message || e}`);
+    return [];
+  }
 });
 
 ipcMain.handle('get-quality-variants', async (event, { url }) => {
