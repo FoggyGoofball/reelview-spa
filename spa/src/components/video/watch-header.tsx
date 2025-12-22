@@ -1,22 +1,20 @@
-
 'use client';
 
-import Link from 'next/link';
+import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, List, ArrowLeft, ExternalLink } from 'lucide-react';
-import { SourceSelector } from '../layout/source-selector';
+import { DownloadButton } from '@/components/video/download-button';
 import type { Video } from '@/lib/data';
-import { cn } from '@/lib/utils';
 
-interface WatchHeaderProps {
+export interface WatchHeaderProps {
   video: Video;
   currentSeason: number;
   currentEpisode: number;
-  onPrev: () => void;
   onNext: () => void;
+  onPrev: () => void;
   onOpenEpisodes: () => void;
-  hasPrev: boolean;
   hasNext: boolean;
+  hasPrev: boolean;
   playerUrl: string;
 }
 
@@ -24,74 +22,78 @@ export function WatchHeader({
   video,
   currentSeason,
   currentEpisode,
-  onPrev,
   onNext,
+  onPrev,
   onOpenEpisodes,
-  hasPrev,
   hasNext,
+  hasPrev,
   playerUrl,
 }: WatchHeaderProps) {
-  
-  const backHref = `/media/${video.media_type}/${video.id}`;
-  const isSeries = video.media_type !== 'movie';
+  const navigate = useNavigate();
+  const isSeries = video.media_type === 'tv' || video.media_type === 'anime';
+
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
   return (
-    <header className={cn(
-        "absolute top-0 left-0 right-0 z-30 p-4",
-        "bg-gradient-to-b from-black/70 to-transparent",
-        "flex items-center justify-between gap-4"
-    )}>
-      <div className="flex items-center gap-2 md:gap-4">
-        <Button asChild variant="ghost" size="icon" className="text-white hover:bg-white/20">
-          <Link href={backHref}>
-            <ArrowLeft className="h-6 w-6" />
-          </Link>
+    <header className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/80 to-transparent p-4 text-white">
+      <div className="container max-w-screen-2xl mx-auto flex items-center justify-between">
+        {/* Back Button */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleGoBack}
+          className="rounded-full"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="h-6 w-6" />
         </Button>
-        <div className='hidden md:block'>
-            <h1 className="text-xl font-bold text-white truncate">{video.title}</h1>
-            {isSeries && <p className="text-sm text-white/80">S{currentSeason}:E{currentEpisode}</p>}
+
+        {/* Title and Info */}
+        <div className="flex-1 px-4">
+          <h1 className="text-xl font-bold text-white truncate">{video.title}</h1>
+          {isSeries && (
+            <p className="text-sm text-gray-300">
+              Season {currentSeason}, Episode {currentEpisode}
+            </p>
+          )}
         </div>
-      </div>
 
-      <div className="flex items-center gap-2 md:gap-4">
-        {isSeries && (
-           <div className="flex items-center gap-1 p-1 bg-black/30 rounded-full">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onPrev}
-                    disabled={!hasPrev}
-                    className="rounded-full text-white hover:bg-white/20 disabled:opacity-30"
-                >
-                    <ChevronLeft className="h-6 w-6" />
-                </Button>
-
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onOpenEpisodes}
-                    className="rounded-full text-white hover:bg-white/20"
-                >
-                    <List className="h-6 w-6" />
-                </Button>
-
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onNext}
-                    disabled={!hasNext}
-                    className="rounded-full text-white hover:bg-white/20 disabled:opacity-30"
-                >
-                    <ChevronRight className="h-6 w-6" />
-                </Button>
-           </div>
-        )}
-         <SourceSelector buttonVariant="secondary" />
-         <Button asChild variant="secondary" size="icon" title="Open in new tab">
-            <a href={playerUrl} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-5 w-5" />
-            </a>
-          </Button>
+        {/* Controls */}
+        <div className="flex items-center gap-2">
+          <DownloadButton />
+          {isSeries && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onPrev}
+                disabled={!hasPrev}
+                aria-label="Previous episode"
+              >
+                ? Prev
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onOpenEpisodes}
+                aria-label="Select episode"
+              >
+                Episodes
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onNext}
+                disabled={!hasNext}
+                aria-label="Next episode"
+              >
+                Next ?
+              </Button>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );
