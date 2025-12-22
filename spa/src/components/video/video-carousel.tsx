@@ -1,11 +1,9 @@
-
 import React from 'react';
 import type { Category, Video } from '@/lib/data';
 import { VideoCard } from './video-card';
 import { ChevronRight, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '../ui/skeleton';
-import Link from 'next/link';
 import { ViewMoreCard } from './view-more-card';
 
 interface VideoCarouselProps {
@@ -20,10 +18,10 @@ interface VideoCarouselProps {
 function VideoCarouselComponent({ category, videos, isLoading, onDismiss, href, hasMore }: VideoCarouselProps) {
   
   const TitleContent = () => (
-    <h2 id={`category-${category.id}-heading`} className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2 group-hover:text-primary transition-colors">
+    <h2 id={`category-${category.id}-heading`} className="text-2xl font-bold tracking-tight text-red-500 flex items-center gap-2 group-hover:text-red-600 transition-colors">
       {category.name}
       {isLoading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
-      {(href) && <ChevronRight className="h-6 w-6 text-primary transition-transform group-hover:translate-x-1" />}
+      {(href) && <ChevronRight className="h-6 w-6 text-red-500 transition-transform group-hover:translate-x-1" />}
     </h2>
   );
   
@@ -35,9 +33,9 @@ function VideoCarouselComponent({ category, videos, isLoading, onDismiss, href, 
     <section className="space-y-4" aria-labelledby={`category-${category.id}-heading`}>
       <div className="container max-w-screen-2xl">
         {actualHref ? (
-           <Link href={actualHref} className="group inline-block">
+           <a href={actualHref} className="group inline-block">
             <TitleContent />
-           </Link>
+           </a>
         ) : (
           <TitleContent />
         )}

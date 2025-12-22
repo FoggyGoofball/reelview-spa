@@ -20,13 +20,20 @@ export function MainNav({ className, isInSheet, ...props }: MainNavProps) {
     { href: '/history', label: 'History' },
   ];
   
+  const isActive = (href: string) => {
+    if (href === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(href);
+  };
+  
   const NavLink = ({ href, label }: { href: string, label: string }) => (
     <button
       onClick={() => navigate(href)}
       className={cn(
-        'text-sm font-medium transition-colors hover:text-primary cursor-pointer bg-transparent border-none p-0',
+        'text-sm font-medium transition-colors cursor-pointer bg-transparent border-none p-0',
         isInSheet ? 'block py-2 text-lg' : '',
-        location.pathname === href ? 'text-primary' : 'text-foreground/80'
+        isActive(href) ? 'text-red-500 font-bold hover:text-red-600' : 'text-foreground/80 hover:text-primary'
       )}
     >
       {label}

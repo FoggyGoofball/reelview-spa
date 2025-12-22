@@ -1,16 +1,16 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useWatchlist } from '@/context/watchlist-context';
 import { VideoCard } from './video-card';
 import { ChevronRight } from 'lucide-react';
-import Link from 'next/link';
+import { useNavigate } from 'react-router-dom';
 import { enrichVideoDetails } from '@/lib/client-api';
 import type { Video } from '@/lib/data';
 import { useDismissed } from '@/context/dismissed-context';
 
 export function WatchlistCarousel() {
+  const navigate = useNavigate();
   const { watchlist } = useWatchlist();
   const { dismissedItems } = useDismissed();
   const [isMounted, setIsMounted] = useState(false);
@@ -43,12 +43,15 @@ export function WatchlistCarousel() {
   return (
     <section className="space-y-4 py-8 md:py-12" aria-labelledby="watchlist-heading">
       <div className="container max-w-screen-2xl">
-        <Link href="/watchlist">
-          <h2 id="watchlist-heading" className="text-2xl font-bold tracking-tight text-foreground flex items-center hover:text-primary transition-colors">
-            From Your Watchlist
-            <ChevronRight className="h-6 w-6 text-primary" />
+        <button 
+          onClick={() => navigate('/watchlist')}
+          className="bg-none border-none p-0 cursor-pointer"
+        >
+          <h2 id="watchlist-heading" className="text-2xl font-bold tracking-tight text-red-500 flex items-center hover:text-red-600 transition-colors">
+            Your Watchlist
+            <ChevronRight className="h-6 w-6 text-red-500 ml-2" />
           </h2>
-        </Link>
+        </button>
       </div>
        <div className="relative">
         <div className="overflow-x-auto pb-4">
