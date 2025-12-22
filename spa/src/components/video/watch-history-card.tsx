@@ -1,5 +1,6 @@
 "use client";
 
+import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { Play } from "lucide-react";
 import type { WatchProgress } from "@/lib/data";
@@ -7,7 +8,6 @@ import { cn } from "@/lib/utils";
 import { Button } from '@/components/ui/button';
 import { AddToWatchlistButton } from './add-to-watchlist-button';
 import { DismissButton } from './dismiss-button';
-import React, { useEffect } from 'react';
 
 export interface WatchHistoryCardProps {
   item: WatchProgress;
@@ -18,13 +18,6 @@ export function WatchHistoryCard({
   item,
   variant = "default",
 }: WatchHistoryCardProps) {
-  // add debug log
-  useEffect(() => {
-    try {
-      console.log('[WATCH-CARD] render', { id: item.id, title: item.title, last_season: item.last_season_watched, last_episode: item.last_episode_watched });
-    } catch (e) { console.error('[WATCH-CARD] render log error', e); }
-  }, [item]);
-
   const navigate = useNavigate();
 
   const posterUrl = item.poster_path
@@ -118,7 +111,8 @@ export function WatchHistoryCard({
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-lg bg-muted cursor-pointer transition-all hover:shadow-xl hover:scale-105",
+        // allow visible overflow so tooltips and badges can render outside the poster area
+        "group relative overflow-visible rounded-lg bg-muted cursor-pointer transition-all hover:shadow-xl hover:scale-105",
         variant === "compact" && "w-24"
       )}
       onClick={handleCardClick}
@@ -127,24 +121,24 @@ export function WatchHistoryCard({
         <img
           src={posterUrl}
           alt={`Poster for ${item.title}`}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover rounded-lg"
         />
 
         {/* overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 rounded-lg" />
 
-        {/* Current episode badge - separate entity on the poster */}
+        {/* Current episode badge - center bottom above next-episode button */}
         {currSeason != null && currEpisode != null && (
-          <div className="absolute left-3 top-3 z-30 pointer-events-auto">
-            <div className="bg-black/70 px-3 py-1 rounded-md text-left">
-              <div className="text-xs text-muted-foreground">Continue</div>
+          <div className="absolute left-1/2 transform -translate-x-1/2 bottom-14 z-40 pointer-events-none text-center">
+            <div className="bg-black/80 px-3 py-1 rounded-md inline-block">
+              <div className="text-xs text-muted-foreground">Continue Watching</div>
               <div className="text-sm font-semibold text-white">{formatEp(currSeason, currEpisode)}</div>
             </div>
           </div>
         )}
 
-        {/* top-right full hover controls (Play, Watchlist, Dismiss) */}
-        <div className="absolute top-2 right-2 z-40 flex flex-col items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        {/* top-right full hover controls (Play, Watchlist, Dismiss) - pointer events enabled */}
+        <div className="absolute top-2 right-2 z-50 flex flex-col items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto">
           <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={(e:any)=>{ e.stopPropagation(); handlePlayClick(e); }}>
             <Play className="h-4 w-4" />
           </Button>
@@ -161,7 +155,7 @@ export function WatchHistoryCard({
 
         {/* progress bar */}
         {item.progress && item.progress.watched > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-600">
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-600 rounded-b-lg">
             <div className="h-full bg-primary" style={{ width: `${percentage}%` }} />
           </div>
         )}
