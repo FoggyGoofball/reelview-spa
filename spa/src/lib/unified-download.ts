@@ -125,7 +125,16 @@ function getElectronAPI() {
     onDownloadsUpdated: (cb: (downloads: any[]) => void) => {
       if (!download?.onDownloadsUpdated) return () => {};
       return download.onDownloadsUpdated(cb);
-    }
+    },
+
+    requestCapturedStreamsPush: async () => {
+      try {
+        const res = await download?.requestCapturedStreamsPush?.();
+        return res || { success: false };
+      } catch (e) {
+        return { success: false };
+      }
+    },
   };
 }
 
@@ -194,4 +203,18 @@ export function getPlatform(): 'electron' | 'capacitor' | 'web' {
   if (isElectron) return 'electron';
   if (isCapacitor) return 'capacitor';
   return 'web';
+}
+
+export async function getBuildInfo() {
+  // Try electron preload first
+  try {
+    const e = (window as any).electronDownload;
+    if (e && e.getBuildInfo) {
+      const info = await e.getBuildInfo();
+      return info;
+    }
+  } catch (e) {}
+
+  // fallback to empty info
+  return { buildTime: new Date().toISOString() };
 }

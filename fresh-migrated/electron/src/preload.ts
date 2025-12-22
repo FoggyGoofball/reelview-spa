@@ -109,6 +109,14 @@ const downloadAPI = {
     }
   },
   
+  requestCapturedStreamsPush: async () => {
+    try {
+      return await ipcRenderer.invoke('request-captured-streams-push');
+    } catch (e:any) {
+      return { success: false };
+    }
+  },
+
   // Event listeners
   onStreamCaptured: (callback: (stream: any) => void) => {
     const handlerCaptured = (_event: any, stream: any) => callback(stream);
@@ -138,7 +146,15 @@ const downloadAPI = {
     const handler = (_event: any, downloads: any[]) => callback(downloads);
     ipcRenderer.on('downloads-updated', handler);
     return () => ipcRenderer.removeListener('downloads-updated', handler);
-  }
+  },
+
+  getBuildInfo: async () => {
+    try {
+      return await ipcRenderer.invoke('get-build-info');
+    } catch (e:any) {
+      return { buildTime: new Date().toISOString() };
+    }
+  },
 };
 
 try {

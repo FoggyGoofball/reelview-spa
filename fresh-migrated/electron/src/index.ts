@@ -6,12 +6,14 @@ import electronIsDev from 'electron-is-dev';
 import unhandled from 'electron-unhandled';
 import * as path from 'path';
 import * as fs from 'fs';
+import { execSync } from 'child_process';
 
 import { ElectronCapacitorApp, setupContentSecurityPolicy, setupReloadWatcher } from './setup';
 import { 
   downloadStream, 
   cancelDownload, 
   getCapturedStreams,
+  getAllCapturedStreams,
   clearCapturedStreams,
   setupNetworkInterception,
   getQualityVariants,
@@ -59,7 +61,10 @@ console.log('[MAIN] IPC Logging listener ENABLED');
 
 ipcMain.handle('get-captured-streams', async (event) => {
   const windowId = String(BrowserWindow.fromWebContents(event.sender)?.id || 'default');
-  return getCapturedStreams(windowId);
+  const streams = getCapturedStreams(windowId);
+  if (streams && streams.length > 0) return streams;
+  // fallback to returning all captured streams across windows
+  return getAllCapturedStreams();
 });
 
 ipcMain.handle('get-quality-variants', async (event, { url }) => {
@@ -236,6 +241,22 @@ if (electronIsDev) {
   console.log('[MAIN] Reload watcher set up');
 }
 
+// Compute build info (git short hash) for debugging
+let BUILD_INFO: { buildHash?: string; branch?: string; buildTime: string } = { buildTime: new Date().toISOString() };
+try {
+  const hash = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+  const branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
+  BUILD_INFO = { buildHash: hash, branch, buildTime: new Date().toISOString() };
+  console.log(`BUILD_INFO: ${JSON.stringify(BUILD_INFO)}`);
+  logToFile(`BUILD_INFO: ${JSON.stringify(BUILD_INFO)}`);
+} catch (e:any) {
+  logToFile(`BUILD_INFO error: ${e?.message || e}`);
+}
+
+ipcMain.handle('get-build-info', async () => {
+  return BUILD_INFO;
+});
+
 // Run Application
 (async () => {
   await app.whenReady();
@@ -288,4 +309,18 @@ ipcMain.on('m3u8-content', (event, { url, size }) => {
 
 ipcMain.on('m3u8-captured', (event, { url, size }) => {
   logToFile(`IPC: m3u8-captured - ${url.substring(0, 80)}, size: ${size}`);
+});
+
+ipcMain.handle('request-captured-streams-push', async (event) => {
+  try {
+    const windowId = String(BrowserWindow.fromWebContents(event.sender)?.id || 'default');
+    const all = getAllCapturedStreams();
+    // send only to the requesting renderer
+    event.sender.send('captured-streams-list', all);
+    logToFile(`request-captured-streams-push handled for window ${windowId}, sent ${all.length}`);
+    return { success: true, count: all.length };
+  } catch (e: any) {
+    logToFile(`request-captured-streams-push failed: ${e?.message || e}`);
+    return { success: false };
+  }
 });
