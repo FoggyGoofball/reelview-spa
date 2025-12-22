@@ -5,6 +5,7 @@ import { ChevronRight, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '../ui/skeleton';
 import { ViewMoreCard } from './view-more-card';
+import { useNavigate } from 'react-router-dom';
 
 interface VideoCarouselProps {
   category: Category;
@@ -16,29 +17,41 @@ interface VideoCarouselProps {
 }
 
 function VideoCarouselComponent({ category, videos, isLoading, onDismiss, href, hasMore }: VideoCarouselProps) {
-  
+  const navigate = useNavigate();
+
+  const handleViewMore = () => {
+    // prefer explicit href with querystring; also pass state as fallback
+    if (href) {
+      navigate(href, { state: { genreId: category.id, genreName: category.name, isKeyword: !!category.is_keyword } });
+    } else {
+      // fallback to route with state only
+      const base = `/${category.is_keyword ? 'anime' : 'movies'}`;
+      navigate(`${base}/genre`, { state: { genreId: category.id, genreName: category.name, isKeyword: !!category.is_keyword } });
+    }
+  };
+
   const TitleContent = () => (
-    <h2 id={`category-${category.id}-heading`} className="text-2xl font-bold tracking-tight text-red-500 flex items-center gap-2 group-hover:text-red-600 transition-colors">
-      {category.name}
-      {isLoading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
-      {(href) && <ChevronRight className="h-6 w-6 text-red-500 transition-transform group-hover:translate-x-1" />}
-    </h2>
+    <div className="flex items-center gap-2 group">
+      <h2 id={`category-${category.id}-heading`} className="text-2xl font-bold tracking-tight text-red-500 group-hover:text-red-600 transition-colors">
+        {category.name}
+        {isLoading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground ml-2" />}
+      </h2>
+      { (href || true) && (
+        <button
+          className="ml-2 p-1 rounded-full hover:bg-red-600/20 transition-colors"
+          onClick={handleViewMore}
+          aria-label={`View more ${category.name}`}
+        >
+          <ChevronRight className="h-6 w-6 text-red-500 group-hover:text-red-600 transition-colors" />
+        </button>
+      )}
+    </div>
   );
-  
-  const actualHref = href 
-    ? `${href}/${category.id}?name=${encodeURIComponent(category.name)}&is_keyword=${!!category.is_keyword}`
-    : undefined;
 
   return (
     <section className="space-y-4" aria-labelledby={`category-${category.id}-heading`}>
       <div className="container max-w-screen-2xl">
-        {actualHref ? (
-           <a href={actualHref} className="group inline-block">
-            <TitleContent />
-           </a>
-        ) : (
-          <TitleContent />
-        )}
+        <TitleContent />
       </div>
       <div className="relative">
         <div className="overflow-x-auto pb-4">
@@ -57,9 +70,15 @@ function VideoCarouselComponent({ category, videos, isLoading, onDismiss, href, 
                     <VideoCard video={video} onDismiss={onDismiss} />
                 </div>
                 ))}
-                {hasMore && actualHref && (
-                  <div className={cn("w-40 sm:w-48 md:w-56 flex-shrink-0")}>
-                    <ViewMoreCard href={actualHref} />
+                {hasMore && (
+                  <div className={cn("w-40 sm:w-48 md:w-56 flex-shrink-0 flex items-center justify-center")}>
+                    <button
+                      className="rounded-full p-3 hover:bg-red-600/20 transition-colors"
+                      onClick={handleViewMore}
+                      aria-label="View More"
+                    >
+                      <ChevronRight className="h-8 w-8 text-red-500" />
+                    </button>
                   </div>
                 )}
               </>

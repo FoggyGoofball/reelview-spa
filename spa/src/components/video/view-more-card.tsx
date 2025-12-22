@@ -1,23 +1,32 @@
-
 'use client';
 
-import Link from 'next/link';
-import { Card } from '@/components/ui/card';
-import { PlusCircle } from 'lucide-react';
+import { Play } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
 
-interface ViewMoreCardProps {
+export interface ViewMoreCardProps {
   href: string;
 }
 
 export function ViewMoreCard({ href }: ViewMoreCardProps) {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (href) {
+      navigate(href);
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
-    <Link href={href} className="group block h-full">
-      <Card className="h-full overflow-hidden border-2 border-dashed border-secondary hover:border-primary hover:text-primary transition-all duration-300 flex items-center justify-center bg-secondary/50 hover:bg-secondary">
-        <div className="flex flex-col items-center gap-2 text-muted-foreground group-hover:text-primary">
-          <PlusCircle className="h-12 w-12" />
-          <span className="text-sm font-medium">View More</span>
+    <Card className="group relative overflow-hidden rounded-lg bg-muted cursor-pointer transition-all hover:shadow-xl hover:scale-105" onClick={handleClick}>
+      <CardContent className="p-0 relative h-full w-full aspect-[2/3] flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+        <div className="text-center">
+          <Play className="h-12 w-12 text-primary mx-auto mb-2" />
+          <p className="text-sm font-semibold text-foreground">View More</p>
         </div>
-      </Card>
-    </Link>
+      </CardContent>
+    </Card>
   );
 }

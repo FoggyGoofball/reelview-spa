@@ -5,11 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import { getVideos, getPopularTvShows, getLatestAnime, tmdbMediaToVideo } from '@/lib/api';
 import type { Video } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-// DISABLE ALL CAROUSELS TO TEST
-// import { VideoCarousel } from '@/components/video/video-carousel';
+import { VideoCarousel } from '@/components/video/video-carousel';
 import { PlayCircle } from 'lucide-react';
 import { ApiKeyNotice } from '@/components/api-key-notice';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ContinueWatchingCarousel } from '@/components/video/continue-watching-carousel';
+import { WatchlistCarousel } from '@/components/video/watchlist-carousel';
 import { useDismissed } from '@/context/dismissed-context';
 import { TMDBMovie, TMDBTvShow } from '@/lib/tmdb';
 import { cn } from '@/lib/utils';
@@ -92,35 +93,51 @@ export default function Home() {
         setIsLoadingAnime(true);
         setIsFeaturedLoading(true);
 
-        const [movies, series, anime] = await Promise.all([
-            processMediaList(getVideos, false),
-            processMediaList(getPopularTvShows, false),
-            processMediaList(getLatestAnime, true)
-        ]);
+        // Sequential loading: fetch each list one by one so each carousel can render as soon as it's ready
+        try {
+          const movies = await processMediaList(getVideos, false);
+          setPopularMovies(movies);
+          setIsLoadingMovies(false);
 
-        console.log('[HOME] Data fetched - movies:', movies.length, 'series:', series.length, 'anime:', anime.length)
+          // update featured pool incrementally
+          const partialPool1 = [...movies.slice(0,3)];
+          setFeaturedPool(prev => {
+            const pool = [...partialPool1, ...(prev || [])].filter(Boolean);
+            return pool;
+          });
+          if (!featuredVideo && movies.length > 0) setFeaturedVideo(movies[0]);
 
-        setPopularMovies(movies);
-        setPopularSeries(series);
-        setTopAnime(anime);
+          const series = await processMediaList(getPopularTvShows, false);
+          setPopularSeries(series);
+          setIsLoadingSeries(false);
 
-        setIsLoadingMovies(false);
-        setIsLoadingSeries(false);
-        setIsLoadingAnime(false);
+          setFeaturedPool(prev => {
+            const pool = [...(prev || []), ...series.slice(0,3)].filter(Boolean);
+            // dedupe by id
+            const seen = new Set();
+            return pool.filter(v => { const k = `${v.media_type}-${v.id}`; if (seen.has(k)) return false; seen.add(k); return true; });
+          });
+          if (!featuredVideo && series.length > 0) setFeaturedVideo(series[0]);
 
-        const pool = [...movies.slice(0, 3), ...series.slice(0, 3), ...anime.slice(0,3)].filter(Boolean);
-        
-        for (let i = pool.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [pool[i], pool[j]] = [pool[j], pool[i]];
+          const anime = await processMediaList(getLatestAnime, true);
+          setTopAnime(anime);
+          setIsLoadingAnime(false);
+
+          setFeaturedPool(prev => {
+            const pool = [...(prev || []), ...anime.slice(0,3)].filter(Boolean);
+            const seen = new Set();
+            return pool.filter(v => { const k = `${v.media_type}-${v.id}`; if (seen.has(k)) return false; seen.add(k); return true; });
+          });
+          if (!featuredVideo && anime.length > 0) setFeaturedVideo(anime[0]);
+
+        } catch (error) {
+          console.error('[HOME] Error fetching lists sequentially', error);
+        } finally {
+          setIsFeaturedLoading(false);
+          setIsLoadingMovies(false);
+          setIsLoadingSeries(false);
+          setIsLoadingAnime(false);
         }
-        
-        console.log('[HOME] Featured pool created with', pool.length, 'items')
-        setFeaturedPool(pool);
-        if (pool.length > 0) {
-            setFeaturedVideo(pool[0]);
-        }
-        setIsFeaturedLoading(false);
     };
 
     fetchAllData();
@@ -169,6 +186,26 @@ export default function Home() {
     return <ApiKeyNotice />;
   }
 
+  const filterDismissed = (videos: Video[]) => {
+    return videos.filter(video => 
+        !dismissedItems[`${video.media_type}-${video.id}`]
+    );
+  }
+
+  const handleDismiss = (video: Video) => {
+    switch (video.media_type) {
+      case 'movie':
+        setPopularMovies(prev => prev.filter(m => m.id !== video.id));
+        break;
+      case 'tv':
+        setPopularSeries(prev => prev.filter(s => s.id !== video.id));
+        break;
+      case 'anime':
+        setTopAnime(prev => prev.filter(a => a.id !== video.id));
+        break;
+    }
+  }
+    
   const currentFeaturedVideo = featuredVideo && !dismissedItems[`${featuredVideo.media_type}-${featuredVideo.id}`]
     ? featuredVideo
     : featuredPool.find(v => !dismissedItems[`${v.media_type}-${v.id}`]) || null;
@@ -182,7 +219,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col bg-black">
+    <div className="flex flex-col">
       {isFeaturedLoading ? (
          <Skeleton className="h-[60vh] w-full" />
       ) : currentFeaturedVideo && (
@@ -216,8 +253,32 @@ export default function Home() {
       )}
 
       <div className="container max-w-screen-2xl flex flex-col gap-8 md:gap-12 lg:gap-16 py-8 md:py-12">
-        <p className="text-white text-lg">? Featured video + data fetching working!</p>
-        <p className="text-white text-sm">Carousels temporarily disabled - one is causing 'd is not a function' error</p>
+        <ContinueWatchingCarousel />
+        <WatchlistCarousel />
+        <VideoCarousel 
+            category={{ id: 'popular-movies', name: 'Popular Movies' }}
+            videos={filterDismissed(popularMovies)}
+            isLoading={isLoadingMovies && popularMovies.length === 0}
+            onDismiss={handleDismiss}
+            href="/movies"
+            hasMore={popularMovies.length >= 10}
+        />
+        <VideoCarousel 
+            category={{ id: 'popular-series', name: 'Popular TV Series' }}
+            videos={filterDismissed(popularSeries)}
+            isLoading={isLoadingSeries && popularSeries.length === 0}
+            onDismiss={handleDismiss}
+            href="/tv"
+            hasMore={popularSeries.length >= 10}
+        />
+        <VideoCarousel 
+            category={{ id: 'top-anime', name: 'Top Airing Anime' }}
+            videos={filterDismissed(topAnime)}
+            isLoading={isLoadingAnime && topAnime.length === 0}
+            onDismiss={handleDismiss}
+            href="/anime"
+            hasMore={topAnime.length >= 10}
+        />
       </div>
     </div>
   );

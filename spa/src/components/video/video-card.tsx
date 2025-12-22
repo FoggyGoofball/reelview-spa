@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Star, Plus, X, Info } from 'lucide-react';
+import { Star, Plus, X, Info, Play } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useDismissed } from '@/context/dismissed-context';
@@ -85,92 +85,50 @@ export function VideoCard({ video, variant = 'default', onDismiss }: VideoCardPr
           className="w-full h-full object-cover"
           style={{ aspectRatio: '2/3' }}
         />
-        
-        {/* Dark gradient overlay - visible on hover (desktop) or always (mobile) */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 md:opacity-0 transition-opacity duration-200" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-100 md:opacity-0" />
 
-        {variant !== 'compact' && (
-          <>
-            {/* Action buttons container - visible on hover (desktop) or always (mobile) */}
-            <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 md:translate-y-0 transition-transform duration-200 bg-gradient-to-t from-black to-transparent space-y-2">
-              {/* Top row: Watch Now and Details buttons */}
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="default"
-                  className="flex-1 bg-red-600 hover:bg-red-700"
-                  onClick={handleWatchNow}
-                  title="Watch Now"
-                >
-                  ? Watch
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={handleDetails}
-                  title="View Details"
-                >
-                  <Info className="h-4 w-4 mr-1" /> Info
-                </Button>
-              </div>
+        {/* Overlay: always visible on mobile, on hover for desktop */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10" />
 
-              {/* Bottom row: Add to Watchlist and Dismiss buttons */}
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant={isVideoInWatchlist ? 'default' : 'outline'}
-                  className={cn(
-                    'flex-1',
-                    isVideoInWatchlist && 'bg-green-600 hover:bg-green-700'
-                  )}
-                  onClick={handleWatchlistClick}
-                  title={isVideoInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}
-                >
-                  {isVideoInWatchlist ? (
-                    <>
-                      <X className="h-4 w-4 mr-1" /> Remove
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4 mr-1" /> Watchlist
-                    </>
-                  )}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleDismissClick}
-                  title="Dismiss"
-                  className="px-2"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+        {/* Right-justified vertical icon-only action buttons (smaller) */}
+        <div className={cn(
+          "absolute inset-y-0 right-3 flex flex-col items-end justify-center gap-2 z-20",
+          "md:opacity-0 md:pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200"
+        )}>
+          <button onClick={handleWatchNow} title="Watch Now" className="bg-black/70 hover:bg-red-600/80 text-white rounded-full p-2 h-8 w-8 flex items-center justify-center shadow transition-colors">
+            <Play className="h-4 w-4" />
+          </button>
+          <button onClick={handleDetails} title="Details" className="bg-black/70 hover:bg-blue-500/80 text-white rounded-full p-2 h-8 w-8 flex items-center justify-center shadow transition-colors">
+            <Info className="h-4 w-4" />
+          </button>
+          <button onClick={handleWatchlistClick} title={isVideoInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'} className={cn(
+            'bg-black/70 rounded-full p-2 h-8 w-8 flex items-center justify-center shadow transition-colors',
+            isVideoInWatchlist ? 'hover:bg-green-600/80 text-green-400' : 'hover:bg-green-500/80 text-white'
+          )}>
+            {isVideoInWatchlist ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          </button>
+          <button onClick={handleDismissClick} title="Dismiss" className="bg-black/70 hover:bg-red-500/80 text-white rounded-full p-2 h-8 w-8 flex items-center justify-center shadow transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
-            {/* Rating badge */}
-            {video.vote_average > 0 && (
-              <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/80 rounded px-2 py-1 z-10">
-                <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                <span className="text-xs font-semibold text-white">
-                  {video.vote_average.toFixed(1)}
-                </span>
-              </div>
-            )}
-
-            {/* Dismiss button (quick dismiss via X) */}
-            <button
-              onClick={handleDismissClick}
-              className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 md:opacity-100 transition-opacity z-10"
-              aria-label="Dismiss"
-              title="Dismiss this item"
-            >
-              <X className="h-6 w-6 text-white bg-black/50 rounded-full p-1 hover:bg-black/75" />
-            </button>
-          </>
+        {/* Age rating badge (use video.rating if available) */}
+        {video.rating && (
+          <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/80 rounded px-2 py-1 z-30">
+            <span className="text-xs font-semibold text-white">
+              {video.rating}
+            </span>
+          </div>
         )}
+
+        {/* Dismiss button (quick dismiss via X) - always visible on mobile, on hover for desktop */}
+        <button
+          onClick={handleDismissClick}
+          className="absolute top-2 left-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity z-30"
+          aria-label="Dismiss"
+          title="Dismiss this item"
+        >
+          <X className="h-6 w-6 text-white bg-black/50 rounded-full p-1 hover:bg-black/75" />
+        </button>
       </CardContent>
     </Card>
   );

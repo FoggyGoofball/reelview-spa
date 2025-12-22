@@ -1,7 +1,7 @@
 'use client';
 
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Play } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DownloadButton } from '@/components/video/download-button';
 import type { Video } from '@/lib/data';
@@ -37,7 +37,7 @@ export function WatchHeader({
   };
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/80 to-transparent p-4 text-white">
+    <header className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent p-4 text-white">
       <div className="container max-w-screen-2xl mx-auto flex items-center justify-between">
         {/* Back Button */}
         <Button
@@ -68,16 +68,18 @@ export function WatchHeader({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={onPrev}
+                onClick={(e) => { e.stopPropagation(); onPrev(); }}
                 disabled={!hasPrev}
                 aria-label="Previous episode"
+                className="inline-flex items-center gap-2"
               >
-                ? Prev
+                <ChevronLeft className="h-4 w-4" />
+                Prev
               </Button>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={onOpenEpisodes}
+                onClick={(e) => { e.stopPropagation(); onOpenEpisodes(); }}
                 aria-label="Select episode"
               >
                 Episodes
@@ -85,11 +87,13 @@ export function WatchHeader({
               <Button
                 size="sm"
                 variant="outline"
-                onClick={onNext}
+                onClick={(e) => { e.stopPropagation(); onNext(); }}
                 disabled={!hasNext}
                 aria-label="Next episode"
+                className="inline-flex items-center gap-2"
               >
-                Next ?
+                Next
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </>
           )}

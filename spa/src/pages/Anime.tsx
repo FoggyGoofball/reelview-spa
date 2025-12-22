@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect, useCallback, memo } from 'react';
 import { getVideosByGenre, tmdbMediaToVideo } from '@/lib/api';
@@ -33,9 +32,8 @@ const fetchGenre = async (
 ): Promise<{ genreId: string, videos: Video[] }> => {
     const currentVideosForGenre: Video[] = [];
     let page = 1;
-    
-    while (currentVideosForGenre.length < CAROUSEL_FETCH_LIMIT && page <= 5) {
-      try {
+    try {
+      while (currentVideosForGenre.length < CAROUSEL_FETCH_LIMIT && page <= 5) {
         const rawMedia: TMDBMedia[] = await getVideosByGenre(genre.id, 'anime', !!genre.is_keyword, page);
         if (!rawMedia || rawMedia.length === 0) break;
 
@@ -43,7 +41,6 @@ const fetchGenre = async (
           if (currentVideosForGenre.length >= CAROUSEL_FETCH_LIMIT) break;
 
           const videoKey = `tv-${basicVideo.id}`;
-          
           if (dismissedItems[videoKey] || masterProcessedIds.has(videoKey)) {
             continue;
           }
@@ -55,11 +52,10 @@ const fetchGenre = async (
           }
         }
         page++;
-      } catch (error) {
-        console.error(`Failed to fetch videos for genre ${genre.name}:`, error);
-        toast({ variant: "destructive", title: `Failed to fetch videos`, description: `Could not load ${genre.name} videos.` });
-        break; 
       }
+    } catch (error) {
+      console.error(`Failed to fetch videos for genre ${genre.name}:`, error);
+      toast({ variant: "destructive", title: `Failed to fetch videos`, description: `Could not load ${genre.name} videos.` });
     }
     return { genreId: genre.id, videos: currentVideosForGenre };
 }
@@ -80,21 +76,21 @@ export default function AnimeGenresPage() {
     setVideosByGenre({});
 
     const masterProcessedIds = new Set<string>();
-    const genrePromises = ANIME_GENRES.map(genre => fetchGenre(genre, dismissedItems, masterProcessedIds, toast));
-    const results = await Promise.all(genrePromises);
 
-    const newVideosByGenre: VideosByGenre = {};
-    results.forEach(result => {
-      newVideosByGenre[result.genreId] = result.videos;
-    });
+    // Sequential fetching to ensure deduplication across carousels
+    for (const genre of ANIME_GENRES) {
+      setLoadingByGenre(prev => ({ ...prev, [genre.id]: true }));
+      try {
+        const result = await fetchGenre(genre, dismissedItems, masterProcessedIds, toast);
+        setVideosByGenre(prev => ({ ...prev, [result.genreId]: result.videos }));
+      } catch (error) {
+        console.error('[ANIME] Error fetching genre', genre.id, error);
+        setVideosByGenre(prev => ({ ...prev, [genre.id]: [] }));
+      } finally {
+        setLoadingByGenre(prev => ({ ...prev, [genre.id]: false }));
+      }
+    }
 
-    setVideosByGenre(newVideosByGenre);
-
-    const finalLoading: LoadingByGenre = {};
-    ANIME_GENRES.forEach(genre => {
-      finalLoading[genre.id] = false;
-    });
-    setLoadingByGenre(finalLoading);
   }, [dismissedItems, toast]);
 
   useEffect(() => {
@@ -119,15 +115,13 @@ export default function AnimeGenresPage() {
           Anime by Genre
         </h1>
       </div>
-      
       <div className="flex flex-col gap-8 md:gap-12 lg:gap-16">
         {ANIME_GENRES.map(genre => {
             const allVideosForGenre = videosByGenre[genre.id] || [];
             const carouselVideos = allVideosForGenre.slice(0, CAROUSEL_ITEM_LIMIT);
             const hasMore = allVideosForGenre.length > CAROUSEL_ITEM_LIMIT;
             const isLoading = loadingByGenre[genre.id] !== false;
-            const href = `/anime/genre`;
-
+            const href = `/anime/genre?id=${genre.id}&name=${encodeURIComponent(genre.name)}${genre.is_keyword ? '&is_keyword=1' : ''}`;
             return (
                 <MemoizedVideoCarousel 
                     key={genre.id}

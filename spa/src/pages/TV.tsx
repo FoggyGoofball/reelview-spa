@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { getVideosByGenre, tmdbMediaToVideo } from '@/lib/api';
@@ -122,9 +121,8 @@ const CarouselRenderer = ({ genre }: { genre: Category }) => {
     const carouselVideos = allVideos.slice(0, CAROUSEL_ITEM_LIMIT);
     const hasMore = allVideos.length > CAROUSEL_ITEM_LIMIT;
     const isLoading = loadingByGenre[genre.id] !== false;
-
+    const href = `/tv/genre?id=${genre.id}&name=${encodeURIComponent(genre.name)}`;
     if (isLoading || carouselVideos.length > 0) {
-        const viewMoreHref = `/tv/genre`;
         return (
             <MemoizedVideoCarousel
                 key={genre.id}
@@ -133,7 +131,7 @@ const CarouselRenderer = ({ genre }: { genre: Category }) => {
                 isLoading={isLoading && carouselVideos.length === 0}
                 onDismiss={handleDismiss}
                 hasMore={hasMore}
-                href={viewMoreHref}
+                href={href}
             />
         )
     }

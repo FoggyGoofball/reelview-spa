@@ -5,6 +5,8 @@ import { AlertTriangle, KeyRound, Check, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { useApiKeyDialog } from '@/context/api-key-dialog-context';
+import { useNavigate } from 'react-router-dom';
 
 export function ApiKeyNotice() {
   const [apiKey, setApiKey] = useState('');
@@ -12,9 +14,14 @@ export function ApiKeyNotice() {
   const [validationStatus, setValidationStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
   const [showChangeKey, setShowChangeKey] = useState(false);
   const { toast } = useToast();
+  const { showDialog, closeDialog } = useApiKeyDialog();
+  const navigate = useNavigate();
 
   // Check if API key is already saved
   const savedKey = typeof window !== 'undefined' ? localStorage.getItem('TMDB_API_KEY') : null;
+
+  // Only render if dialog is open or no key is set
+  if (!showDialog && savedKey && !showChangeKey) return null;
 
   const validateApiKey = async (key: string): Promise<boolean> => {
     if (!key.trim()) {
@@ -57,7 +64,7 @@ export function ApiKeyNotice() {
     if (isValid) {
       toast({
         title: 'API Key Valid!',
-        description: 'This key works. Click "Save Key & Reload" to continue.',
+        description: 'This key works. Click "Save Key" to continue.',
       });
     } else {
       toast({
@@ -92,14 +99,25 @@ export function ApiKeyNotice() {
     }
 
     localStorage.setItem('TMDB_API_KEY', apiKey);
+    // Dispatch an event so other parts of the app can react without a full reload
+    try {
+      window.dispatchEvent(new CustomEvent('tmdb-api-key-changed'));
+    } catch (e) {
+      console.warn('Could not dispatch api key event', e);
+    }
+
     toast({
       title: 'API Key Saved!',
-      description: 'The page will now reload.',
+      description: 'The dialog will close and the app will refresh data.',
     });
 
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000);
+    // Close dialog and navigate to home to avoid blank page
+    closeDialog();
+    try {
+      navigate('/');
+    } catch (e) {
+      /* ignore */
+    }
   };
 
   const handleChangeKey = () => {
@@ -109,10 +127,20 @@ export function ApiKeyNotice() {
     localStorage.removeItem('TMDB_API_KEY');
   };
 
+  // Modal wrapper to overlay on top of the UI
+  const ModalWrapper = ({ children }: { children: React.ReactNode }) => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/60" onClick={closeDialog} />
+      <div className="relative z-50 w-full max-w-md p-6 mx-4 sm:mx-0">
+        {children}
+      </div>
+    </div>
+  );
+
   // If a valid key is already saved, show option to change it
   if (savedKey && !showChangeKey) {
     return (
-      <div className="container max-w-screen-md my-12">
+      <ModalWrapper>
         <div className="p-6 rounded-lg bg-green-950/30 border border-green-700/50 flex flex-col items-center text-center">
           <Check className="w-12 h-12 text-green-500 mb-4" />
           <h2 className="text-2xl font-bold mb-2">API Key Configured</h2>
@@ -122,7 +150,7 @@ export function ApiKeyNotice() {
 
           <div className="flex gap-4">
             <Button 
-              onClick={() => window.location.reload()}
+              onClick={() => { closeDialog(); navigate('/'); }}
             >
               Continue to App
             </Button>
@@ -138,13 +166,16 @@ export function ApiKeyNotice() {
             API key: {savedKey.substring(0, 6)}...{savedKey.substring(savedKey.length - 4)}
           </p>
         </div>
-      </div>
+      </ModalWrapper>
     );
   }
 
   return (
-    <div className="container max-w-screen-md my-12">
+    <ModalWrapper>
       <div className="p-6 rounded-lg bg-secondary border border-primary/20 flex flex-col items-center text-center">
+        <button onClick={closeDialog} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
+          <X className="h-5 w-5" />
+        </button>
         <AlertTriangle className="w-12 h-12 text-primary mb-4" />
         <h2 className="text-2xl font-bold mb-2">TMDB API Key Required</h2>
         <p className="text-muted-foreground mb-6">
@@ -208,7 +239,7 @@ export function ApiKeyNotice() {
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Checking...
                 </>
               ) : (
-                'Save Key & Reload'
+                'Save Key'
               )}
             </Button>
             <Button asChild variant="outline">
@@ -223,6 +254,6 @@ export function ApiKeyNotice() {
           Your API key will be stored in your browser's local storage.
         </p>
       </div>
-    </div>
+    </ModalWrapper>
   );
 }
