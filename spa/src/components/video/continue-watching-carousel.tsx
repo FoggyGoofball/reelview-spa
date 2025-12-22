@@ -1,15 +1,15 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getWatchHistory, enrichVideoDetails } from '@/lib/client-api';
 import type { WatchProgress } from '@/lib/data';
 import { WatchHistoryCard } from './watch-history-card';
 import { ChevronRight } from 'lucide-react';
-import Link from 'next/link';
 import { useDismissed } from '@/context/dismissed-context';
 
 export function ContinueWatchingCarousel() {
+  const navigate = useNavigate();
   const [history, setHistory] = useState<WatchProgress[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const { dismissedItems } = useDismissed();
@@ -78,12 +78,15 @@ export function ContinueWatchingCarousel() {
   return (
     <section className="space-y-4 py-8 md:py-12" aria-labelledby="continue-watching-heading">
       <div className="container max-w-screen-2xl">
-        <Link href="/history">
+        <button 
+          onClick={() => navigate('/history')}
+          className="bg-none border-none p-0 cursor-pointer"
+        >
           <h2 id="continue-watching-heading" className="text-2xl font-bold tracking-tight text-foreground flex items-center hover:text-primary transition-colors">
             Continue Watching
             <ChevronRight className="h-6 w-6 text-primary" />
           </h2>
-        </Link>
+        </button>
       </div>
       <div className="relative">
         <div className="overflow-x-auto pb-4">

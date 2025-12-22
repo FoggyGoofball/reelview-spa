@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
-import { notFound, useRouter, useSearchParams, redirect } from 'next/navigation';
+import { useNavigate, useLocation } from 'react-router-dom';
 import type { Video, CustomVideoData } from '@/lib/data';
 import { getAnimeEpisodes, type JikanEpisode } from '@/lib/jikan';
 import { getTvSeasonDetails, type TMDBEpisode, type TMDBMedia } from '@/lib/tmdb';
@@ -15,13 +14,15 @@ import { EpisodeSelectionSheet } from '@/components/video/episode-selection-shee
 import { useSource } from '@/context/source-context';
 
 function WatchPageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const tmdbId = searchParams.get('id');
-  const mediaType = searchParams.get('type') as 'movie' | 'tv' | 'anime' | null;
-  const initialSeason = searchParams.get('s') ? parseInt(searchParams.get('s') as string, 10) : undefined;
-  const initialEpisode = searchParams.get('e') ? parseInt(searchParams.get('e') as string, 10) : undefined;
+  // Parse query params from React Router location
+  const params = new URLSearchParams(location.search);
+  const tmdbId = params.get('id');
+  const mediaType = params.get('type') as 'movie' | 'tv' | 'anime' | null;
+  const initialSeason = params.get('s') ? parseInt(params.get('s') as string, 10) : undefined;
+  const initialEpisode = params.get('e') ? parseInt(params.get('e') as string, 10) : undefined;
 
   const [video, setVideo] = useState<Video | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,9 +36,9 @@ function WatchPageContent() {
 
   useEffect(() => {
     if (mediaType && mediaType !== 'movie' && (!initialSeason || !initialEpisode)) {
-      redirect(`/watch?id=${tmdbId}&type=${mediaType}&s=1&e=1`);
+      navigate(`/watch?id=${tmdbId}&type=${mediaType}&s=1&e=1`);
     }
-  }, [mediaType, initialSeason, initialEpisode, tmdbId]);
+  }, [mediaType, initialSeason, initialEpisode, tmdbId, navigate]);
 
   const applyCustomData = useCallback((videoData: Video, customData: Record<string, CustomVideoData>) => {
     const videoKey = `${videoData.media_type}-${videoData.id}`;
@@ -175,7 +176,7 @@ function WatchPageContent() {
     setCurrentEpisode(episode);
     
     const newUrl = `/watch?id=${tmdbId}&type=${mediaType}&s=${season}&e=${episode}`;
-    router.push(newUrl);
+    navigate(newUrl);
   };
   
   const handleNext = () => {
@@ -225,15 +226,15 @@ function WatchPageContent() {
     if (!currentSeasonData) return false;
 
     if (currentEpisode < currentSeasonData.episode_count) {
-        return true; // There's another episode in the current season
+        return true;
     }
     
     const currentSeasonIndex = seasonsToDisplay.findIndex(s => s.season_number === currentSeason);
-    return currentSeasonIndex < seasonsToDisplay.length - 1; // There's another season
+    return currentSeasonIndex < seasonsToDisplay.length - 1;
   }, [currentEpisode, currentSeason, seasonsToDisplay]);
 
   if (!tmdbId || !mediaType) {
-    notFound();
+    return <div className="h-screen w-screen bg-black flex justify-center items-center"><div>Content not found</div></div>;
   }
 
   if (isLoading) {
@@ -241,7 +242,7 @@ function WatchPageContent() {
   }
   
   if (!video) {
-    return notFound();
+    return <div className="h-screen w-screen bg-black flex justify-center items-center"><div>Video not found</div></div>;
   }
 
   return (

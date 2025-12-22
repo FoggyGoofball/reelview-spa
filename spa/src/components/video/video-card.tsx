@@ -1,99 +1,132 @@
-
-import Image from 'next/image';
-import Link from 'next/link';
+import { useNavigate } from 'react-router-dom';
+import { Star, Plus, X } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useDismissed } from '@/context/dismissed-context';
+import { useWatchlist } from '@/context/watchlist-context';
 import type { Video } from '@/lib/data';
-import { Card } from '@/components/ui/card';
-import { Play } from 'lucide-react';
-import { AddToWatchlistButton } from './add-to-watchlist-button';
-import { DismissButton } from './dismiss-button';
-import { Badge } from '@/components/ui/badge';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Button } from '../ui/button';
+import { cn } from '@/lib/utils';
 
-interface VideoCardProps {
+export interface VideoCardProps {
   video: Video;
+  variant?: 'default' | 'compact';
   onDismiss?: (video: Video) => void;
-  watchHref?: string; // Optional href for resuming playback directly
 }
 
-export function VideoCard({ video, onDismiss, watchHref }: VideoCardProps) {
-  const title = video.title || video.name;
-  
-  const imageUrl = video.poster_path && video.poster_path.startsWith('http')
-    ? video.poster_path
-    : `https://image.tmdb.org/t/p/w500${video.poster_path}`;
+export function VideoCard({ video, variant = 'default', onDismiss }: VideoCardProps) {
+  const navigate = useNavigate();
+  const { addToDismissed, isDismissed } = useDismissed();
+  const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
 
-  const id = video.id;
+  const isSeries = video.media_type === 'tv' || video.media_type === 'anime';
+  const posterUrl = video.poster_path
+    ? video.poster_path.startsWith('http')
+      ? video.poster_path
+      : `https://image.tmdb.org/t/p/w342${video.poster_path}`
+    : 'https://picsum.photos/seed/default-poster/342/513';
 
-  const detailHref = `/media/${video.media_type}/${id}`;
-  
-  const showRating = video.rating && video.rating.trim() !== '';
+  const isVideoInWatchlist = isInWatchlist(video.id, video.media_type);
+  const isVideoDismissed = isDismissed(video.id, video.media_type);
 
-  const getWatchNowHref = () => {
-    if (watchHref) return watchHref; // Use provided resume link if available
-    
-    const isSeries = video.media_type === 'tv' || video.media_type === 'anime';
+  const handleCardClick = () => {
     if (isSeries) {
-      return `/watch?id=${id}&type=${video.media_type}&s=1&e=1`;
+      navigate(`/media/${video.media_type}/${video.id}`);
+    } else {
+      navigate(`/watch?id=${video.id}&type=${video.media_type}`);
     }
-    return `/watch?id=${id}&type=movie`;
   };
-  const watchNowHref = getWatchNowHref();
 
-  // The primary action for the card. For "Continue Watching", it's playing. For others, it's details.
-  const primaryHref = watchHref || detailHref;
+  const handlePlayClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = isSeries
+      ? `/watch?id=${video.id}&type=${video.media_type}&s=1&e=1`
+      : `/watch?id=${video.id}&type=${video.media_type}`;
+    navigate(url);
+  };
+
+  const handleWatchlistClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isVideoInWatchlist) {
+      removeFromWatchlist(video.id, video.media_type);
+    } else {
+      addToWatchlist(video);
+    }
+  };
+
+  const handleDismissClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToDismissed(video);
+    if (onDismiss) {
+      onDismiss(video);
+    }
+  };
+
+  if (isVideoDismissed) {
+    return null;
+  }
 
   return (
-    <div className="group block relative">
-      <Link href={primaryHref}>
-        <Card className="overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 transform group-hover:scale-105 group-hover:shadow-2xl group-hover:shadow-primary/20">
-          <div className="aspect-[2/3] relative bg-secondary">
-              <Image
-                  src={imageUrl}
-                  alt={`Thumbnail for ${title}`}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  data-ai-hint={'movie poster'}
-              />
-              {showRating && (
-                  <Badge variant="destructive" className="absolute top-2 left-2 z-10 text-xs backdrop-blur-sm bg-black/50 text-white border-0">
-                      {video.rating}
-                  </Badge>
-              )}
-          </div>
-        </Card>
-      </Link>
-        <div className="absolute top-2 right-2 z-10 flex flex-col items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/50 p-1 rounded-lg">
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                       <Button asChild variant="ghost" size="icon" className="text-white hover:bg-white/20">
-                          <Link href={watchNowHref} onClick={(e) => e.stopPropagation()}>
-                              <Play className="h-5 w-5" />
-                          </Link>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Watch Now</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-            <AddToWatchlistButton video={video} />
-            <DismissButton video={video} onDismiss={onDismiss} />
-        </div>
-      <div className='mt-2 space-y-1'>
-        <Link href={primaryHref} >
-            <h3 className="text-sm font-medium text-foreground truncate transition-colors group-hover:text-primary">
-            {title}
-            </h3>
-        </Link>
-      </div>
-    </div>
+    <Card
+      className={cn(
+        'group relative overflow-hidden rounded-lg bg-muted cursor-pointer transition-all hover:shadow-xl hover:scale-105',
+        variant === 'compact' && 'w-24'
+      )}
+      onClick={handleCardClick}
+    >
+      <CardContent className="p-0 relative h-full">
+        <img
+          src={posterUrl}
+          alt={`Poster for ${video.title}`}
+          className="w-full h-full object-cover"
+          style={{ aspectRatio: '2/3' }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+
+        {variant !== 'compact' && (
+          <>
+            <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-200 bg-gradient-to-t from-black to-transparent">
+              <h3 className="text-sm font-semibold text-white line-clamp-2 mb-2">
+                {video.title}
+              </h3>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="flex-1"
+                  onClick={handlePlayClick}
+                >
+                  Play
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleWatchlistClick}
+                >
+                  {isVideoInWatchlist ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+
+            {video.vote_average > 0 && (
+              <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/80 rounded px-2 py-1">
+                <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                <span className="text-xs font-semibold text-white">
+                  {video.vote_average.toFixed(1)}
+                </span>
+              </div>
+            )}
+
+            {/* Dismiss button */}
+            <button
+              onClick={handleDismissClick}
+              className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Dismiss"
+            >
+              <X className="h-6 w-6 text-white bg-black/50 rounded-full p-1 hover:bg-black/75" />
+            </button>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
