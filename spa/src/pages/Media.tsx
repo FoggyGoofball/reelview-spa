@@ -290,12 +290,17 @@ function MediaDetailsPageContent() {
                               const title = tmdbEpisodeDetail?.name || jikanEpisodeDetail?.title || `Episode ${epNum}`;
                               const summary = tmdbEpisodeDetail?.overview || jikanEpisodeDetail?.synopsis || 'No summary available.';
 
+                              // Check if episode has been watched
+                              const seasonKey = String(season.season_number);
+                              const episodeKey = String(epNum);
+                              const episodeWatched = seasonKey in lastWatched?.show_progress && episodeKey in lastWatched.show_progress[seasonKey];
+
                               return (
                                 <div key={epNum} className="border-b border-border pb-4 last:border-b-0">
                                   <div className="flex items-start gap-4">
                                     <span className="text-2xl font-bold text-muted-foreground pt-1 min-w-[40px] text-center">{epNum}</span>
                                     <div className="flex-grow">
-                                      <h3 className="font-semibold text-foreground">{title}</h3>
+                                      <h3 className={`font-semibold ${episodeWatched ? 'text-green-500' : 'text-foreground'}`}>{title}</h3>
                                       <ExpandableText text={summary} charLimit={150} />
                                     </div>
                                     <div className="flex flex-col items-center justify-center shrink-0 w-24 gap-2">

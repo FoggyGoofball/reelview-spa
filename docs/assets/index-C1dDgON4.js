@@ -22982,13 +22982,21 @@ function EpisodeSelectionSheet({
   tvSeasonDetails,
   animeEpisodeDetails
 }) {
-  var _a;
+  var _a, _b;
   const handleEpisodeClick = (season, episode) => {
     onEpisodeSelect(season, episode);
     onOpenChange(false);
   };
   const isAnime = video.media_type === "anime";
-  const seasonsToDisplay = isAnime && video.episodes && (!video.seasons || video.seasons.length === 0) ? [{ season_number: 1, episode_count: video.episodes, name: "Episodes" }] : ((_a = video.seasons) == null ? void 0 : _a.filter((s) => s.season_number > 0).sort((a, b) => a.season_number - b.season_number)) || [];
+  const history = getWatchHistory();
+  const historyKey = video.mal_id ? `mal-${video.mal_id}` : `tmdb-${video.id}`;
+  const watchedEpisodes = ((_a = history[historyKey]) == null ? void 0 : _a.show_progress) || {};
+  const seasonsToDisplay = isAnime && video.episodes && (!video.seasons || video.seasons.length === 0) ? [{ season_number: 1, episode_count: video.episodes, name: "Episodes" }] : ((_b = video.seasons) == null ? void 0 : _b.filter((s) => s.season_number > 0).sort((a, b) => a.season_number - b.season_number)) || [];
+  const isEpisodeWatched = (season, episode) => {
+    const seasonKey = String(season);
+    const episodeKey = String(episode);
+    return seasonKey in watchedEpisodes && episodeKey in watchedEpisodes[seasonKey];
+  };
   return /* @__PURE__ */ jsxRuntimeExports.jsx(Sheet, { open: isOpen, onOpenChange, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(SheetContent, { side: "bottom", className: "h-[75vh] flex flex-col", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs(SheetHeader, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(SheetTitle, { children: video.title }),
@@ -23008,10 +23016,11 @@ function EpisodeSelectionSheet({
             children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionTrigger, { className: "text-lg font-semibold", children: season.name || `Season ${season.season_number}` }),
               /* @__PURE__ */ jsxRuntimeExports.jsx(AccordionContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-col gap-2", children: Array.from({ length: season.episode_count }).map((_, i) => {
-                var _a2, _b, _c;
+                var _a2, _b2, _c;
                 const epNum = i + 1;
                 const isPlaying = season.season_number === currentSeason && epNum === currentEpisode;
-                const jikanEpisodeIndex = (season.season_number - 1) * (((_b = (_a2 = video.seasons) == null ? void 0 : _a2.find((s) => s.season_number === season.season_number - 1)) == null ? void 0 : _b.episode_count) || 0) + i;
+                const watched = isEpisodeWatched(season.season_number, epNum);
+                const jikanEpisodeIndex = (season.season_number - 1) * (((_b2 = (_a2 = video.seasons) == null ? void 0 : _a2.find((s) => s.season_number === season.season_number - 1)) == null ? void 0 : _b2.episode_count) || 0) + i;
                 const jikanEpisodeDetail = animeEpisodeDetails[jikanEpisodeIndex];
                 const tmdbEpisodeDetail = (_c = tvSeasonDetails[season.season_number]) == null ? void 0 : _c.find((e) => e.episode_number === epNum);
                 const title = (tmdbEpisodeDetail == null ? void 0 : tmdbEpisodeDetail.name) || (jikanEpisodeDetail == null ? void 0 : jikanEpisodeDetail.title) || `Episode ${epNum}`;
@@ -23026,7 +23035,7 @@ function EpisodeSelectionSheet({
                     children: [
                       /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg font-mono text-muted-foreground w-8 text-center", children: epNum }),
                       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 space-y-1", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-semibold", children: title }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: cn("font-semibold", watched && "text-green-500"), children: title }),
                         /* @__PURE__ */ jsxRuntimeExports.jsx(ExpandableText, { text: summary, charLimit: 100, className: "text-xs text-muted-foreground" })
                       ] }),
                       /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -28006,10 +28015,13 @@ function MediaDetailsPageContent() {
             const watchHref = getWatchHref(season.season_number, epNum);
             const title = (tmdbEpisodeDetail == null ? void 0 : tmdbEpisodeDetail.name) || (jikanEpisodeDetail == null ? void 0 : jikanEpisodeDetail.title) || `Episode ${epNum}`;
             const summary = (tmdbEpisodeDetail == null ? void 0 : tmdbEpisodeDetail.overview) || (jikanEpisodeDetail == null ? void 0 : jikanEpisodeDetail.synopsis) || "No summary available.";
+            const seasonKey = String(season.season_number);
+            const episodeKey = String(epNum);
+            const episodeWatched = seasonKey in (lastWatched == null ? void 0 : lastWatched.show_progress) && episodeKey in lastWatched.show_progress[seasonKey];
             return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border-b border-border pb-4 last:border-b-0", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-4", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-2xl font-bold text-muted-foreground pt-1 min-w-[40px] text-center", children: epNum }),
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-grow", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-semibold text-foreground", children: title }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: `font-semibold ${episodeWatched ? "text-green-500" : "text-foreground"}`, children: title }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx(ExpandableText, { text: summary, charLimit: 150 })
               ] }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-col items-center justify-center shrink-0 w-24 gap-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Button, { size: "sm", onClick: () => navigate(watchHref), className: "w-full", children: [
@@ -28624,4 +28636,4 @@ function App() {
 ReactDOM$1.createRoot(document.getElementById("root")).render(
   /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) })
 );
-//# sourceMappingURL=index-C9ZVwYkc.js.map
+//# sourceMappingURL=index-C1dDgON4.js.map

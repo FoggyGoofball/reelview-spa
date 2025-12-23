@@ -1,4 +1,3 @@
-
 'use client';
 import {
   Sheet,
@@ -21,6 +20,7 @@ import { PlayCircle } from "lucide-react";
 import { ExpandableText } from "../expandable-text";
 import type { TMDBEpisode } from "@/lib/tmdb";
 import type { JikanEpisode } from "@/lib/jikan";
+import { getWatchHistory } from "@/lib/client-api";
 
 interface EpisodeSelectionSheetProps {
   video: Video;
@@ -50,10 +50,19 @@ export function EpisodeSelectionSheet({
   }
 
   const isAnime = video.media_type === 'anime';
+  const history = getWatchHistory();
+  const historyKey = video.mal_id ? `mal-${video.mal_id}` : `tmdb-${video.id}`;
+  const watchedEpisodes = history[historyKey]?.show_progress || {};
 
   const seasonsToDisplay = isAnime && video.episodes && (!video.seasons || video.seasons.length === 0)
     ? [{ season_number: 1, episode_count: video.episodes, name: 'Episodes' }]
     : video.seasons?.filter(s => s.season_number > 0).sort((a,b) => a.season_number - b.season_number) || [];
+
+  const isEpisodeWatched = (season: number, episode: number): boolean => {
+    const seasonKey = String(season);
+    const episodeKey = String(episode);
+    return seasonKey in watchedEpisodes && episodeKey in watchedEpisodes[seasonKey];
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -85,6 +94,7 @@ export function EpisodeSelectionSheet({
                         const isPlaying =
                           season.season_number === currentSeason &&
                           epNum === currentEpisode;
+                        const watched = isEpisodeWatched(season.season_number, epNum);
 
                         const jikanEpisodeIndex = (season.season_number - 1) * (video.seasons?.find(s=>s.season_number === season.season_number-1)?.episode_count || 0) + i;
                         const jikanEpisodeDetail = animeEpisodeDetails[jikanEpisodeIndex];
@@ -106,7 +116,7 @@ export function EpisodeSelectionSheet({
                               {epNum}
                             </span>
                             <div className="flex-1 space-y-1">
-                              <p className="font-semibold">{title}</p>
+                              <p className={cn("font-semibold", watched && "text-green-500")}>{title}</p>
                               <ExpandableText text={summary} charLimit={100} className="text-xs text-muted-foreground" />
                             </div>
                             <Button
