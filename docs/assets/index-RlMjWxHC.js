@@ -28343,6 +28343,8 @@ function GenreGridPage({ mediaType }) {
   const [videos, setVideos] = reactExports.useState([]);
   const [loading, setLoading] = reactExports.useState(true);
   const [error, setError] = reactExports.useState(null);
+  const isAdultAnimationGenre = mediaType === "tv" && genreId === "16-adult";
+  const isRegularAnimationGenre = mediaType === "tv" && genreId === "16";
   reactExports.useEffect(() => {
     let cancelled = false;
     async function fetchGenre2() {
@@ -28355,7 +28357,8 @@ function GenreGridPage({ mediaType }) {
         while (results.length < 40 && page <= 5) {
           let raw;
           try {
-            raw = await getVideosByGenre(genreId, mediaType, isKeyword, page);
+            const fetchGenreId = isAdultAnimationGenre ? "16" : genreId;
+            raw = await getVideosByGenre(fetchGenreId, mediaType, isKeyword, page);
           } catch (fetchErr) {
             console.error("[GENRE GRID] Failed to fetch page", page, "for", genreId, "mediaType", mediaType, fetchErr);
             setError(`Failed to fetch data (page ${page}).`);
@@ -28370,6 +28373,18 @@ function GenreGridPage({ mediaType }) {
               if (enriched) {
                 if (mediaType === "anime" && enriched.is_explicit) continue;
                 if (mediaType === "movie" && enriched.rating === "NR") continue;
+                if (mediaType === "tv" && (isAdultAnimationGenre || isRegularAnimationGenre)) {
+                  const asianOrRussianLanguages = ["ja", "ko", "zh", "ru"];
+                  if (asianOrRussianLanguages.includes(enriched.original_language || "")) {
+                    continue;
+                  }
+                  if (isAdultAnimationGenre && !enriched.is_explicit) {
+                    continue;
+                  }
+                  if (isRegularAnimationGenre && enriched.is_explicit) {
+                    continue;
+                  }
+                }
                 results.push(enriched);
                 seen.add(key);
               }
@@ -28394,7 +28409,7 @@ function GenreGridPage({ mediaType }) {
     return () => {
       cancelled = true;
     };
-  }, [genreId, genreName, isKeyword, mediaType]);
+  }, [genreId, genreName, isKeyword, mediaType, isAdultAnimationGenre, isRegularAnimationGenre]);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "container max-w-screen-2xl py-8 md:py-12", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-3xl md:text-4xl font-bold mb-8 text-red-500", children: genreName || "Genre" }),
     error && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-4 mb-6 rounded bg-red-600/10 border border-red-600/20 text-red-500", children: [
@@ -28545,4 +28560,4 @@ function App() {
 ReactDOM$1.createRoot(document.getElementById("root")).render(
   /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) })
 );
-//# sourceMappingURL=index-BbVvCAty.js.map
+//# sourceMappingURL=index-RlMjWxHC.js.map

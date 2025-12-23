@@ -31,6 +31,7 @@ function TvGenrePageContent() {
       setVideos([]);
       try {
         const isAdultAnimation = genreId === '16-adult';
+        const isRegularAnimation = genreId === '16';
         
         let page = 1;
         let processedVideos: Video[] = [];
@@ -54,12 +55,20 @@ function TvGenrePageContent() {
                 
                 // Explicitly check to ensure we don't add anime to TV pages
                 if (enrichedVideo && enrichedVideo.media_type !== 'anime') {
+                    // Filter out Asian and Russian language animations from animation genre pages
+                    if (isAdultAnimation || isRegularAnimation) {
+                        const asianOrRussianLanguages = ['ja', 'ko', 'zh', 'ru'];
+                        if (asianOrRussianLanguages.includes(enrichedVideo.original_language || '')) {
+                            continue; // Skip - belongs on Anime page
+                        }
+                    }
+                    
                     if (isAdultAnimation) {
                         // For adult animation, only include shows marked as explicit
                         if (enrichedVideo.is_explicit) {
                             processedVideos.push(enrichedVideo);
                         }
-                    } else if (genreId === '16') {
+                    } else if (isRegularAnimation) {
                         // For the main animation genre, only include non-explicit shows
                         if (!enrichedVideo.is_explicit) {
                             processedVideos.push(enrichedVideo);

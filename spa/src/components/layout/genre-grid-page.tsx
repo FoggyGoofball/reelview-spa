@@ -16,6 +16,10 @@ export function GenreGridPage({ mediaType }: { mediaType: 'movie' | 'tv' | 'anim
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Determine if this is the Adult Animation genre page
+  const isAdultAnimationGenre = mediaType === 'tv' && genreId === '16-adult';
+  const isRegularAnimationGenre = mediaType === 'tv' && genreId === '16';
+
   useEffect(() => {
     let cancelled = false;
     async function fetchGenre() {
@@ -28,7 +32,9 @@ export function GenreGridPage({ mediaType }: { mediaType: 'movie' | 'tv' | 'anim
         while (results.length < 40 && page <= 5) {
           let raw;
           try {
-            raw = await getVideosByGenre(genreId!, mediaType, isKeyword, page);
+            // For Adult Animation, fetch from regular animation genre but filter explicitly
+            const fetchGenreId = isAdultAnimationGenre ? '16' : genreId;
+            raw = await getVideosByGenre(fetchGenreId!, mediaType, isKeyword, page);
           } catch (fetchErr: any) {
             console.error('[GENRE GRID] Failed to fetch page', page, 'for', genreId, 'mediaType', mediaType, fetchErr);
             setError(`Failed to fetch data (page ${page}).`);
@@ -44,8 +50,32 @@ export function GenreGridPage({ mediaType }: { mediaType: 'movie' | 'tv' | 'anim
                 // Filtering rules:
                 // - Exclude explicit for anime
                 // - Exclude NR for movies
+                // - For regular Animation genre: exclude explicit AND exclude asian/russian languages
+                // - For Adult Animation genre: ONLY include explicit AND exclude asian/russian languages
+                
                 if (mediaType === 'anime' && enriched.is_explicit) continue;
                 if (mediaType === 'movie' && enriched.rating === 'NR') continue;
+                
+                // Handle Animation genre special cases for TV
+                if (mediaType === 'tv' && (isAdultAnimationGenre || isRegularAnimationGenre)) {
+                  const asianOrRussianLanguages = ['ja', 'ko', 'zh', 'ru'];
+                  
+                  // Skip if has asian/russian language (belongs on Anime page)
+                  if (asianOrRussianLanguages.includes(enriched.original_language || '')) {
+                    continue;
+                  }
+                  
+                  // For Adult Animation: ONLY include explicit content
+                  if (isAdultAnimationGenre && !enriched.is_explicit) {
+                    continue;
+                  }
+                  
+                  // For Regular Animation: ONLY include non-explicit content
+                  if (isRegularAnimationGenre && enriched.is_explicit) {
+                    continue;
+                  }
+                }
+                
                 results.push(enriched);
                 seen.add(key);
               }
@@ -68,7 +98,7 @@ export function GenreGridPage({ mediaType }: { mediaType: 'movie' | 'tv' | 'anim
     if (genreId) fetchGenre();
     else setError('No genre specified');
     return () => { cancelled = true; };
-  }, [genreId, genreName, isKeyword, mediaType]);
+  }, [genreId, genreName, isKeyword, mediaType, isAdultAnimationGenre, isRegularAnimationGenre]);
 
   return (
     <div className="container max-w-screen-2xl py-8 md:py-12">
