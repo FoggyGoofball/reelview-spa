@@ -1,12 +1,12 @@
-
 'use client';
 
-import Link from 'next/link';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, List, ArrowLeft, ExternalLink } from 'lucide-react';
 import { SourceSelector } from '../layout/source-selector';
 import type { Video } from '@/lib/data';
 import { cn } from '@/lib/utils';
+import { DownloadButton } from './download-button';
 
 interface WatchHeaderProps {
   video: Video;
@@ -24,16 +24,20 @@ export function WatchHeader({
   video,
   currentSeason,
   currentEpisode,
-  onPrev,
   onNext,
+  onPrev,
   onOpenEpisodes,
-  hasPrev,
   hasNext,
+  hasPrev,
   playerUrl,
 }: WatchHeaderProps) {
-  
-  const backHref = `/media/${video.media_type}/${video.id}`;
-  const isSeries = video.media_type !== 'movie';
+  const navigate = useNavigate();
+  const isSeries = video.media_type === 'tv' || video.media_type === 'anime';
+
+  // Suggested download filename prefilled from video + season/episode
+  const suggestedFilename = isSeries
+    ? `${video.title || video.name || 'series'}_S${String(currentSeason).padStart(2,'0')}E${String(currentEpisode).padStart(2,'0')}`
+    : `${video.title || video.name || 'movie'}`;
 
   return (
     <header className={cn(
@@ -42,10 +46,8 @@ export function WatchHeader({
         "flex items-center justify-between gap-4"
     )}>
       <div className="flex items-center gap-2 md:gap-4">
-        <Button asChild variant="ghost" size="icon" className="text-white hover:bg-white/20">
-          <Link href={backHref}>
+        <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => navigate(`/media/${video.media_type}/${video.id}`)}>
             <ArrowLeft className="h-6 w-6" />
-          </Link>
         </Button>
         <div className='hidden md:block'>
             <h1 className="text-xl font-bold text-white truncate">{video.title}</h1>
@@ -87,7 +89,8 @@ export function WatchHeader({
            </div>
         )}
          <SourceSelector buttonVariant="secondary" />
-         <Button asChild variant="secondary" size="icon" title="Open in new tab">
+         <DownloadButton suggestedFilename={suggestedFilename} />
+         <Button variant="secondary" size="icon" title="Open in new tab" asChild>
             <a href={playerUrl} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="h-5 w-5" />
             </a>

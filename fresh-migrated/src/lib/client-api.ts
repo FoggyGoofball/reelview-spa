@@ -1,4 +1,3 @@
-
 import { type Video, type WatchProgress, type CustomVideoData } from './data';
 import { tmdbMediaToVideo } from './api';
 
@@ -231,4 +230,38 @@ export async function enrichVideoDetails<T extends Video | WatchProgress>(item: 
     }
     
     return item;
+}
+
+/**
+ * Updates the watch position in the history when navigating to the watch page.
+ * @param id The ID of the video.
+ * @param type The type of the video ('movie', 'tv', or 'anime').
+ * @param season The current season number (optional).
+ * @param episode The current episode number (optional).
+ * @param title The title of the video (optional).
+ */
+export function updateWatchPositionOnNavigate(id: string, type: 'movie' | 'tv' | 'anime', season?: number | null, episode?: number | null, title?: string) {
+    if (isServer()) return;
+    try {
+        const currentHistory = getWatchHistory();
+        const key = type === 'anime' && (season === undefined || season === null) && false
+            ? `mal-${id}`
+            : `tmdb-${id}`;
+
+        const existing = currentHistory[key] || {};
+        const updated = {
+            ...existing,
+            id: existing.id || id,
+            title: existing.title || title || '',
+            type,
+            last_season_watched: season != null ? String(season) : existing.last_season_watched,
+            last_episode_watched: episode != null ? String(episode) : existing.last_episode_watched,
+            last_updated: Date.now(),
+        };
+        currentHistory[key] = { ...existing, ...updated };
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(currentHistory));
+        window.dispatchEvent(new CustomEvent('history-updated', { detail: currentHistory }));
+    } catch (e) {
+        console.error('updateWatchPositionOnNavigate error', e);
+    }
 }

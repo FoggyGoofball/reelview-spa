@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -6,8 +5,6 @@ import { useDismissed } from '@/context/dismissed-context';
 import { ChevronRight, ThumbsUp } from 'lucide-react';
 import type { Video } from '@/lib/data';
 import { Card } from '../ui/card';
-import Image from 'next/image';
-import Link from 'next/link';
 import { Button } from '../ui/button';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 
@@ -57,20 +54,19 @@ export function DismissedCarousel() {
                 return (
                   <div key={`${video.id}-${video.media_type}`} className="w-40 sm:w-48 md:w-56 flex-shrink-0 group">
                      <div className="relative">
-                        <Link href={detailHref} >
+                        <a href={detailHref} >
                           <Card className="overflow-hidden border-2 border-transparent group-hover:border-primary transition-all duration-300 transform group-hover:scale-105 group-hover:shadow-2xl group-hover:shadow-primary/20">
                             <div className="aspect-[2/3] relative bg-secondary">
-                                <Image
+                                <img
                                   src={imageUrl}
                                   alt={`Thumbnail for ${video.title}`}
-                                  fill
                                   className="object-cover"
                                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                   data-ai-hint={'movie poster'}
                                 />
                             </div>
                           </Card>
-                        </Link>
+                        </a>
                         <div className="absolute top-2 right-2 z-10 flex flex-col items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <TooltipProvider>
                                 <Tooltip>
@@ -93,11 +89,11 @@ export function DismissedCarousel() {
                         </div>
                       </div>
                       <div className='mt-2 space-y-1'>
-                        <Link href={detailHref} >
+                        <a href={detailHref} >
                             <h3 className="text-sm font-medium text-foreground truncate transition-colors group-hover:text-primary">
                             {video.title}
                             </h3>
-                        </Link>
+                        </a>
                       </div>
                   </div>
                 )

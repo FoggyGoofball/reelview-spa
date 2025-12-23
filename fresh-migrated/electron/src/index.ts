@@ -97,11 +97,37 @@ ipcMain.handle('start-download', async (event, { url, filename, quality }) => {
   logToFile(`IPC: start-download - ${filename} @ ${quality || 'default'}`);
   logToFile(`Download URL: ${url.substring(0, 150)}`);
   const window = BrowserWindow.fromWebContents(event.sender);
-  
+
+  // Attempt to improve the filename when it's a generic placeholder like "video_<timestamp>"
+  let baseName = String(filename || '').trim();
+  try {
+    const looksGeneric = /^video_\d+$/.test(baseName) || baseName.length < 4;
+    if (looksGeneric && window) {
+      try {
+        // Ask the renderer for a human-friendly title (h1 or document.title)
+        const remoteTitle: any = await window.webContents.executeJavaScript(`(function(){
+          try {
+            const h = document.querySelector('h1')?.innerText?.trim();
+            return h || document.title || '';
+          } catch(e) { return document.title || ''; }
+        })()` , true);
+
+        if (remoteTitle && typeof remoteTitle === 'string' && remoteTitle.trim().length > 0) {
+          // sanitize remoteTitle to a safe filename
+          const sanitized = remoteTitle.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_').trim();
+          if (sanitized.length > 0) baseName = sanitized;
+        }
+      } catch (e:any) {
+        logToFile(`Could not obtain title from renderer: ${e?.message || e}`);
+      }
+    }
+  } catch (e:any) {
+    logToFile(`Filename derivation error: ${e?.message || e}`);
+  }
+
   // Always save as MKV (bundled FFmpeg handles conversion)
-  const baseName = filename.replace(/\.[^/.]+$/, '');
-  const finalFilename = `${baseName}.mkv`;
-  
+  const finalFilename = `${baseName.replace(/\.[^/.]+$/, '')}.mkv`;
+
   const { filePath } = await dialog.showSaveDialog(window!, {
     title: 'Save Video as MKV',
     defaultPath: path.join(app.getPath('downloads'), finalFilename),
@@ -110,11 +136,11 @@ ipcMain.handle('start-download', async (event, { url, filename, quality }) => {
       { name: 'All Files', extensions: ['*'] }
     ]
   });
-  
+
   if (!filePath) {
     return { success: false, error: 'Cancelled' };
   }
-  
+
   // Create download item
   const downloadId = `dl-${Date.now()}`;
   const downloadItem: DownloadItem = {
@@ -127,10 +153,10 @@ ipcMain.handle('start-download', async (event, { url, filename, quality }) => {
     downloadedBytes: 0,
     startTime: Date.now()
   };
-  
+
   addDownload(downloadItem);
   event.sender.send('downloads-updated', getDownloadsList());
-  
+
   try {
     const result = await downloadStream(url, filePath, (progress) => {
       // Update with estimated quality from bitrate analysis
@@ -143,11 +169,11 @@ ipcMain.handle('start-download', async (event, { url, filename, quality }) => {
         estimatedQuality: progress.estimatedQuality,
         bitrateMbps: progress.bitrateMbps
       });
-      
+
       event.sender.send('download-progress', { id: downloadId, ...progress });
       event.sender.send('downloads-updated', getDownloadsList());
     }, window!);
-    
+
     // Update with final quality info
     updateDownload(downloadId, { 
       filename: path.basename(result.filePath),
@@ -155,7 +181,7 @@ ipcMain.handle('start-download', async (event, { url, filename, quality }) => {
       bitrateMbps: result.bitrateMbps
     });
     event.sender.send('downloads-updated', getDownloadsList());
-    
+
     logToFile(`Download complete: ${result.filePath} - Quality: ${result.estimatedQuality} @ ${result.bitrateMbps.toFixed(2)} Mbps`);
     return { success: true, filePath: result.filePath, downloadId, quality: result.estimatedQuality };
   } catch (error: any) {

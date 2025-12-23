@@ -1,7 +1,20 @@
 import React, { useEffect, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { ApiKeyDialogProvider } from '@/context/api-key-dialog-context';
+import { ApiKeyNotice } from '@/components/api-key-notice';
 
-// Comprehensive error boundary with terminal logging
+// Global error handler - catch EVERYTHING
+window.addEventListener('error', (event) => {
+  const msg = `[GLOBAL ERROR] ${event.error?.toString()}\nStack: ${event.error?.stack}`
+  console.error('[GLOBAL ERROR]', msg)
+})
+
+window.addEventListener('unhandledrejection', (event) => {
+  const msg = `[UNHANDLED REJECTION] ${event.reason?.toString()}`
+  console.error('[UNHANDLED REJECTION]', msg)
+})
+
+// Comprehensive error boundary with detailed logging
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
   constructor(props: {children: React.ReactNode}) {
     super(props)
@@ -14,12 +27,8 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
     const errorStack = error?.stack
     console.error('[ERROR BOUNDARY] ? getDerivedStateFromError caught:', errorMsg)
     console.error('[ERROR BOUNDARY] Stack:', errorStack)
-    
-    // Send to terminal via ipcRenderer
-    try {
-      const msg = `[ERROR BOUNDARY] ${errorMsg}\n${errorStack}`
-      window.ipcRenderer?.send?.('console-log', { level: 'error', message: msg })
-    } catch (e) {}
+    console.log('[ERROR BOUNDARY] ERROR MESSAGE:', errorMsg)
+    console.log('[ERROR BOUNDARY] ERROR STACK:', errorStack)
     
     return { hasError: true, error }
   }
@@ -29,15 +38,11 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
     const errorStack = error?.stack
     const componentStack = errorInfo?.componentStack
     
-    console.error('[ERROR BOUNDARY] ? componentDidCatch - Error:', errorMsg)
+    console.error('[ERROR BOUNDARY componentDidCatch] ? Error:', errorMsg)
     console.error('[ERROR BOUNDARY] Stack:', errorStack)
     console.error('[ERROR BOUNDARY] Component Stack:', componentStack)
-    
-    // Send full error to terminal
-    try {
-      const fullMsg = `[ERROR BOUNDARY] CAUGHT ERROR\nMessage: ${errorMsg}\nStack: ${errorStack}\nComponent Stack: ${componentStack}`
-      window.ipcRenderer?.send?.('console-log', { level: 'error', message: fullMsg })
-    } catch (e) {}
+    console.log('[ERROR BOUNDARY componentDidCatch] MESSAGE:', errorMsg)
+    console.log('[ERROR BOUNDARY componentDidCatch] COMPONENT STACK:', componentStack)
   }
 
   render() {
@@ -45,19 +50,19 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
       const errorMsg = this.state.error?.toString()
       const errorStack = this.state.error?.stack
       
-      console.error('[ERROR BOUNDARY] ? Rendering error UI')
-      console.error('[ERROR BOUNDARY] Error:', errorMsg)
-      console.error('[ERROR BOUNDARY] Stack:', errorStack)
+      console.error('[ERROR BOUNDARY RENDER ERROR UI] Error:', errorMsg)
+      console.log('[ERROR BOUNDARY RENDER ERROR UI] MESSAGE:', errorMsg)
+      console.log('[ERROR BOUNDARY RENDER ERROR UI] STACK:', errorStack)
       
       return (
-        <div style={{ padding: '20px', color: '#ff0000', fontFamily: 'monospace', backgroundColor: '#000', minHeight: '100vh', overflowY: 'auto' }}>
+        <div style={{ padding: '20px', color: '#ff0000', fontFamily: 'monospace', backgroundColor: '#000', minHeight: '100vh', overflowY: 'auto', fontSize: '12px' }}>
           <h1>?? React Error Caught by ErrorBoundary</h1>
           <h2>Error Message:</h2>
-          <pre style={{ backgroundColor: '#111', padding: '10px', overflow: 'auto', color: '#ff6b6b' }}>
+          <pre style={{ backgroundColor: '#111', padding: '10px', overflow: 'auto', color: '#ff6b6b', maxHeight: '300px' }}>
             {errorMsg}
           </pre>
           <h2>Error Stack:</h2>
-          <pre style={{ backgroundColor: '#111', padding: '10px', overflow: 'auto', color: '#0f0' }}>
+          <pre style={{ backgroundColor: '#111', padding: '10px', overflow: 'auto', color: '#0f0', maxHeight: '300px' }}>
             {errorStack}
           </pre>
           <h2 style={{ color: '#ffff00' }}>Check Terminal/Console for Full Diagnostic Information</h2>
@@ -96,6 +101,9 @@ import Watchlist from './pages/Watchlist'
 import History from './pages/History'
 import Media from './pages/Media'
 import Downloads from './pages/Downloads'
+import MovieGenre from './pages/MovieGenre';
+import TvGenre from './pages/TvGenre';
+import AnimeGenre from './pages/AnimeGenre';
 
 console.log('[APP] ? All page components imported successfully')
 console.log('[APP] Starting ReelView initialization...')
@@ -120,6 +128,7 @@ function ClientLayout({ children }: { children: React.ReactNode }) {
               <Suspense fallback={null}>
                 <LoadingBar />
               </Suspense>
+              {/* Hide main Header on watch page - WatchHeader will provide its own controls */}
               {!isWatchPage && <Header />}
               <main>{children}</main>
               <Toaster />
@@ -156,6 +165,9 @@ function AppRoutes() {
         <Route path="/history" element={<History />} />
         <Route path="/media/:media_type/:id" element={<Media />} />
         <Route path="/downloads" element={<Downloads />} />
+        <Route path="/movies/genre" element={<MovieGenre />} />
+        <Route path="/tv/genre" element={<TvGenre />} />
+        <Route path="/anime/genre" element={<AnimeGenre />} />
         <Route path="*" element={<Home />} />
       </Routes>
     )
@@ -174,13 +186,16 @@ export default function App() {
 
   try {
     return (
-      <ErrorBoundary>
-        <BrowserRouter basename="/">
-          <ClientLayout>
-            <AppRoutes />
-          </ClientLayout>
-        </BrowserRouter>
-      </ErrorBoundary>
+      <ApiKeyDialogProvider>
+        <ErrorBoundary>
+          <BrowserRouter basename="/">
+            <ClientLayout>
+              <AppRoutes />
+              <ApiKeyNotice />
+            </ClientLayout>
+          </BrowserRouter>
+        </ErrorBoundary>
+      </ApiKeyDialogProvider>
     )
   } catch (error) {
     console.error('[APP] ? Error rendering App:', error)

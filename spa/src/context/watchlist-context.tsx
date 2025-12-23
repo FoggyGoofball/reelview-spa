@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -9,6 +8,7 @@ interface WatchlistContextType {
   watchlist: Record<string, Video>;
   addToWatchlist: (video: Video) => void;
   removeFromWatchlist: (videoId: string, mediaType: 'movie' | 'tv' | 'anime') => void;
+  isInWatchlist: (videoId: string, mediaType: 'movie' | 'tv' | 'anime') => boolean;
 }
 
 const WatchlistContext = createContext<WatchlistContextType | undefined>(undefined);
@@ -51,8 +51,13 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
     apiRemoveFromWatchlist(videoId, mediaType);
   }, []);
 
+  const isInWatchlist = useCallback((videoId: string, mediaType: 'movie' | 'tv' | 'anime') => {
+    const key = `${mediaType}-${videoId}`;
+    return key in watchlist;
+  }, [watchlist]);
+
   return (
-    <WatchlistContext.Provider value={{ watchlist, addToWatchlist, removeFromWatchlist }}>
+    <WatchlistContext.Provider value={{ watchlist, addToWatchlist, removeFromWatchlist, isInWatchlist }}>
       {children}
     </WatchlistContext.Provider>
   );
@@ -65,5 +70,3 @@ export function useWatchlist() {
   }
   return context;
 }
-
-    

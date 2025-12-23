@@ -2,12 +2,13 @@
 
 import React from 'react';
 import { useNavigate } from "react-router-dom";
-import { Play } from "lucide-react";
+import { Play, Info } from "lucide-react";
 import type { WatchProgress } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { Button } from '@/components/ui/button';
 import { AddToWatchlistButton } from './add-to-watchlist-button';
 import { DismissButton } from './dismiss-button';
+import { updateWatchPositionOnNavigate } from '@/lib/client-api';
 
 export interface WatchHistoryCardProps {
   item: WatchProgress;
@@ -30,18 +31,36 @@ export function WatchHistoryCard({
 
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    const season = isSeries ? Number(item.last_season_watched || 1) : undefined;
+    const episode = isSeries ? Number(item.last_episode_watched || 1) : undefined;
+
+    // update history immediately so carousels update
+    updateWatchPositionOnNavigate(String(item.id), item.type, season ?? null, episode ?? null, item.title);
+
     const url = isSeries
-      ? `/watch?id=${item.id}&type=${item.type}&s=${item.last_season_watched || 1}&e=${item.last_episode_watched || 1}`
+      ? `/watch?id=${item.id}&type=${item.type}&s=${season || 1}&e=${episode || 1}`
       : `/watch?id=${item.id}&type=${item.type}`;
     navigate(url);
   };
 
   // For continue-watching carousel, clicking the card should go directly to the watch page
   const handleCardClick = () => {
+    const season = isSeries ? Number(item.last_season_watched || 1) : undefined;
+    const episode = isSeries ? Number(item.last_episode_watched || 1) : undefined;
+
+    updateWatchPositionOnNavigate(String(item.id), item.type, season ?? null, episode ?? null, item.title);
+
     const url = isSeries
-      ? `/watch?id=${item.id}&type=${item.type}&s=${item.last_season_watched || 1}&e=${item.last_episode_watched || 1}`
+      ? `/watch?id=${item.id}&type=${item.type}&s=${season || 1}&e=${episode || 1}`
       : `/watch?id=${item.id}&type=${item.type}`;
     navigate(url);
+  };
+
+  const detailHref = `/media/${item.type}/${item.id}`;
+
+  const handleDetailsClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(detailHref);
   };
 
   const percentage = item.progress
@@ -137,10 +156,13 @@ export function WatchHistoryCard({
           </div>
         )}
 
-        {/* top-right full hover controls (Play, Watchlist, Dismiss) - pointer events enabled */}
+        {/* top-right full hover controls (Play, Details, Watchlist, Dismiss) - pointer events enabled */}
         <div className="absolute top-2 right-2 z-50 flex flex-col items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto">
           <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={(e:any)=>{ e.stopPropagation(); handlePlayClick(e); }}>
             <Play className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={(e:any)=>{ e.stopPropagation(); handleDetailsClick(e); }}>
+            <Info className="h-4 w-4" />
           </Button>
           <AddToWatchlistButton video={{ id: String(item.id), mal_id: item.mal_id, media_type: item.type, title: item.title, description: '', categories: [], thumbnailSeed: '', poster_path: item.poster_path, rating: item.rating, seasons: item.seasons, episodes: item.episodes }} />
           <DismissButton video={{ id: String(item.id), mal_id: item.mal_id, media_type: item.type, title: item.title, description: '', categories: [], thumbnailSeed: '', poster_path: item.poster_path, rating: item.rating, seasons: item.seasons, episodes: item.episodes }} onDismiss={() => {}} />
@@ -169,6 +191,8 @@ export function WatchHistoryCard({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                // update history immediately for next episode
+                updateWatchPositionOnNavigate(String(item.id), item.type, nextSeason, nextEpisode, item.title);
                 navigate(nextEpisodeHref);
               }}
               className="inline-flex items-center justify-center gap-2 bg-primary text-white px-4 h-10 rounded-md hover:opacity-90 w-full"

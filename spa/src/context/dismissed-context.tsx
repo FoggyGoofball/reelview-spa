@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -9,6 +8,8 @@ interface DismissedContextType {
   dismissedItems: Record<string, Video>;
   dismissItem: (video: Video) => void;
   unDismissItem: (video: Video) => void;
+  isDismissed: (videoId: string, mediaType: 'movie' | 'tv' | 'anime') => boolean;
+  addToDismissed: (video: Video) => void;
 }
 
 const DismissedContext = createContext<DismissedContextType | undefined>(undefined);
@@ -51,8 +52,17 @@ export function DismissedProvider({ children }: { children: React.ReactNode }) {
     apiRemoveFromDismissed(video);
   }, []);
 
+  const addToDismissed = useCallback((video: Video) => {
+    apiAddToDismissed(video);
+  }, []);
+
+  const isDismissed = useCallback((videoId: string, mediaType: 'movie' | 'tv' | 'anime') => {
+    const key = `${mediaType}-${videoId}`;
+    return key in dismissedItems;
+  }, [dismissedItems]);
+
   return (
-    <DismissedContext.Provider value={{ dismissedItems, dismissItem, unDismissItem }}>
+    <DismissedContext.Provider value={{ dismissedItems, dismissItem, unDismissItem, isDismissed, addToDismissed }}>
       {children}
     </DismissedContext.Provider>
   );

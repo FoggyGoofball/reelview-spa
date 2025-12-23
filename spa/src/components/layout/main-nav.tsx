@@ -18,6 +18,7 @@ export function MainNav({ className, isInSheet, ...props }: MainNavProps) {
     { href: '/anime', label: 'Anime' },
     { href: '/watchlist', label: 'Watchlist' },
     { href: '/history', label: 'History' },
+    { href: '/downloads', label: 'Downloads' }, // added downloads link
   ];
   
   const isActive = (href: string) => {

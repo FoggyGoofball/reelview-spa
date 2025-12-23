@@ -1,8 +1,10 @@
-import Image from 'next/image';
-import Link from 'next/link';
+'use client';
+
+import React from 'react';
+import { useRouter } from 'next/navigation';
 import type { Video } from '@/lib/data';
 import { Card } from '@/components/ui/card';
-import { Play } from 'lucide-react';
+import { Play, Info } from 'lucide-react';
 import { AddToWatchlistButton } from './add-to-watchlist-button';
 import { DismissButton } from './dismiss-button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from '../ui/button';
+import { updateWatchPositionOnNavigate } from '@/lib/client-api';
 
 interface VideoCardProps {
   video: Video;
@@ -22,6 +25,7 @@ interface VideoCardProps {
 }
 
 export function VideoCard({ video, onDismiss, watchHref, allowOverflow }: VideoCardProps) {
+  const router = useRouter();
   const title = video.title || video.name;
   
   const imageUrl = video.poster_path && video.poster_path.startsWith('http')
@@ -45,20 +49,42 @@ export function VideoCard({ video, onDismiss, watchHref, allowOverflow }: VideoC
   };
   const watchNowHref = getWatchNowHref();
 
-  // The primary action for the card. For "Continue Watching", it's playing. For others, it's details.
-  const primaryHref = watchHref || detailHref;
+  // The primary action for the card: prefer details page unless an explicit watchHref is provided
+  const primaryHref = watchHref ? watchHref : detailHref;
+
+  const onCardClick = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    router.push(primaryHref);
+  };
+
+  const handlePlayClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // update history immediately so continue-watching carousels refresh
+    const isSeries = video.media_type === 'tv' || video.media_type === 'anime';
+    updateWatchPositionOnNavigate(String(id), video.media_type, isSeries ? 1 : null, isSeries ? 1 : null, video.title);
+    // navigate via router when clicked programmatically
+    router.push(watchNowHref);
+  };
+
+  const handleDetailsClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(detailHref);
+  };
+
+  const handleDismiss = (v?: Video) => {
+    // forward to optional onDismiss prop
+    if (onDismiss && v) onDismiss(v);
+  };
 
   return (
     <div className="group block relative">
-      <Link href={primaryHref}>
-        <Card className={`border-2 border-transparent ${allowOverflow ? 'overflow-visible' : 'overflow-hidden'} group-hover:border-primary transition-all duration-300 transform group-hover:scale-105 group-hover:shadow-2xl group-hover:shadow-primary/20`}> 
+      <div onClick={(e) => onCardClick(e)} className="block">
+        <Card className={`border-2 border-transparent ${allowOverflow ? 'overflow-visible' : 'overflow-hidden'} group-hover:border-primary transition-all duration-300 transform group-hover:scale-105 group-hover:shadow-2xl group-hover:shadow-primary/20`}>
           <div className="aspect-[2/3] relative bg-secondary">
-              <Image
+              <img
                   src={imageUrl}
                   alt={`Thumbnail for ${title}`}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className="object-cover w-full h-full"
                   data-ai-hint={'movie poster'}
               />
               {showRating && (
@@ -68,15 +94,13 @@ export function VideoCard({ video, onDismiss, watchHref, allowOverflow }: VideoC
               )}
           </div>
         </Card>
-      </Link>
+      </div>
         <div className="absolute top-2 right-2 z-10 flex flex-col items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/50 p-1 rounded-lg">
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                       <Button asChild variant="ghost" size="icon" className="text-white hover:bg-white/20">
-                          <Link href={watchNowHref} onClick={(e) => e.stopPropagation()}>
-                              <Play className="h-5 w-5" />
-                          </Link>
+                       <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={(e)=>{ e.stopPropagation(); handlePlayClick(e); }}>
+                          <Play className="h-5 w-5" />
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -84,15 +108,30 @@ export function VideoCard({ video, onDismiss, watchHref, allowOverflow }: VideoC
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
+
+            {/* Details button reinstated */}
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={(e)=>{ e.stopPropagation(); handleDetailsClick(e); }}>
+                            <Info className="h-5 w-5" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Details</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+
             <AddToWatchlistButton video={video} />
-            <DismissButton video={video} onDismiss={onDismiss} />
+            <DismissButton video={video} onDismiss={(v)=>handleDismiss(v)} />
         </div>
       <div className='mt-2 space-y-1'>
-        <Link href={primaryHref} >
+        <div onClick={(e)=>{ e.stopPropagation(); router.push(detailHref); }} className="block">
             <h3 className="text-sm font-medium text-foreground truncate transition-colors group-hover:text-primary">
-            {title}
+              {title}
             </h3>
-        </Link>
+        </div>
       </div>
     </div>
   );

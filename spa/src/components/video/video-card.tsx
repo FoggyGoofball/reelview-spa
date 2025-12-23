@@ -6,14 +6,16 @@ import { useDismissed } from '@/context/dismissed-context';
 import { useWatchlist } from '@/context/watchlist-context';
 import type { Video } from '@/lib/data';
 import { cn } from '@/lib/utils';
+import { updateWatchPositionOnNavigate } from '@/lib/client-api';
 
 export interface VideoCardProps {
   video: Video;
   variant?: 'default' | 'compact';
   onDismiss?: (video: Video) => void;
+  watchHref?: string; // optional override for primary click (used by continue-watching)
 }
 
-export function VideoCard({ video, variant = 'default', onDismiss }: VideoCardProps) {
+export function VideoCard({ video, variant = 'default', onDismiss, watchHref }: VideoCardProps) {
   const navigate = useNavigate();
   const { addToDismissed, isDismissed } = useDismissed();
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
@@ -28,25 +30,27 @@ export function VideoCard({ video, variant = 'default', onDismiss }: VideoCardPr
   const isVideoInWatchlist = isInWatchlist(video.id, video.media_type);
   const isVideoDismissed = isDismissed(video.id, video.media_type);
 
+  const detailHref = `/media/${video.media_type}/${video.id}`;
+  const defaultWatchHref = isSeries ? `/watch?id=${video.id}&type=${video.media_type}&s=1&e=1` : `/watch?id=${video.id}&type=${video.media_type}`;
+  const primaryHref = watchHref ? watchHref : detailHref; // prefer details unless watchHref provided
+
   const handleCardClick = () => {
-    if (isSeries) {
-      navigate(`/media/${video.media_type}/${video.id}`);
-    } else {
-      navigate(`/watch?id=${video.id}&type=${video.media_type}`);
-    }
+    navigate(primaryHref);
   };
 
   const handleWatchNow = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = isSeries
-      ? `/watch?id=${video.id}&type=${video.media_type}&s=1&e=1`
-      : `/watch?id=${video.id}&type=${video.media_type}`;
+    const url = watchHref || defaultWatchHref;
+
+    // Update watch history immediately so continue-watching carousels refresh
+    updateWatchPositionOnNavigate(video.id, video.media_type, isSeries ? 1 : null, isSeries ? 1 : null, video.title);
+
     navigate(url);
   };
 
   const handleDetails = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/media/${video.media_type}/${video.id}`);
+    navigate(detailHref);
   };
 
   const handleWatchlistClick = (e: React.MouseEvent) => {

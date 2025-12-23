@@ -22,7 +22,7 @@ import History from './app/history/page'
 
 function ClientLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
-  const isWatchPage = location.pathname.startsWith('/watch')
+  // Always show header (including on watch page) to provide consistent navigation
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -32,7 +32,7 @@ function ClientLayout({ children }: { children: React.ReactNode }) {
             <Suspense fallback={null}>
               <LoadingBar />
             </Suspense>
-            {!isWatchPage && <Header />}
+            <Header />
             <main>{children}</main>
             <Toaster />
           </WatchlistProvider>

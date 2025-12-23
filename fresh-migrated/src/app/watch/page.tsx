@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
@@ -7,7 +6,7 @@ import type { Video, CustomVideoData } from '@/lib/data';
 import { getAnimeEpisodes, type JikanEpisode } from '@/lib/jikan';
 import { getTvSeasonDetails, type TMDBEpisode, type TMDBMedia } from '@/lib/tmdb';
 import { tmdbMediaToVideo } from '@/lib/api';
-import { getCustomVideoData } from '@/lib/client-api';
+import { getCustomVideoData, updateWatchPositionOnNavigate } from '@/lib/client-api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VidlinkPlayer } from '@/components/video/vidlink-player';
 import { WatchHeader } from '@/components/video/watch-header';
@@ -173,7 +172,10 @@ function WatchPageContent() {
   const handleEpisodeSelect = (season: number, episode: number) => {
     setCurrentSeason(season);
     setCurrentEpisode(episode);
-    
+
+    // ensure history updates immediately for continue-watching
+    updateWatchPositionOnNavigate(String(tmdbId || ''), mediaType as any, season, episode, video?.title || '');
+
     const newUrl = `/watch?id=${tmdbId}&type=${mediaType}&s=${season}&e=${episode}`;
     router.push(newUrl);
   };

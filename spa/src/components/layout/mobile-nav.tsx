@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -7,9 +6,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Menu } from 'lucide-react';
 import { MainNav } from './main-nav';
 import { Logo } from './logo';
+import { useApiKeyDialog } from '@/context/api-key-dialog-context';
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const { openDialog } = useApiKeyDialog();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -30,6 +31,9 @@ export function MobileNav() {
         </SheetHeader>
         <div className="p-6 space-y-6">
           <MainNav className="flex-col items-start space-x-0 space-y-4" isInSheet />
+          <Button variant="outline" className="w-full mt-4" onClick={() => { setOpen(false); openDialog(); }}>
+            Change API Key
+          </Button>
         </div>
       </SheetContent>
     </Sheet>

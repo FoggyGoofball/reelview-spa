@@ -6,7 +6,7 @@ import type { Video, CustomVideoData } from '@/lib/data';
 import { getAnimeEpisodes, type JikanEpisode } from '@/lib/jikan';
 import { getTvSeasonDetails, type TMDBEpisode, type TMDBMedia } from '@/lib/tmdb';
 import { tmdbMediaToVideo } from '@/lib/api';
-import { getCustomVideoData } from '@/lib/client-api';
+import { getCustomVideoData, updateWatchPositionOnNavigate } from '@/lib/client-api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VidlinkPlayer } from '@/components/video/vidlink-player';
 import { WatchHeader } from '@/components/video/watch-header';
@@ -174,6 +174,9 @@ function WatchPageContent() {
   const handleEpisodeSelect = (season: number, episode: number) => {
     setCurrentSeason(season);
     setCurrentEpisode(episode);
+
+    // update history immediately so continue-watching reflects this navigation
+    updateWatchPositionOnNavigate(String(tmdbId || ''), mediaType as any, season, episode, video?.title || '');
     
     const newUrl = `/watch?id=${tmdbId}&type=${mediaType}&s=${season}&e=${episode}`;
     navigate(newUrl);
@@ -246,8 +249,8 @@ function WatchPageContent() {
   }
 
   return (
-    <div className="h-screen w-screen bg-black">
-      <div className="relative h-full w-full">
+    <div className="h-screen w-screen bg-black overflow-hidden">
+      <div className="relative h-full w-full flex flex-col">
         <WatchHeader 
             video={video}
             currentSeason={currentSeason}
@@ -259,12 +262,14 @@ function WatchPageContent() {
             hasPrev={hasPrev}
             playerUrl={playerUrl}
         />
-        <VidlinkPlayer 
-            video={video}
-            playerUrl={playerUrl}
-            season={currentSeason}
-            episode={currentEpisode}
-        />
+        <div className="flex-1 relative w-full">
+          <VidlinkPlayer 
+              video={video}
+              playerUrl={playerUrl}
+              season={currentSeason}
+              episode={currentEpisode}
+          />
+        </div>
       </div>
       
       {mediaType !== 'movie' && (

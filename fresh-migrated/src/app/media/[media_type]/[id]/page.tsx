@@ -9,7 +9,7 @@ import type { Video, CustomVideoData, VideoSource } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { PlayCircle, Star, Pencil } from 'lucide-react';
-import { getWatchHistory, getCustomVideoData } from '@/lib/client-api';
+import { getWatchHistory, getCustomVideoData, updateWatchPositionOnNavigate } from '@/lib/client-api';
 import { AddToWatchlistButton } from '@/components/video/add-to-watchlist-button';
 import {
   Select,
@@ -264,7 +264,16 @@ function MediaDetailsPageContent() {
 
             <div className="mt-6 flex flex-wrap items-center gap-4">
               <Button asChild size="lg">
-                <Link href={continueWatchingHref || firstPlayHref}>
+                <Link href={continueWatchingHref || firstPlayHref} onClick={() => {
+                  // update history immediately before navigation
+                  if (isSeries) {
+                    const season = continueWatchingHref ? (lastWatched?.last_season_watched || 1) : 1;
+                    const episode = continueWatchingHref ? (lastWatched?.last_episode_watched || 1) : 1;
+                    updateWatchPositionOnNavigate(String(video.id), video.media_type, Number(season), Number(episode), video.title);
+                  } else {
+                    updateWatchPositionOnNavigate(String(video.id), video.media_type, null, null, video.title);
+                  }
+                }}>
                   <PlayCircle className="mr-2 h-6 w-6" /> {continueWatchingHref ? "Continue Watching" : "Play"}
                 </Link>
               </Button>
@@ -313,7 +322,7 @@ function MediaDetailsPageContent() {
                                     </div>
                                     <div className="flex flex-col items-center justify-center shrink-0 w-24 gap-2">
                                       <Button asChild className="w-full">
-                                          <Link href={watchHref}>
+                                          <Link href={watchHref} onClick={() => updateWatchPositionOnNavigate(String(video.id), video.media_type, season.season_number, epNum, video.title)}>
                                             <PlayCircle className="h-5 w-5" /> Play
                                           </Link>
                                       </Button>

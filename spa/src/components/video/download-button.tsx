@@ -1,49 +1,22 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2 } from 'lucide-react';
 import { getDownloadAPI, isDownloadAvailable, getPlatform } from '@/lib/unified-download';
 
-// Download button for Watch page - works on Electron and Capacitor
-export function DownloadButton() {
+function sanitizeFilename(name: string) {
+  return name.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_').trim();
+}
+
+export function DownloadButton({ suggestedFilename }: { suggestedFilename?: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [capturedStreams, setCapturedStreams] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (!isDownloadAvailable()) return;
-    const api = getDownloadAPI();
-    const unsub = api.onStreamCaptured((stream: any) => {
-      try {
-        console.log('[DOWNLOAD] onStreamCaptured event:', stream);
-        setCapturedStreams(prev => {
-          const next = [stream, ...prev].slice(0, 10);
-          return next;
-        });
-      } catch (e) {
-        console.error('[DOWNLOAD] onStreamCaptured handler error', e);
-      }
-    });
-
-    const unsubAll = api.onCapturedStreamsList((streams:any[]) => {
-      try {
-        console.log('[DOWNLOAD] onCapturedStreamsList event, count=', streams?.length);
-        setCapturedStreams(streams || []);
-      } catch (e) {
-        console.error('[DOWNLOAD] onCapturedStreamsList handler error', e);
-      }
-    });
-
-    return () => { unsub?.(); unsubAll?.(); };
-  }, []);
 
   const handleClick = useCallback(async () => {
     setIsLoading(true);
     setMessage('Starting...');
-    console.log('=== DOWNLOAD CLICKED ===');
 
     try {
       const platform = getPlatform();
-      console.log('[DOWNLOAD] Platform:', platform);
       setMessage(`Platform: ${platform}`);
 
       if (!isDownloadAvailable()) {
@@ -53,35 +26,32 @@ export function DownloadButton() {
       }
 
       const api = getDownloadAPI();
-      console.log('[DOWNLOAD] Got API:', !!api, api);
-      setMessage('Got API...');
 
-      if (!api?.getCapturedStreams) {
+      if (typeof api?.getCapturedStreams !== 'function') {
         setMessage('No getCapturedStreams method');
         setIsLoading(false);
         return;
       }
 
-      console.log('[DOWNLOAD] Calling getCapturedStreams...');
-      setMessage('Fetching streams...');
+      let streams = await api.getCapturedStreams!();
 
-      const streams = await api.getCapturedStreams();
-      console.log('[DOWNLOAD] getCapturedStreams returned:', streams);
-      setMessage(`Found ${streams?.length || 0} streams`);
-
-      // If nothing returned, also show any recent events captured via listener
-      if ((!streams || streams.length === 0) && capturedStreams.length > 0) {
-        console.log('[DOWNLOAD] No streams from API, using capturedStreams from listener:', capturedStreams);
+      if ((!streams || streams.length === 0)) {
+        for (let i = 0; i < 3; i++) {
+          await new Promise(res => setTimeout(res, 500));
+          try {
+            const retry = await api.getCapturedStreams!();
+            if (retry && retry.length > 0) { streams = retry; break; }
+          } catch { }
+        }
       }
 
-      if ((!streams || streams.length === 0) && capturedStreams.length === 0) {
+      if ((!streams || streams.length === 0)) {
         setMessage('No streams captured - play the video first');
         setIsLoading(false);
         return;
       }
 
-      // Prefer the API streams; fallback to the listener-captured ones
-      const sourceList = (streams && streams.length > 0) ? streams : capturedStreams;
+      const sourceList = (streams && streams.length > 0) ? streams : [];
       const raw = sourceList[0];
       const url = typeof raw === 'string' ? raw : raw?.url;
 
@@ -91,46 +61,56 @@ export function DownloadButton() {
         return;
       }
 
-      console.log('[DOWNLOAD] Selected URL for download:', url);
-      setMessage('Starting download...');
+      // Derive suggested filename if not provided
+      let suggestedName = suggestedFilename || `video_${Date.now()}`;
+      if (!suggestedFilename) {
+        try {
+          const win = window as any;
+          const currentLocation = win?.location?.href || '';
+          const params = new URLSearchParams(currentLocation.split('?')[1] || '');
+          const id = params.get('id');
+          const type = params.get('type');
+          const s = params.get('s');
+          const e = params.get('e');
+          if (type && id && (type === 'tv' || type === 'anime') && s && e) {
+            const titleEl = document.querySelector('h1') || document.querySelector('title');
+            const titleText = (titleEl?.textContent || '').trim() || `series_${id}`;
+            const sP = String(s).padStart(2, '0');
+            const eP = String(e).padStart(2, '0');
+            suggestedName = `${titleText}_S${sP}E${eP}`;
+          } else {
+            // try document.title or h1
+            const titleEl = document.querySelector('h1') || document.querySelector('title');
+            const titleText = (titleEl?.textContent || '').trim();
+            if (titleText) suggestedName = titleText;
+          }
+        } catch (ex) {}
+      }
 
-      // Remove quality selection - let the embed/player choose quality. Start download with URL only.
-      const result = await api.startDownload(url, `video_${Date.now()}`);
-      console.log('[DOWNLOAD] startDownload result:', result);
+      suggestedName = sanitizeFilename(suggestedName);
+
+      const result = await api.startDownload(url, suggestedName);
 
       setMessage(result?.success ? 'Download started!' : `Error: ${result?.error || 'unknown'}`);
     } catch (e: any) {
-      console.error('[DOWNLOAD] ERROR:', e);
       setMessage(`Error: ${e?.message || e}`);
     } finally {
       setIsLoading(false);
     }
-  }, [capturedStreams]);
+  }, [suggestedFilename]);
 
-  // Always show on Electron or Capacitor, hide on web
-  if (!isDownloadAvailable()) {
-    return null;
-  }
+  if (!isDownloadAvailable()) return null;
 
   return (
-    <div className="flex flex-col gap-1 items-center">
-      <Button
-        onClick={handleClick}
-        disabled={isLoading}
-        variant="ghost"
-        size="icon"
-        className="h-9 w-9 text-white hover:bg-white/20"
-        title={`Download (${getPlatform()})`}
-      >
-        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-      </Button>
-      {message && <div className="text-xs text-white bg-black/50 px-2 py-1 rounded max-w-[200px] text-center">{message}</div>}
-      {capturedStreams.length > 0 && (
-        <div className="text-xs text-muted-foreground mt-1 max-w-[200px] text-center break-words">
-          <div className="font-medium">Recent captured stream</div>
-          <div className="text-xs">{(capturedStreams[0] as any)?.url ?? JSON.stringify(capturedStreams[0])}</div>
-        </div>
-      )}
-    </div>
+    <Button
+      onClick={handleClick}
+      disabled={isLoading}
+      variant="ghost"
+      size="icon"
+      className="h-7 w-7 sm:h-8 sm:w-8 text-white hover:bg-white/20 flex-shrink-0"
+      title={`Download (${getPlatform()})`}
+    >
+      {isLoading ? <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" /> : <Download className="h-3 w-3 sm:h-4 sm:w-4" />}
+    </Button>
   );
 }

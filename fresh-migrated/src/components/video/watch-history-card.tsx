@@ -1,7 +1,8 @@
 'use client';
+// @ts-nocheck
 
 import React from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import type { WatchProgress, Video } from '@/lib/data';
@@ -10,6 +11,7 @@ import { VideoCard } from './video-card';
 import { SkipForward, Play } from 'lucide-react';
 import { AddToWatchlistButton } from './add-to-watchlist-button';
 import { DismissButton } from './dismiss-button';
+import { updateWatchPositionOnNavigate } from '@/lib/client-api';
 
 // Helper to determine the next episode
 const getNextEpisode = (item: WatchProgress) => {
@@ -51,6 +53,7 @@ const getNextEpisode = (item: WatchProgress) => {
 
 export function WatchHistoryCard({ item }: { item: WatchProgress }) {
   const { dismissedItems } = useDismissed();
+  const router = useRouter();
   const percentage = (item.progress.watched / item.progress.duration) * 100;
 
   const getWatchHref = () => {
@@ -84,20 +87,30 @@ export function WatchHistoryCard({ item }: { item: WatchProgress }) {
     return null;
  }
 
+  const handlePlay = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const season = item.type === 'anime' || item.type === 'tv' ? Number(item.last_season_watched || 1) : undefined;
+    const episode = item.type === 'anime' || item.type === 'tv' ? Number(item.last_episode_watched || 1) : undefined;
+    updateWatchPositionOnNavigate(String(item.id), item.type, season ?? null, episode ?? null, item.title);
+    router.push(watchHref);
+  };
+
+  const handleWatchNext = (e: React.MouseEvent, nextSeason: number | null, nextEpisodeNum: number | null) => {
+    e.stopPropagation();
+    updateWatchPositionOnNavigate(String(item.id), item.type, nextSeason, nextEpisodeNum, item.title);
+    router.push(`/watch?id=${item.id}&type=${item.type}&s=${nextSeason}&e=${nextEpisodeNum}`);
+  };
+
   return (
     <div className="relative group overflow-visible block"> {/* allow overlays/tooltips to escape card */}
-      <Link href={watchHref}>
-        <div>
-          <VideoCard video={video} watchHref={watchHref} />
-        </div>
-      </Link>
+      <div onClick={() => { handlePlay(); }}>
+        <VideoCard video={video} watchHref={watchHref} />
+      </div>
 
       {/* Top-right small controls, same as other card hovers */}
       <div className="absolute top-2 right-2 z-50 flex flex-col items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto">
-        <Button asChild variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={(e:any)=>{ e.stopPropagation(); }}>
-          <Link href={watchHref}>
+        <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={(e:any)=>{ e.stopPropagation(); handlePlay(e); }}>
             <Play className="h-4 w-4" />
-          </Link>
         </Button>
         <AddToWatchlistButton video={video} />
         <DismissButton video={video} onDismiss={() => {}} />
@@ -123,10 +136,8 @@ export function WatchHistoryCard({ item }: { item: WatchProgress }) {
         <div className="mt-2 space-y-1 pointer-events-auto">
           <div className="flex items-center justify-between">
             <div />
-            <Button asChild variant="ghost" size="sm" className="h-auto px-1 py-0 text-xs text-muted-foreground hover:text-primary hover:bg-transparent">
-              <Link href={`/watch?id=${video.id}&type=${video.media_type}&s=${nextEpisode.season}&e=${nextEpisode.episode}`}>
-                Next Ep <SkipForward className="h-3 w-3 ml-1" />
-              </Link>
+            <Button variant="ghost" size="sm" className="h-auto px-1 py-0 text-xs text-muted-foreground hover:text-primary hover:bg-transparent" onClick={(e) => handleWatchNext(e, nextEpisode.season, nextEpisode.episode)}>
+                <>Next Ep <SkipForward className="h-3 w-3 ml-1" /></>
             </Button>
           </div>
         </div>
