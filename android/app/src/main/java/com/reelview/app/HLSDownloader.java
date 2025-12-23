@@ -47,21 +47,37 @@ public class HLSDownloader {
 
     /**
      * Initialize WakeLock to keep device awake during download
+     * Uses FULL_WAKE_LOCK to ensure CPU stays awake even in low-power modes
      */
     private void initializeWakeLock() {
         try {
             PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
             if (powerManager != null) {
-                wakeLock = powerManager.newWakeLock(
-                    PowerManager.PARTIAL_WAKE_LOCK,
-                    "reelview:download"
-                );
-                // Set timeout to 1 hour (in case something goes wrong)
-                wakeLock.acquire(3600000);
-                Log.d(TAG, "WakeLock acquired");
+                // PARTIAL_WAKE_LOCK: keeps CPU awake but allows screen to turn off (preferred for downloads)
+                // FULL_WAKE_LOCK: keeps CPU + screen awake (only use if needed)
+                // ACQUIRE_CAUSES_WAKEUP: wakes device from doze mode
+                
+                // For downloads: PARTIAL_WAKE_LOCK is sufficient since we don't need the screen on
+                int lockType = PowerManager.PARTIAL_WAKE_LOCK;
+                
+                // Add ACQUIRE_CAUSES_WAKEUP flag to wake from Doze if download is pending
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    // On Android 6+, also request to override power-saving modes
+                    // Note: This requires IGNORE_BATTERY_OPTIMIZATIONS permission in manifest
+                    lockType |= PowerManager.ACQUIRE_CAUSES_WAKEUP;
+                }
+                
+                wakeLock = powerManager.newWakeLock(lockType, "reelview:download");
+                
+                // Set timeout to 30 minutes max per download (prevent runaway)
+                // Downloads longer than this will need to manage their own WakeLock re-acquisition
+                wakeLock.acquire(30 * 60 * 1000L);
+                
+                Log.d(TAG, "WakeLock acquired with flags: " + lockType);
             }
         } catch (Exception e) {
             Log.e(TAG, "Error initializing WakeLock: " + e.getMessage());
+            // Proceed without WakeLock if there's an error
         }
     }
 

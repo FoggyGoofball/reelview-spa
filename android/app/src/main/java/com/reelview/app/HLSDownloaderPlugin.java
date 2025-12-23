@@ -322,10 +322,38 @@ public class HLSDownloaderPlugin extends Plugin {
         result.put("downloadId", downloadId);
         call.resolve(result);
         
-        // Start download in background thread
+        // CRITICAL: Start download via Foreground Service to survive screen lock & app backgrounding
+        // This replaces the background thread approach
+        Intent downloadIntent = new Intent(getContext(), DownloadService.class);
+        downloadIntent.setAction("DOWNLOAD");
+        downloadIntent.putExtra("downloadId", downloadId);
+        downloadIntent.putExtra("url", url);
+        downloadIntent.putExtra("quality", quality);
+        downloadIntent.putExtra("filename", filename);
+        
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // Android 8+ requires startForegroundService for foreground services
+                getContext().startForegroundService(downloadIntent);
+                Log.d(TAG, "Download started via foreground service: " + downloadId);
+            } else {
+                getContext().startService(downloadIntent);
+                Log.d(TAG, "Download started via service: " + downloadId);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error starting foreground service: " + e.getMessage());
+            // Fallback to thread-based download if service fails
+            startDownloadThread(downloadId, url, quality, filename, state);
+        }
+    }
+    
+    /**
+     * Fallback: Start download in background thread if service unavailable
+     */
+    private void startDownloadThread(String downloadId, String url, String quality, String filename, DownloadState state) {
         new Thread(() -> {
             try {
-                Log.d(TAG, "Download thread started for " + downloadId);
+                Log.d(TAG, "Download thread started (fallback) for " + downloadId);
                 
                 hlsDownloader.downloadStream(url, quality, filename, new HLSDownloader.DownloadProgressCallback() {
                     @Override
