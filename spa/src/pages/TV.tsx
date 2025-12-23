@@ -90,8 +90,16 @@ const fetchAnimationGenres = async (
             if (allProcessedIds.has(videoKey) || dismissedItems[videoKey]) continue;
 
             const enrichedVideo = await tmdbMediaToVideo(basicVideo);
+            
             // Ensure we are not adding anime to the animation carousels on the TV page
             if (enrichedVideo && enrichedVideo.media_type !== 'anime') {
+                // ALSO exclude animated shows with Asian or Russian original language
+                // Those belong on the Anime page, not the Animation/Adult Animation carousels
+                const asianOrRussianLanguages = ['ja', 'ko', 'zh', 'ru'];
+                if (asianOrRussianLanguages.includes(enrichedVideo.original_language || '')) {
+                    continue; // Skip this show - it should be on anime page only
+                }
+                
                 allProcessedIds.add(videoKey);
                 if (enrichedVideo.is_explicit && adultAnimation.length < CAROUSEL_FETCH_LIMIT) {
                     adultAnimation.push(enrichedVideo);

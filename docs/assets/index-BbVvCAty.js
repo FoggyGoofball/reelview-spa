@@ -21246,6 +21246,10 @@ const fetchAnimationGenres = async (dismissedItems, allProcessedIds, toast2) => 
       if (allProcessedIds.has(videoKey) || dismissedItems[videoKey]) continue;
       const enrichedVideo = await tmdbMediaToVideo(basicVideo);
       if (enrichedVideo && enrichedVideo.media_type !== "anime") {
+        const asianOrRussianLanguages = ["ja", "ko", "zh", "ru"];
+        if (asianOrRussianLanguages.includes(enrichedVideo.original_language || "")) {
+          continue;
+        }
         allProcessedIds.add(videoKey);
         if (enrichedVideo.is_explicit && adultAnimation.length < CAROUSEL_FETCH_LIMIT$1) {
           adultAnimation.push(enrichedVideo);
@@ -28541,4 +28545,4 @@ function App() {
 ReactDOM$1.createRoot(document.getElementById("root")).render(
   /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) })
 );
-//# sourceMappingURL=index-CtCouRAc.js.map
+//# sourceMappingURL=index-BbVvCAty.js.map
