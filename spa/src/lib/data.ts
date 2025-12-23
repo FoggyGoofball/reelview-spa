@@ -1,4 +1,3 @@
-
 export type Video = {
   id: string;
   title: string;
@@ -94,6 +93,7 @@ export const EXPLICIT_RATINGS = [
   'Rx', 
   'Hentai', 
   'Adult',
+  'MA',      // MyAnimeList Mature Audiences rating
   '18',
   '18+',
   'Restricted'

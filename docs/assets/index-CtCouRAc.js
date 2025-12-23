@@ -7106,12 +7106,12 @@ function _extends$1() {
   };
   return _extends$1.apply(this, arguments);
 }
-var Action$1;
+var Action$2;
 (function(Action2) {
   Action2["Pop"] = "POP";
   Action2["Push"] = "PUSH";
   Action2["Replace"] = "REPLACE";
-})(Action$1 || (Action$1 = {}));
+})(Action$2 || (Action$2 = {}));
 const PopStateEventType = "popstate";
 function createBrowserHistory(options) {
   if (options === void 0) {
@@ -7220,7 +7220,7 @@ function getUrlBasedHistory(getLocation, createHref, validateLocation, options) 
     v5Compat = false
   } = options;
   let globalHistory = window2.history;
-  let action = Action$1.Pop;
+  let action = Action$2.Pop;
   let listener = null;
   let index2 = getIndex();
   if (index2 == null) {
@@ -7236,7 +7236,7 @@ function getUrlBasedHistory(getLocation, createHref, validateLocation, options) 
     return state.idx;
   }
   function handlePop() {
-    action = Action$1.Pop;
+    action = Action$2.Pop;
     let nextIndex = getIndex();
     let delta = nextIndex == null ? null : nextIndex - index2;
     index2 = nextIndex;
@@ -7249,7 +7249,7 @@ function getUrlBasedHistory(getLocation, createHref, validateLocation, options) 
     }
   }
   function push(to, state) {
-    action = Action$1.Push;
+    action = Action$2.Push;
     let location = createLocation(history.location, to, state);
     index2 = getIndex() + 1;
     let historyState = getHistoryState(location, index2);
@@ -7271,7 +7271,7 @@ function getUrlBasedHistory(getLocation, createHref, validateLocation, options) 
     }
   }
   function replace(to, state) {
-    action = Action$1.Replace;
+    action = Action$2.Replace;
     let location = createLocation(history.location, to, state);
     index2 = getIndex();
     let historyState = getHistoryState(location, index2);
@@ -7849,7 +7849,7 @@ function useRoutesImpl(routes, locationArg, dataRouterState, future) {
           state: null,
           key: "default"
         }, location),
-        navigationType: Action$1.Pop
+        navigationType: Action$2.Pop
       }
     }, renderedMatches);
   }
@@ -8134,7 +8134,7 @@ function Router(_ref5) {
     basename: basenameProp = "/",
     children = null,
     location: locationProp,
-    navigationType = Action$1.Pop,
+    navigationType = Action$2.Pop,
     navigator: navigator2,
     static: staticProp = false,
     future
@@ -8637,17 +8637,6 @@ const Menu$1 = createLucideIcon("Menu", [
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const Monitor = createLucideIcon("Monitor", [
-  ["rect", { width: "20", height: "14", x: "2", y: "3", rx: "2", key: "48i651" }],
-  ["line", { x1: "8", x2: "16", y1: "21", y2: "21", key: "1svkeh" }],
-  ["line", { x1: "12", x2: "12", y1: "17", y2: "21", key: "vw1qmm" }]
-]);
-/**
- * @license lucide-react v0.417.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
 const Pencil = createLucideIcon("Pencil", [
   [
     "path",
@@ -8699,6 +8688,22 @@ const Star = createLucideIcon("Star", [
     {
       points: "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2",
       key: "8f66p6"
+    }
+  ]
+]);
+/**
+ * @license lucide-react v0.417.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const ThumbsDown = createLucideIcon("ThumbsDown", [
+  ["path", { d: "M17 14V2", key: "8ymqnk" }],
+  [
+    "path",
+    {
+      d: "M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z",
+      key: "m61m77"
     }
   ]
 ]);
@@ -8795,7 +8800,7 @@ function createSlot(ownerName) {
   const Slot2 = reactExports.forwardRef((props, forwardedRef) => {
     const { children, ...slotProps } = props;
     const childrenArray = reactExports.Children.toArray(children);
-    const slottable = childrenArray.find(isSlottable$5);
+    const slottable = childrenArray.find(isSlottable$6);
     if (slottable) {
       const newElement = slottable.props.children;
       const newChildren = childrenArray.map((child) => {
@@ -8813,14 +8818,14 @@ function createSlot(ownerName) {
   Slot2.displayName = `${ownerName}.Slot`;
   return Slot2;
 }
-var Slot$5 = /* @__PURE__ */ createSlot("Slot");
+var Slot$6 = /* @__PURE__ */ createSlot("Slot");
 // @__NO_SIDE_EFFECTS__
 function createSlotClone(ownerName) {
   const SlotClone2 = reactExports.forwardRef((props, forwardedRef) => {
     const { children, ...slotProps } = props;
     if (reactExports.isValidElement(children)) {
-      const childrenRef = getElementRef$6(children);
-      const props2 = mergeProps$5(slotProps, children.props);
+      const childrenRef = getElementRef$7(children);
+      const props2 = mergeProps$6(slotProps, children.props);
       if (children.type !== reactExports.Fragment) {
         props2.ref = forwardedRef ? composeRefs$1(forwardedRef, childrenRef) : childrenRef;
       }
@@ -8832,10 +8837,10 @@ function createSlotClone(ownerName) {
   return SlotClone2;
 }
 var SLOTTABLE_IDENTIFIER = Symbol("radix.slottable");
-function isSlottable$5(child) {
+function isSlottable$6(child) {
   return reactExports.isValidElement(child) && typeof child.type === "function" && "__radixId" in child.type && child.type.__radixId === SLOTTABLE_IDENTIFIER;
 }
-function mergeProps$5(slotProps, childProps) {
+function mergeProps$6(slotProps, childProps) {
   const overrideProps = { ...childProps };
   for (const propName in childProps) {
     const slotPropValue = slotProps[propName];
@@ -8859,7 +8864,7 @@ function mergeProps$5(slotProps, childProps) {
   }
   return { ...slotProps, ...overrideProps };
 }
-function getElementRef$6(element) {
+function getElementRef$7(element) {
   var _a, _b;
   let getter = (_a = Object.getOwnPropertyDescriptor(element.props, "ref")) == null ? void 0 : _a.get;
   let mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
@@ -11658,7 +11663,7 @@ const buttonVariants = cva(
 );
 const Button = reactExports.forwardRef(
   ({ className, variant, size: size2, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot$5 : "button";
+    const Comp = asChild ? Slot$6 : "button";
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
       Comp,
       {
@@ -12024,7 +12029,9 @@ function MainNav({ className, isInSheet, ...props }) {
     { href: "/tv", label: "TV Shows" },
     { href: "/anime", label: "Anime" },
     { href: "/watchlist", label: "Watchlist" },
-    { href: "/history", label: "History" }
+    { href: "/history", label: "History" },
+    { href: "/downloads", label: "Downloads" }
+    // added downloads link
   ];
   const isActive = (href) => {
     if (href === "/") {
@@ -12263,10 +12270,10 @@ function useUncontrolledState({
   }, [value, prevValueRef, handleChange]);
   return uncontrolledState;
 }
-var Slot$4 = reactExports.forwardRef((props, forwardedRef) => {
+var Slot$5 = reactExports.forwardRef((props, forwardedRef) => {
   const { children, ...slotProps } = props;
   const childrenArray = reactExports.Children.toArray(children);
-  const slottable = childrenArray.find(isSlottable$4);
+  const slottable = childrenArray.find(isSlottable$5);
   if (slottable) {
     const newElement = slottable.props.children;
     const newChildren = childrenArray.map((child) => {
@@ -12277,16 +12284,16 @@ var Slot$4 = reactExports.forwardRef((props, forwardedRef) => {
         return child;
       }
     });
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$4, { ...slotProps, ref: forwardedRef, children: reactExports.isValidElement(newElement) ? reactExports.cloneElement(newElement, void 0, newChildren) : null });
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$5, { ...slotProps, ref: forwardedRef, children: reactExports.isValidElement(newElement) ? reactExports.cloneElement(newElement, void 0, newChildren) : null });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$4, { ...slotProps, ref: forwardedRef, children });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$5, { ...slotProps, ref: forwardedRef, children });
 });
-Slot$4.displayName = "Slot";
-var SlotClone$4 = reactExports.forwardRef((props, forwardedRef) => {
+Slot$5.displayName = "Slot";
+var SlotClone$5 = reactExports.forwardRef((props, forwardedRef) => {
   const { children, ...slotProps } = props;
   if (reactExports.isValidElement(children)) {
-    const childrenRef = getElementRef$5(children);
-    const props2 = mergeProps$4(slotProps, children.props);
+    const childrenRef = getElementRef$6(children);
+    const props2 = mergeProps$5(slotProps, children.props);
     if (children.type !== reactExports.Fragment) {
       props2.ref = forwardedRef ? composeRefs(forwardedRef, childrenRef) : childrenRef;
     }
@@ -12294,14 +12301,14 @@ var SlotClone$4 = reactExports.forwardRef((props, forwardedRef) => {
   }
   return reactExports.Children.count(children) > 1 ? reactExports.Children.only(null) : null;
 });
-SlotClone$4.displayName = "SlotClone";
-var Slottable$4 = ({ children }) => {
+SlotClone$5.displayName = "SlotClone";
+var Slottable$5 = ({ children }) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children });
 };
-function isSlottable$4(child) {
-  return reactExports.isValidElement(child) && child.type === Slottable$4;
+function isSlottable$5(child) {
+  return reactExports.isValidElement(child) && child.type === Slottable$5;
 }
-function mergeProps$4(slotProps, childProps) {
+function mergeProps$5(slotProps, childProps) {
   const overrideProps = { ...childProps };
   for (const propName in childProps) {
     const slotPropValue = slotProps[propName];
@@ -12324,7 +12331,7 @@ function mergeProps$4(slotProps, childProps) {
   }
   return { ...slotProps, ...overrideProps };
 }
-function getElementRef$5(element) {
+function getElementRef$6(element) {
   var _a, _b;
   let getter = (_a = Object.getOwnPropertyDescriptor(element.props, "ref")) == null ? void 0 : _a.get;
   let mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
@@ -12359,7 +12366,7 @@ var NODES = [
 var Primitive = NODES.reduce((primitive, node) => {
   const Node2 = reactExports.forwardRef((props, forwardedRef) => {
     const { asChild, ...primitiveProps } = props;
-    const Comp = asChild ? Slot$4 : node;
+    const Comp = asChild ? Slot$5 : node;
     if (typeof window !== "undefined") {
       window[Symbol.for("radix-ui")] = true;
     }
@@ -12786,7 +12793,7 @@ function arrayRemove(array, item) {
 function removeLinks(items) {
   return items.filter((item) => item.tagName !== "A");
 }
-var PORTAL_NAME$4 = "Portal";
+var PORTAL_NAME$5 = "Portal";
 var Portal$2 = reactExports.forwardRef((props, forwardedRef) => {
   var _a;
   const { container: containerProp, ...portalProps } = props;
@@ -12795,7 +12802,7 @@ var Portal$2 = reactExports.forwardRef((props, forwardedRef) => {
   const container = containerProp || mounted && ((_a = globalThis == null ? void 0 : globalThis.document) == null ? void 0 : _a.body);
   return container ? ReactDOM.createPortal(/* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.div, { ...portalProps, ref: forwardedRef }), container) : null;
 });
-Portal$2.displayName = PORTAL_NAME$4;
+Portal$2.displayName = PORTAL_NAME$5;
 function useStateMachine$1(initialState, machine) {
   return reactExports.useReducer((state, event) => {
     const nextState = machine[state][event];
@@ -12806,7 +12813,7 @@ var Presence = (props) => {
   const { present, children } = props;
   const presence = usePresence(present);
   const child = typeof children === "function" ? children({ present: presence.isPresent }) : reactExports.Children.only(children);
-  const ref = useComposedRefs(presence.ref, getElementRef$4(child));
+  const ref = useComposedRefs(presence.ref, getElementRef$5(child));
   const forceMount = typeof children === "function";
   return forceMount || presence.isPresent ? reactExports.cloneElement(child, { ref }) : null;
 };
@@ -12905,7 +12912,7 @@ function usePresence(present) {
 function getAnimationName(styles) {
   return (styles == null ? void 0 : styles.animationName) || "none";
 }
-function getElementRef$4(element) {
+function getElementRef$5(element) {
   var _a, _b;
   let getter = (_a = Object.getOwnPropertyDescriptor(element.props, "ref")) == null ? void 0 : _a.get;
   let mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
@@ -13717,10 +13724,10 @@ var hideOthers = function(originalTarget, parentNode, markerName) {
   targets.push.apply(targets, Array.from(activeParentNode.querySelectorAll("[aria-live]")));
   return applyAttributeToOthers(targets, activeParentNode, markerName, "aria-hidden");
 };
-var Slot$3 = reactExports.forwardRef((props, forwardedRef) => {
+var Slot$4 = reactExports.forwardRef((props, forwardedRef) => {
   const { children, ...slotProps } = props;
   const childrenArray = reactExports.Children.toArray(children);
-  const slottable = childrenArray.find(isSlottable$3);
+  const slottable = childrenArray.find(isSlottable$4);
   if (slottable) {
     const newElement = slottable.props.children;
     const newChildren = childrenArray.map((child) => {
@@ -13731,16 +13738,16 @@ var Slot$3 = reactExports.forwardRef((props, forwardedRef) => {
         return child;
       }
     });
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$3, { ...slotProps, ref: forwardedRef, children: reactExports.isValidElement(newElement) ? reactExports.cloneElement(newElement, void 0, newChildren) : null });
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$4, { ...slotProps, ref: forwardedRef, children: reactExports.isValidElement(newElement) ? reactExports.cloneElement(newElement, void 0, newChildren) : null });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$3, { ...slotProps, ref: forwardedRef, children });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$4, { ...slotProps, ref: forwardedRef, children });
 });
-Slot$3.displayName = "Slot";
-var SlotClone$3 = reactExports.forwardRef((props, forwardedRef) => {
+Slot$4.displayName = "Slot";
+var SlotClone$4 = reactExports.forwardRef((props, forwardedRef) => {
   const { children, ...slotProps } = props;
   if (reactExports.isValidElement(children)) {
-    const childrenRef = getElementRef$3(children);
-    const props2 = mergeProps$3(slotProps, children.props);
+    const childrenRef = getElementRef$4(children);
+    const props2 = mergeProps$4(slotProps, children.props);
     if (children.type !== reactExports.Fragment) {
       props2.ref = forwardedRef ? composeRefs(forwardedRef, childrenRef) : childrenRef;
     }
@@ -13748,14 +13755,14 @@ var SlotClone$3 = reactExports.forwardRef((props, forwardedRef) => {
   }
   return reactExports.Children.count(children) > 1 ? reactExports.Children.only(null) : null;
 });
-SlotClone$3.displayName = "SlotClone";
-var Slottable$3 = ({ children }) => {
+SlotClone$4.displayName = "SlotClone";
+var Slottable$4 = ({ children }) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children });
 };
-function isSlottable$3(child) {
-  return reactExports.isValidElement(child) && child.type === Slottable$3;
+function isSlottable$4(child) {
+  return reactExports.isValidElement(child) && child.type === Slottable$4;
 }
-function mergeProps$3(slotProps, childProps) {
+function mergeProps$4(slotProps, childProps) {
   const overrideProps = { ...childProps };
   for (const propName in childProps) {
     const slotPropValue = slotProps[propName];
@@ -13778,7 +13785,7 @@ function mergeProps$3(slotProps, childProps) {
   }
   return { ...slotProps, ...overrideProps };
 }
-function getElementRef$3(element) {
+function getElementRef$4(element) {
   var _a, _b;
   let getter = (_a = Object.getOwnPropertyDescriptor(element.props, "ref")) == null ? void 0 : _a.get;
   let mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
@@ -13793,7 +13800,7 @@ function getElementRef$3(element) {
   return element.props.ref || element.ref;
 }
 var DIALOG_NAME = "Dialog";
-var [createDialogContext] = createContextScope(DIALOG_NAME);
+var [createDialogContext, createDialogScope] = createContextScope(DIALOG_NAME);
 var [DialogProvider, useDialogContext] = createDialogContext(DIALOG_NAME);
 var Dialog$1 = (props) => {
   const {
@@ -13829,11 +13836,11 @@ var Dialog$1 = (props) => {
   );
 };
 Dialog$1.displayName = DIALOG_NAME;
-var TRIGGER_NAME$4 = "DialogTrigger";
+var TRIGGER_NAME$5 = "DialogTrigger";
 var DialogTrigger = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { __scopeDialog, ...triggerProps } = props;
-    const context = useDialogContext(TRIGGER_NAME$4, __scopeDialog);
+    const context = useDialogContext(TRIGGER_NAME$5, __scopeDialog);
     const composedTriggerRef = useComposedRefs(forwardedRef, context.triggerRef);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
       Primitive.button,
@@ -13850,35 +13857,35 @@ var DialogTrigger = reactExports.forwardRef(
     );
   }
 );
-DialogTrigger.displayName = TRIGGER_NAME$4;
-var PORTAL_NAME$3 = "DialogPortal";
-var [PortalProvider$2, usePortalContext$2] = createDialogContext(PORTAL_NAME$3, {
+DialogTrigger.displayName = TRIGGER_NAME$5;
+var PORTAL_NAME$4 = "DialogPortal";
+var [PortalProvider$2, usePortalContext$2] = createDialogContext(PORTAL_NAME$4, {
   forceMount: void 0
 });
 var DialogPortal$1 = (props) => {
   const { __scopeDialog, forceMount, children, container } = props;
-  const context = useDialogContext(PORTAL_NAME$3, __scopeDialog);
+  const context = useDialogContext(PORTAL_NAME$4, __scopeDialog);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(PortalProvider$2, { scope: __scopeDialog, forceMount, children: reactExports.Children.map(children, (child) => /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Portal$2, { asChild: true, container, children: child }) })) });
 };
-DialogPortal$1.displayName = PORTAL_NAME$3;
-var OVERLAY_NAME = "DialogOverlay";
+DialogPortal$1.displayName = PORTAL_NAME$4;
+var OVERLAY_NAME$1 = "DialogOverlay";
 var DialogOverlay$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
-    const portalContext = usePortalContext$2(OVERLAY_NAME, props.__scopeDialog);
+    const portalContext = usePortalContext$2(OVERLAY_NAME$1, props.__scopeDialog);
     const { forceMount = portalContext.forceMount, ...overlayProps } = props;
-    const context = useDialogContext(OVERLAY_NAME, props.__scopeDialog);
+    const context = useDialogContext(OVERLAY_NAME$1, props.__scopeDialog);
     return context.modal ? /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: /* @__PURE__ */ jsxRuntimeExports.jsx(DialogOverlayImpl, { ...overlayProps, ref: forwardedRef }) }) : null;
   }
 );
-DialogOverlay$1.displayName = OVERLAY_NAME;
+DialogOverlay$1.displayName = OVERLAY_NAME$1;
 var DialogOverlayImpl = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { __scopeDialog, ...overlayProps } = props;
-    const context = useDialogContext(OVERLAY_NAME, __scopeDialog);
+    const context = useDialogContext(OVERLAY_NAME$1, __scopeDialog);
     return (
       // Make sure `Content` is scrollable even when it doesn't live inside `RemoveScroll`
       // ie. when `Overlay` and `Content` are siblings
-      /* @__PURE__ */ jsxRuntimeExports.jsx(ReactRemoveScroll, { as: Slot$3, allowPinchZoom: true, shards: [context.contentRef], children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ReactRemoveScroll, { as: Slot$4, allowPinchZoom: true, shards: [context.contentRef], children: /* @__PURE__ */ jsxRuntimeExports.jsx(
         Primitive.div,
         {
           "data-state": getState$2(context.open),
@@ -13890,19 +13897,19 @@ var DialogOverlayImpl = reactExports.forwardRef(
     );
   }
 );
-var CONTENT_NAME$6 = "DialogContent";
+var CONTENT_NAME$7 = "DialogContent";
 var DialogContent$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
-    const portalContext = usePortalContext$2(CONTENT_NAME$6, props.__scopeDialog);
+    const portalContext = usePortalContext$2(CONTENT_NAME$7, props.__scopeDialog);
     const { forceMount = portalContext.forceMount, ...contentProps } = props;
-    const context = useDialogContext(CONTENT_NAME$6, props.__scopeDialog);
+    const context = useDialogContext(CONTENT_NAME$7, props.__scopeDialog);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: context.modal ? /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentModal, { ...contentProps, ref: forwardedRef }) : /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentNonModal, { ...contentProps, ref: forwardedRef }) });
   }
 );
-DialogContent$1.displayName = CONTENT_NAME$6;
+DialogContent$1.displayName = CONTENT_NAME$7;
 var DialogContentModal = reactExports.forwardRef(
   (props, forwardedRef) => {
-    const context = useDialogContext(CONTENT_NAME$6, props.__scopeDialog);
+    const context = useDialogContext(CONTENT_NAME$7, props.__scopeDialog);
     const contentRef = reactExports.useRef(null);
     const composedRefs = useComposedRefs(forwardedRef, context.contentRef, contentRef);
     reactExports.useEffect(() => {
@@ -13937,7 +13944,7 @@ var DialogContentModal = reactExports.forwardRef(
 );
 var DialogContentNonModal = reactExports.forwardRef(
   (props, forwardedRef) => {
-    const context = useDialogContext(CONTENT_NAME$6, props.__scopeDialog);
+    const context = useDialogContext(CONTENT_NAME$7, props.__scopeDialog);
     const hasInteractedOutsideRef = reactExports.useRef(false);
     const hasPointerDownOutsideRef = reactExports.useRef(false);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -13980,7 +13987,7 @@ var DialogContentNonModal = reactExports.forwardRef(
 var DialogContentImpl = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { __scopeDialog, trapFocus, onOpenAutoFocus, onCloseAutoFocus, ...contentProps } = props;
-    const context = useDialogContext(CONTENT_NAME$6, __scopeDialog);
+    const context = useDialogContext(CONTENT_NAME$7, __scopeDialog);
     const contentRef = reactExports.useRef(null);
     const composedRefs = useComposedRefs(forwardedRef, contentRef);
     useFocusGuards();
@@ -14010,29 +14017,29 @@ var DialogContentImpl = reactExports.forwardRef(
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(TitleWarning, { titleId: context.titleId }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(DescriptionWarning, { contentRef, descriptionId: context.descriptionId })
+        /* @__PURE__ */ jsxRuntimeExports.jsx(DescriptionWarning$1, { contentRef, descriptionId: context.descriptionId })
       ] })
     ] });
   }
 );
-var TITLE_NAME$1 = "DialogTitle";
+var TITLE_NAME$2 = "DialogTitle";
 var DialogTitle$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { __scopeDialog, ...titleProps } = props;
-    const context = useDialogContext(TITLE_NAME$1, __scopeDialog);
+    const context = useDialogContext(TITLE_NAME$2, __scopeDialog);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.h2, { id: context.titleId, ...titleProps, ref: forwardedRef });
   }
 );
-DialogTitle$1.displayName = TITLE_NAME$1;
-var DESCRIPTION_NAME$1 = "DialogDescription";
+DialogTitle$1.displayName = TITLE_NAME$2;
+var DESCRIPTION_NAME$2 = "DialogDescription";
 var DialogDescription$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { __scopeDialog, ...descriptionProps } = props;
-    const context = useDialogContext(DESCRIPTION_NAME$1, __scopeDialog);
+    const context = useDialogContext(DESCRIPTION_NAME$2, __scopeDialog);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.p, { id: context.descriptionId, ...descriptionProps, ref: forwardedRef });
   }
 );
-DialogDescription$1.displayName = DESCRIPTION_NAME$1;
+DialogDescription$1.displayName = DESCRIPTION_NAME$2;
 var CLOSE_NAME$1 = "DialogClose";
 var DialogClose$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
@@ -14055,8 +14062,8 @@ function getState$2(open) {
 }
 var TITLE_WARNING_NAME = "DialogTitleWarning";
 var [WarningProvider, useWarningContext] = createContext2(TITLE_WARNING_NAME, {
-  contentName: CONTENT_NAME$6,
-  titleName: TITLE_NAME$1,
+  contentName: CONTENT_NAME$7,
+  titleName: TITLE_NAME$2,
   docsSlug: "dialog"
 });
 var TitleWarning = ({ titleId }) => {
@@ -14075,7 +14082,7 @@ For more information, see https://radix-ui.com/primitives/docs/components/${titl
   return null;
 };
 var DESCRIPTION_WARNING_NAME = "DialogDescriptionWarning";
-var DescriptionWarning = ({ contentRef, descriptionId }) => {
+var DescriptionWarning$1 = ({ contentRef, descriptionId }) => {
   const descriptionWarningContext = useWarningContext(DESCRIPTION_WARNING_NAME);
   const MESSAGE = `Warning: Missing \`Description\` or \`aria-describedby={undefined}\` for {${descriptionWarningContext.contentName}}.`;
   reactExports.useEffect(() => {
@@ -14255,10 +14262,10 @@ function useSource() {
   }
   return context;
 }
-var Slot$2 = reactExports.forwardRef((props, forwardedRef) => {
+var Slot$3 = reactExports.forwardRef((props, forwardedRef) => {
   const { children, ...slotProps } = props;
   const childrenArray = reactExports.Children.toArray(children);
-  const slottable = childrenArray.find(isSlottable$2);
+  const slottable = childrenArray.find(isSlottable$3);
   if (slottable) {
     const newElement = slottable.props.children;
     const newChildren = childrenArray.map((child) => {
@@ -14269,16 +14276,16 @@ var Slot$2 = reactExports.forwardRef((props, forwardedRef) => {
         return child;
       }
     });
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$2, { ...slotProps, ref: forwardedRef, children: reactExports.isValidElement(newElement) ? reactExports.cloneElement(newElement, void 0, newChildren) : null });
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$3, { ...slotProps, ref: forwardedRef, children: reactExports.isValidElement(newElement) ? reactExports.cloneElement(newElement, void 0, newChildren) : null });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$2, { ...slotProps, ref: forwardedRef, children });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$3, { ...slotProps, ref: forwardedRef, children });
 });
-Slot$2.displayName = "Slot";
-var SlotClone$2 = reactExports.forwardRef((props, forwardedRef) => {
+Slot$3.displayName = "Slot";
+var SlotClone$3 = reactExports.forwardRef((props, forwardedRef) => {
   const { children, ...slotProps } = props;
   if (reactExports.isValidElement(children)) {
-    const childrenRef = getElementRef$2(children);
-    const props2 = mergeProps$2(slotProps, children.props);
+    const childrenRef = getElementRef$3(children);
+    const props2 = mergeProps$3(slotProps, children.props);
     if (children.type !== reactExports.Fragment) {
       props2.ref = forwardedRef ? composeRefs(forwardedRef, childrenRef) : childrenRef;
     }
@@ -14286,14 +14293,14 @@ var SlotClone$2 = reactExports.forwardRef((props, forwardedRef) => {
   }
   return reactExports.Children.count(children) > 1 ? reactExports.Children.only(null) : null;
 });
-SlotClone$2.displayName = "SlotClone";
-var Slottable$2 = ({ children }) => {
+SlotClone$3.displayName = "SlotClone";
+var Slottable$3 = ({ children }) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children });
 };
-function isSlottable$2(child) {
-  return reactExports.isValidElement(child) && child.type === Slottable$2;
+function isSlottable$3(child) {
+  return reactExports.isValidElement(child) && child.type === Slottable$3;
 }
-function mergeProps$2(slotProps, childProps) {
+function mergeProps$3(slotProps, childProps) {
   const overrideProps = { ...childProps };
   for (const propName in childProps) {
     const slotPropValue = slotProps[propName];
@@ -14316,7 +14323,7 @@ function mergeProps$2(slotProps, childProps) {
   }
   return { ...slotProps, ...overrideProps };
 }
-function getElementRef$2(element) {
+function getElementRef$3(element) {
   var _a, _b;
   let getter = (_a = Object.getOwnPropertyDescriptor(element.props, "ref")) == null ? void 0 : _a.get;
   let mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
@@ -14350,7 +14357,7 @@ function createCollection(name) {
       const { scope, children } = props;
       const context = useCollectionContext(COLLECTION_SLOT_NAME, scope);
       const composedRefs = useComposedRefs(forwardedRef, context.collectionRef);
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(Slot$2, { ref: composedRefs, children });
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(Slot$3, { ref: composedRefs, children });
     }
   );
   CollectionSlot.displayName = COLLECTION_SLOT_NAME;
@@ -14366,7 +14373,7 @@ function createCollection(name) {
         context.itemMap.set(ref, { ref, ...itemData });
         return () => void context.itemMap.delete(ref);
       });
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(Slot$2, { ...{ [ITEM_DATA_ATTR]: "" }, ref: composedRefs, children });
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(Slot$3, { ...{ [ITEM_DATA_ATTR]: "" }, ref: composedRefs, children });
     }
   );
   CollectionItemSlot.displayName = ITEM_SLOT_NAME;
@@ -16315,8 +16322,8 @@ var PopperAnchor = reactExports.forwardRef(
   }
 );
 PopperAnchor.displayName = ANCHOR_NAME$1;
-var CONTENT_NAME$5 = "PopperContent";
-var [PopperContentProvider, useContentContext] = createPopperContext(CONTENT_NAME$5);
+var CONTENT_NAME$6 = "PopperContent";
+var [PopperContentProvider, useContentContext] = createPopperContext(CONTENT_NAME$6);
 var PopperContent = reactExports.forwardRef(
   (props, forwardedRef) => {
     var _a, _b, _c, _d, _e, _f;
@@ -16336,7 +16343,7 @@ var PopperContent = reactExports.forwardRef(
       onPlaced,
       ...contentProps
     } = props;
-    const context = usePopperContext(CONTENT_NAME$5, __scopePopper);
+    const context = usePopperContext(CONTENT_NAME$6, __scopePopper);
     const [content, setContent] = reactExports.useState(null);
     const composedRefs = useComposedRefs(forwardedRef, (node) => setContent(node));
     const [arrow$12, setArrow] = reactExports.useState(null);
@@ -16459,7 +16466,7 @@ var PopperContent = reactExports.forwardRef(
     );
   }
 );
-PopperContent.displayName = CONTENT_NAME$5;
+PopperContent.displayName = CONTENT_NAME$6;
 var ARROW_NAME$3 = "PopperArrow";
 var OPPOSITE_SIDE = {
   top: "bottom",
@@ -16554,7 +16561,7 @@ function getSideAndAlignFromPlacement(placement) {
   const [side, align = "center"] = placement.split("-");
   return [side, align];
 }
-var Root2$3 = Popper;
+var Root2$4 = Popper;
 var Anchor = PopperAnchor;
 var Content$1 = PopperContent;
 var Arrow = PopperArrow;
@@ -16764,10 +16771,10 @@ function wrapArray$1(array, startIndex) {
 }
 var Root$5 = RovingFocusGroup;
 var Item$1 = RovingFocusGroupItem;
-var Slot$1 = reactExports.forwardRef((props, forwardedRef) => {
+var Slot$2 = reactExports.forwardRef((props, forwardedRef) => {
   const { children, ...slotProps } = props;
   const childrenArray = reactExports.Children.toArray(children);
-  const slottable = childrenArray.find(isSlottable$1);
+  const slottable = childrenArray.find(isSlottable$2);
   if (slottable) {
     const newElement = slottable.props.children;
     const newChildren = childrenArray.map((child) => {
@@ -16778,16 +16785,16 @@ var Slot$1 = reactExports.forwardRef((props, forwardedRef) => {
         return child;
       }
     });
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$1, { ...slotProps, ref: forwardedRef, children: reactExports.isValidElement(newElement) ? reactExports.cloneElement(newElement, void 0, newChildren) : null });
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$2, { ...slotProps, ref: forwardedRef, children: reactExports.isValidElement(newElement) ? reactExports.cloneElement(newElement, void 0, newChildren) : null });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$1, { ...slotProps, ref: forwardedRef, children });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$2, { ...slotProps, ref: forwardedRef, children });
 });
-Slot$1.displayName = "Slot";
-var SlotClone$1 = reactExports.forwardRef((props, forwardedRef) => {
+Slot$2.displayName = "Slot";
+var SlotClone$2 = reactExports.forwardRef((props, forwardedRef) => {
   const { children, ...slotProps } = props;
   if (reactExports.isValidElement(children)) {
-    const childrenRef = getElementRef$1(children);
-    const props2 = mergeProps$1(slotProps, children.props);
+    const childrenRef = getElementRef$2(children);
+    const props2 = mergeProps$2(slotProps, children.props);
     if (children.type !== reactExports.Fragment) {
       props2.ref = forwardedRef ? composeRefs(forwardedRef, childrenRef) : childrenRef;
     }
@@ -16795,14 +16802,14 @@ var SlotClone$1 = reactExports.forwardRef((props, forwardedRef) => {
   }
   return reactExports.Children.count(children) > 1 ? reactExports.Children.only(null) : null;
 });
-SlotClone$1.displayName = "SlotClone";
-var Slottable$1 = ({ children }) => {
+SlotClone$2.displayName = "SlotClone";
+var Slottable$2 = ({ children }) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children });
 };
-function isSlottable$1(child) {
-  return reactExports.isValidElement(child) && child.type === Slottable$1;
+function isSlottable$2(child) {
+  return reactExports.isValidElement(child) && child.type === Slottable$2;
 }
-function mergeProps$1(slotProps, childProps) {
+function mergeProps$2(slotProps, childProps) {
   const overrideProps = { ...childProps };
   for (const propName in childProps) {
     const slotPropValue = slotProps[propName];
@@ -16825,7 +16832,7 @@ function mergeProps$1(slotProps, childProps) {
   }
   return { ...slotProps, ...overrideProps };
 }
-function getElementRef$1(element) {
+function getElementRef$2(element) {
   var _a, _b;
   let getter = (_a = Object.getOwnPropertyDescriptor(element.props, "ref")) == null ? void 0 : _a.get;
   let mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
@@ -16883,7 +16890,7 @@ var Menu = (props) => {
       document.removeEventListener("pointermove", handlePointer, { capture: true });
     };
   }, []);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2$3, { ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2$4, { ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
     MenuProvider,
     {
       scope: __scopeMenu,
@@ -16915,30 +16922,30 @@ var MenuAnchor = reactExports.forwardRef(
   }
 );
 MenuAnchor.displayName = ANCHOR_NAME;
-var PORTAL_NAME$2 = "MenuPortal";
-var [PortalProvider$1, usePortalContext$1] = createMenuContext(PORTAL_NAME$2, {
+var PORTAL_NAME$3 = "MenuPortal";
+var [PortalProvider$1, usePortalContext$1] = createMenuContext(PORTAL_NAME$3, {
   forceMount: void 0
 });
 var MenuPortal = (props) => {
   const { __scopeMenu, forceMount, children, container } = props;
-  const context = useMenuContext(PORTAL_NAME$2, __scopeMenu);
+  const context = useMenuContext(PORTAL_NAME$3, __scopeMenu);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(PortalProvider$1, { scope: __scopeMenu, forceMount, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Portal$2, { asChild: true, container, children }) }) });
 };
-MenuPortal.displayName = PORTAL_NAME$2;
-var CONTENT_NAME$4 = "MenuContent";
-var [MenuContentProvider, useMenuContentContext] = createMenuContext(CONTENT_NAME$4);
+MenuPortal.displayName = PORTAL_NAME$3;
+var CONTENT_NAME$5 = "MenuContent";
+var [MenuContentProvider, useMenuContentContext] = createMenuContext(CONTENT_NAME$5);
 var MenuContent = reactExports.forwardRef(
   (props, forwardedRef) => {
-    const portalContext = usePortalContext$1(CONTENT_NAME$4, props.__scopeMenu);
+    const portalContext = usePortalContext$1(CONTENT_NAME$5, props.__scopeMenu);
     const { forceMount = portalContext.forceMount, ...contentProps } = props;
-    const context = useMenuContext(CONTENT_NAME$4, props.__scopeMenu);
-    const rootContext = useMenuRootContext(CONTENT_NAME$4, props.__scopeMenu);
+    const context = useMenuContext(CONTENT_NAME$5, props.__scopeMenu);
+    const rootContext = useMenuRootContext(CONTENT_NAME$5, props.__scopeMenu);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(Collection$2.Provider, { scope: props.__scopeMenu, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Collection$2.Slot, { scope: props.__scopeMenu, children: rootContext.modal ? /* @__PURE__ */ jsxRuntimeExports.jsx(MenuRootContentModal, { ...contentProps, ref: forwardedRef }) : /* @__PURE__ */ jsxRuntimeExports.jsx(MenuRootContentNonModal, { ...contentProps, ref: forwardedRef }) }) }) });
   }
 );
 var MenuRootContentModal = reactExports.forwardRef(
   (props, forwardedRef) => {
-    const context = useMenuContext(CONTENT_NAME$4, props.__scopeMenu);
+    const context = useMenuContext(CONTENT_NAME$5, props.__scopeMenu);
     const ref = reactExports.useRef(null);
     const composedRefs = useComposedRefs(forwardedRef, ref);
     reactExports.useEffect(() => {
@@ -16964,7 +16971,7 @@ var MenuRootContentModal = reactExports.forwardRef(
   }
 );
 var MenuRootContentNonModal = reactExports.forwardRef((props, forwardedRef) => {
-  const context = useMenuContext(CONTENT_NAME$4, props.__scopeMenu);
+  const context = useMenuContext(CONTENT_NAME$5, props.__scopeMenu);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
     MenuContentImpl,
     {
@@ -16995,8 +17002,8 @@ var MenuContentImpl = reactExports.forwardRef(
       disableOutsideScroll,
       ...contentProps
     } = props;
-    const context = useMenuContext(CONTENT_NAME$4, __scopeMenu);
-    const rootContext = useMenuRootContext(CONTENT_NAME$4, __scopeMenu);
+    const context = useMenuContext(CONTENT_NAME$5, __scopeMenu);
+    const rootContext = useMenuRootContext(CONTENT_NAME$5, __scopeMenu);
     const popperScope = usePopperScope$1(__scopeMenu);
     const rovingFocusGroupScope = useRovingFocusGroupScope(__scopeMenu);
     const getItems = useCollection$2(__scopeMenu);
@@ -17010,7 +17017,7 @@ var MenuContentImpl = reactExports.forwardRef(
     const pointerDirRef = reactExports.useRef("right");
     const lastPointerXRef = reactExports.useRef(0);
     const ScrollLockWrapper = disableOutsideScroll ? ReactRemoveScroll : reactExports.Fragment;
-    const scrollLockWrapperProps = disableOutsideScroll ? { as: Slot$1, allowPinchZoom: true } : void 0;
+    const scrollLockWrapperProps = disableOutsideScroll ? { as: Slot$2, allowPinchZoom: true } : void 0;
     const handleTypeaheadSearch = (key) => {
       var _a, _b;
       const search = searchRef.current + key;
@@ -17163,7 +17170,7 @@ var MenuContentImpl = reactExports.forwardRef(
     );
   }
 );
-MenuContent.displayName = CONTENT_NAME$4;
+MenuContent.displayName = CONTENT_NAME$5;
 var GROUP_NAME$1 = "MenuGroup";
 var MenuGroup = reactExports.forwardRef(
   (props, forwardedRef) => {
@@ -17511,10 +17518,10 @@ MenuSubTrigger.displayName = SUB_TRIGGER_NAME$1;
 var SUB_CONTENT_NAME$1 = "MenuSubContent";
 var MenuSubContent = reactExports.forwardRef(
   (props, forwardedRef) => {
-    const portalContext = usePortalContext$1(CONTENT_NAME$4, props.__scopeMenu);
+    const portalContext = usePortalContext$1(CONTENT_NAME$5, props.__scopeMenu);
     const { forceMount = portalContext.forceMount, ...subContentProps } = props;
-    const context = useMenuContext(CONTENT_NAME$4, props.__scopeMenu);
-    const rootContext = useMenuRootContext(CONTENT_NAME$4, props.__scopeMenu);
+    const context = useMenuContext(CONTENT_NAME$5, props.__scopeMenu);
+    const rootContext = useMenuRootContext(CONTENT_NAME$5, props.__scopeMenu);
     const subContext = useMenuSubContext(SUB_CONTENT_NAME$1, props.__scopeMenu);
     const ref = reactExports.useRef(null);
     const composedRefs = useComposedRefs(forwardedRef, ref);
@@ -17614,7 +17621,7 @@ function whenMouse(handler) {
 var Root3$1 = Menu;
 var Anchor2 = MenuAnchor;
 var Portal = MenuPortal;
-var Content2$3 = MenuContent;
+var Content2$4 = MenuContent;
 var Group = MenuGroup;
 var Label$2 = MenuLabel;
 var Item2$1 = MenuItem;
@@ -17666,11 +17673,11 @@ var DropdownMenu$1 = (props) => {
   );
 };
 DropdownMenu$1.displayName = DROPDOWN_MENU_NAME;
-var TRIGGER_NAME$3 = "DropdownMenuTrigger";
+var TRIGGER_NAME$4 = "DropdownMenuTrigger";
 var DropdownMenuTrigger$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { __scopeDropdownMenu, disabled = false, ...triggerProps } = props;
-    const context = useDropdownMenuContext(TRIGGER_NAME$3, __scopeDropdownMenu);
+    const context = useDropdownMenuContext(TRIGGER_NAME$4, __scopeDropdownMenu);
     const menuScope = useMenuScope(__scopeDropdownMenu);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(Anchor2, { asChild: true, ...menuScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
       Primitive.button,
@@ -17701,23 +17708,23 @@ var DropdownMenuTrigger$1 = reactExports.forwardRef(
     ) });
   }
 );
-DropdownMenuTrigger$1.displayName = TRIGGER_NAME$3;
-var PORTAL_NAME$1 = "DropdownMenuPortal";
+DropdownMenuTrigger$1.displayName = TRIGGER_NAME$4;
+var PORTAL_NAME$2 = "DropdownMenuPortal";
 var DropdownMenuPortal = (props) => {
   const { __scopeDropdownMenu, ...portalProps } = props;
   const menuScope = useMenuScope(__scopeDropdownMenu);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal, { ...menuScope, ...portalProps });
 };
-DropdownMenuPortal.displayName = PORTAL_NAME$1;
-var CONTENT_NAME$3 = "DropdownMenuContent";
+DropdownMenuPortal.displayName = PORTAL_NAME$2;
+var CONTENT_NAME$4 = "DropdownMenuContent";
 var DropdownMenuContent$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { __scopeDropdownMenu, ...contentProps } = props;
-    const context = useDropdownMenuContext(CONTENT_NAME$3, __scopeDropdownMenu);
+    const context = useDropdownMenuContext(CONTENT_NAME$4, __scopeDropdownMenu);
     const menuScope = useMenuScope(__scopeDropdownMenu);
     const hasInteractedOutsideRef = reactExports.useRef(false);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Content2$3,
+      Content2$4,
       {
         id: context.contentId,
         "aria-labelledby": context.triggerId,
@@ -17751,7 +17758,7 @@ var DropdownMenuContent$1 = reactExports.forwardRef(
     );
   }
 );
-DropdownMenuContent$1.displayName = CONTENT_NAME$3;
+DropdownMenuContent$1.displayName = CONTENT_NAME$4;
 var GROUP_NAME = "DropdownMenuGroup";
 var DropdownMenuGroup = reactExports.forwardRef(
   (props, forwardedRef) => {
@@ -17855,10 +17862,10 @@ var DropdownMenuSubContent$1 = reactExports.forwardRef((props, forwardedRef) => 
   );
 });
 DropdownMenuSubContent$1.displayName = SUB_CONTENT_NAME;
-var Root2$2 = DropdownMenu$1;
+var Root2$3 = DropdownMenu$1;
 var Trigger$2 = DropdownMenuTrigger$1;
-var Portal2 = DropdownMenuPortal;
-var Content2$2 = DropdownMenuContent$1;
+var Portal2$1 = DropdownMenuPortal;
+var Content2$3 = DropdownMenuContent$1;
 var Label2 = DropdownMenuLabel$1;
 var Item2 = DropdownMenuItem$1;
 var CheckboxItem2 = DropdownMenuCheckboxItem$1;
@@ -17868,7 +17875,7 @@ var ItemIndicator2 = DropdownMenuItemIndicator;
 var Separator2 = DropdownMenuSeparator$1;
 var SubTrigger2 = DropdownMenuSubTrigger$1;
 var SubContent2 = DropdownMenuSubContent$1;
-const DropdownMenu = Root2$2;
+const DropdownMenu = Root2$3;
 const DropdownMenuTrigger = Trigger$2;
 const DropdownMenuRadioGroup = RadioGroup2;
 const DropdownMenuSubTrigger = reactExports.forwardRef(({ className, inset, children, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -17900,8 +17907,8 @@ const DropdownMenuSubContent = reactExports.forwardRef(({ className, ...props },
   }
 ));
 DropdownMenuSubContent.displayName = SubContent2.displayName;
-const DropdownMenuContent = reactExports.forwardRef(({ className, sideOffset = 4, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(Portal2, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-  Content2$2,
+const DropdownMenuContent = reactExports.forwardRef(({ className, sideOffset = 4, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(Portal2$1, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  Content2$3,
   {
     ref,
     sideOffset,
@@ -17912,7 +17919,7 @@ const DropdownMenuContent = reactExports.forwardRef(({ className, sideOffset = 4
     ...props
   }
 ) }));
-DropdownMenuContent.displayName = Content2$2.displayName;
+DropdownMenuContent.displayName = Content2$3.displayName;
 const DropdownMenuItem = reactExports.forwardRef(({ className, inset, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
   Item2,
   {
@@ -18516,36 +18523,36 @@ var ToastAnnounce = (props) => {
     children
   ] }) }) });
 };
-var TITLE_NAME = "ToastTitle";
+var TITLE_NAME$1 = "ToastTitle";
 var ToastTitle$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { __scopeToast, ...titleProps } = props;
     return /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.div, { ...titleProps, ref: forwardedRef });
   }
 );
-ToastTitle$1.displayName = TITLE_NAME;
-var DESCRIPTION_NAME = "ToastDescription";
+ToastTitle$1.displayName = TITLE_NAME$1;
+var DESCRIPTION_NAME$1 = "ToastDescription";
 var ToastDescription$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { __scopeToast, ...descriptionProps } = props;
     return /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.div, { ...descriptionProps, ref: forwardedRef });
   }
 );
-ToastDescription$1.displayName = DESCRIPTION_NAME;
-var ACTION_NAME = "ToastAction";
+ToastDescription$1.displayName = DESCRIPTION_NAME$1;
+var ACTION_NAME$1 = "ToastAction";
 var ToastAction$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { altText, ...actionProps } = props;
     if (!altText.trim()) {
       console.error(
-        `Invalid prop \`altText\` supplied to \`${ACTION_NAME}\`. Expected non-empty \`string\`.`
+        `Invalid prop \`altText\` supplied to \`${ACTION_NAME$1}\`. Expected non-empty \`string\`.`
       );
       return null;
     }
     return /* @__PURE__ */ jsxRuntimeExports.jsx(ToastAnnounceExclude, { altText, asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ToastClose$1, { ...actionProps, ref: forwardedRef }) });
   }
 );
-ToastAction$1.displayName = ACTION_NAME;
+ToastAction$1.displayName = ACTION_NAME$1;
 var CLOSE_NAME = "ToastClose";
 var ToastClose$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
@@ -18653,10 +18660,10 @@ function focusFirst(candidates) {
 }
 var Provider$1 = ToastProvider$1;
 var Viewport$1 = ToastViewport$1;
-var Root2$1 = Toast$1;
+var Root2$2 = Toast$1;
 var Title = ToastTitle$1;
 var Description = ToastDescription$1;
-var Action = ToastAction$1;
+var Action$1 = ToastAction$1;
 var Close = ToastClose$1;
 const ToastProvider = Provider$1;
 const ToastViewport = reactExports.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -18687,7 +18694,7 @@ const toastVariants = cva(
 );
 const Toast = reactExports.forwardRef(({ className, variant, ...props }, ref) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Root2$1,
+    Root2$2,
     {
       ref,
       className: cn(toastVariants({ variant }), className),
@@ -18695,9 +18702,9 @@ const Toast = reactExports.forwardRef(({ className, variant, ...props }, ref) =>
     }
   );
 });
-Toast.displayName = Root2$1.displayName;
+Toast.displayName = Root2$2.displayName;
 const ToastAction = reactExports.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-  Action,
+  Action$1,
   {
     ref,
     className: cn(
@@ -18707,7 +18714,7 @@ const ToastAction = reactExports.forwardRef(({ className, ...props }, ref) => /*
     ...props
   }
 ));
-ToastAction.displayName = Action.displayName;
+ToastAction.displayName = Action$1.displayName;
 const ToastClose = reactExports.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
   Close,
   {
@@ -18977,6 +18984,8 @@ const EXPLICIT_RATINGS = [
   "Rx",
   "Hentai",
   "Adult",
+  "MA",
+  // MyAnimeList Mature Audiences rating
   "18",
   "18+",
   "Restricted"
@@ -19205,6 +19214,14 @@ function saveWatchProgress(progress) {
     console.error("Failed to save history", error);
   }
 }
+function removeFromHistory(id, type, mal_id) {
+  if (isServer()) return;
+  const currentHistory = getWatchHistory();
+  const key = type === "anime" && mal_id ? `mal-${mal_id}` : `tmdb-${id}`;
+  delete currentHistory[key];
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(currentHistory));
+  window.dispatchEvent(new CustomEvent("history-updated", { detail: currentHistory }));
+}
 function getWatchlist() {
   if (isServer()) return {};
   try {
@@ -19329,6 +19346,28 @@ async function enrichVideoDetails(item) {
     console.error(`[client-api] enrichVideoDetails: Could not enrich details for ${mediaType} ID ${itemId}`, e);
   }
   return item;
+}
+function updateWatchPositionOnNavigate(id, type, season, episode, title) {
+  if (isServer()) return;
+  try {
+    const currentHistory = getWatchHistory();
+    const key = type === "anime" && (season === void 0 || season === null) && false ? `mal-${id}` : `tmdb-${id}`;
+    const existing = currentHistory[key] || {};
+    const updated = {
+      ...existing,
+      id: existing.id || id,
+      title: existing.title || title || "",
+      type,
+      last_season_watched: season != null ? String(season) : existing.last_season_watched,
+      last_episode_watched: episode != null ? String(episode) : existing.last_episode_watched,
+      last_updated: Date.now()
+    };
+    currentHistory[key] = { ...existing, ...updated };
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(currentHistory));
+    window.dispatchEvent(new CustomEvent("history-updated", { detail: currentHistory }));
+  } catch (e) {
+    console.error("updateWatchPositionOnNavigate error", e);
+  }
 }
 const WatchlistContext = reactExports.createContext(void 0);
 function WatchlistProvider({ children }) {
@@ -19481,7 +19520,7 @@ const CardFooter = reactExports.forwardRef(({ className, ...props }, ref) => /* 
   }
 ));
 CardFooter.displayName = "CardFooter";
-function VideoCard({ video, variant = "default", onDismiss }) {
+function VideoCard({ video, variant = "default", onDismiss, watchHref }) {
   const navigate = useNavigate();
   const { addToDismissed: addToDismissed2, isDismissed } = useDismissed();
   const { isInWatchlist, addToWatchlist: addToWatchlist2, removeFromWatchlist: removeFromWatchlist2 } = useWatchlist();
@@ -19489,21 +19528,21 @@ function VideoCard({ video, variant = "default", onDismiss }) {
   const posterUrl = video.poster_path ? video.poster_path.startsWith("http") ? video.poster_path : `https://image.tmdb.org/t/p/w342${video.poster_path}` : "https://picsum.photos/seed/default-poster/342/513";
   const isVideoInWatchlist = isInWatchlist(video.id, video.media_type);
   const isVideoDismissed = isDismissed(video.id, video.media_type);
+  const detailHref = `/media/${video.media_type}/${video.id}`;
+  const defaultWatchHref = isSeries ? `/watch?id=${video.id}&type=${video.media_type}&s=1&e=1` : `/watch?id=${video.id}&type=${video.media_type}`;
+  const primaryHref = watchHref ? watchHref : detailHref;
   const handleCardClick = () => {
-    if (isSeries) {
-      navigate(`/media/${video.media_type}/${video.id}`);
-    } else {
-      navigate(`/watch?id=${video.id}&type=${video.media_type}`);
-    }
+    navigate(primaryHref);
   };
   const handleWatchNow = (e) => {
     e.stopPropagation();
-    const url = isSeries ? `/watch?id=${video.id}&type=${video.media_type}&s=1&e=1` : `/watch?id=${video.id}&type=${video.media_type}`;
+    const url = watchHref || defaultWatchHref;
+    updateWatchPositionOnNavigate(video.id, video.media_type, isSeries ? 1 : null, isSeries ? 1 : null, video.title);
     navigate(url);
   };
   const handleDetails = (e) => {
     e.stopPropagation();
-    navigate(`/media/${video.media_type}/${video.id}`);
+    navigate(detailHref);
   };
   const handleWatchlistClick = (e) => {
     e.stopPropagation();
@@ -19626,18 +19665,987 @@ function VideoCarouselComponent({ category, videos, isLoading, onDismiss, href, 
   ] });
 }
 const VideoCarousel = React.memo(VideoCarouselComponent);
-function WatchHistoryCard({ item, variant = "default" }) {
+var Slot$1 = reactExports.forwardRef((props, forwardedRef) => {
+  const { children, ...slotProps } = props;
+  const childrenArray = reactExports.Children.toArray(children);
+  const slottable = childrenArray.find(isSlottable$1);
+  if (slottable) {
+    const newElement = slottable.props.children;
+    const newChildren = childrenArray.map((child) => {
+      if (child === slottable) {
+        if (reactExports.Children.count(newElement) > 1) return reactExports.Children.only(null);
+        return reactExports.isValidElement(newElement) ? newElement.props.children : null;
+      } else {
+        return child;
+      }
+    });
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$1, { ...slotProps, ref: forwardedRef, children: reactExports.isValidElement(newElement) ? reactExports.cloneElement(newElement, void 0, newChildren) : null });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone$1, { ...slotProps, ref: forwardedRef, children });
+});
+Slot$1.displayName = "Slot";
+var SlotClone$1 = reactExports.forwardRef((props, forwardedRef) => {
+  const { children, ...slotProps } = props;
+  if (reactExports.isValidElement(children)) {
+    const childrenRef = getElementRef$1(children);
+    const props2 = mergeProps$1(slotProps, children.props);
+    if (children.type !== reactExports.Fragment) {
+      props2.ref = forwardedRef ? composeRefs(forwardedRef, childrenRef) : childrenRef;
+    }
+    return reactExports.cloneElement(children, props2);
+  }
+  return reactExports.Children.count(children) > 1 ? reactExports.Children.only(null) : null;
+});
+SlotClone$1.displayName = "SlotClone";
+var Slottable$1 = ({ children }) => {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children });
+};
+function isSlottable$1(child) {
+  return reactExports.isValidElement(child) && child.type === Slottable$1;
+}
+function mergeProps$1(slotProps, childProps) {
+  const overrideProps = { ...childProps };
+  for (const propName in childProps) {
+    const slotPropValue = slotProps[propName];
+    const childPropValue = childProps[propName];
+    const isHandler = /^on[A-Z]/.test(propName);
+    if (isHandler) {
+      if (slotPropValue && childPropValue) {
+        overrideProps[propName] = (...args) => {
+          childPropValue(...args);
+          slotPropValue(...args);
+        };
+      } else if (slotPropValue) {
+        overrideProps[propName] = slotPropValue;
+      }
+    } else if (propName === "style") {
+      overrideProps[propName] = { ...slotPropValue, ...childPropValue };
+    } else if (propName === "className") {
+      overrideProps[propName] = [slotPropValue, childPropValue].filter(Boolean).join(" ");
+    }
+  }
+  return { ...slotProps, ...overrideProps };
+}
+function getElementRef$1(element) {
+  var _a, _b;
+  let getter = (_a = Object.getOwnPropertyDescriptor(element.props, "ref")) == null ? void 0 : _a.get;
+  let mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
+  if (mayWarn) {
+    return element.ref;
+  }
+  getter = (_b = Object.getOwnPropertyDescriptor(element, "ref")) == null ? void 0 : _b.get;
+  mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
+  if (mayWarn) {
+    return element.props.ref;
+  }
+  return element.props.ref || element.ref;
+}
+var [createTooltipContext] = createContextScope("Tooltip", [
+  createPopperScope
+]);
+var usePopperScope = createPopperScope();
+var PROVIDER_NAME = "TooltipProvider";
+var DEFAULT_DELAY_DURATION = 700;
+var TOOLTIP_OPEN = "tooltip.open";
+var [TooltipProviderContextProvider, useTooltipProviderContext] = createTooltipContext(PROVIDER_NAME);
+var TooltipProvider$1 = (props) => {
+  const {
+    __scopeTooltip,
+    delayDuration = DEFAULT_DELAY_DURATION,
+    skipDelayDuration = 300,
+    disableHoverableContent = false,
+    children
+  } = props;
+  const [isOpenDelayed, setIsOpenDelayed] = reactExports.useState(true);
+  const isPointerInTransitRef = reactExports.useRef(false);
+  const skipDelayTimerRef = reactExports.useRef(0);
+  reactExports.useEffect(() => {
+    const skipDelayTimer = skipDelayTimerRef.current;
+    return () => window.clearTimeout(skipDelayTimer);
+  }, []);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    TooltipProviderContextProvider,
+    {
+      scope: __scopeTooltip,
+      isOpenDelayed,
+      delayDuration,
+      onOpen: reactExports.useCallback(() => {
+        window.clearTimeout(skipDelayTimerRef.current);
+        setIsOpenDelayed(false);
+      }, []),
+      onClose: reactExports.useCallback(() => {
+        window.clearTimeout(skipDelayTimerRef.current);
+        skipDelayTimerRef.current = window.setTimeout(
+          () => setIsOpenDelayed(true),
+          skipDelayDuration
+        );
+      }, [skipDelayDuration]),
+      isPointerInTransitRef,
+      onPointerInTransitChange: reactExports.useCallback((inTransit) => {
+        isPointerInTransitRef.current = inTransit;
+      }, []),
+      disableHoverableContent,
+      children
+    }
+  );
+};
+TooltipProvider$1.displayName = PROVIDER_NAME;
+var TOOLTIP_NAME = "Tooltip";
+var [TooltipContextProvider, useTooltipContext] = createTooltipContext(TOOLTIP_NAME);
+var Tooltip$1 = (props) => {
+  const {
+    __scopeTooltip,
+    children,
+    open: openProp,
+    defaultOpen = false,
+    onOpenChange,
+    disableHoverableContent: disableHoverableContentProp,
+    delayDuration: delayDurationProp
+  } = props;
+  const providerContext = useTooltipProviderContext(TOOLTIP_NAME, props.__scopeTooltip);
+  const popperScope = usePopperScope(__scopeTooltip);
+  const [trigger, setTrigger] = reactExports.useState(null);
+  const contentId = useId();
+  const openTimerRef = reactExports.useRef(0);
+  const disableHoverableContent = disableHoverableContentProp ?? providerContext.disableHoverableContent;
+  const delayDuration = delayDurationProp ?? providerContext.delayDuration;
+  const wasOpenDelayedRef = reactExports.useRef(false);
+  const [open = false, setOpen] = useControllableState({
+    prop: openProp,
+    defaultProp: defaultOpen,
+    onChange: (open2) => {
+      if (open2) {
+        providerContext.onOpen();
+        document.dispatchEvent(new CustomEvent(TOOLTIP_OPEN));
+      } else {
+        providerContext.onClose();
+      }
+      onOpenChange == null ? void 0 : onOpenChange(open2);
+    }
+  });
+  const stateAttribute = reactExports.useMemo(() => {
+    return open ? wasOpenDelayedRef.current ? "delayed-open" : "instant-open" : "closed";
+  }, [open]);
+  const handleOpen = reactExports.useCallback(() => {
+    window.clearTimeout(openTimerRef.current);
+    openTimerRef.current = 0;
+    wasOpenDelayedRef.current = false;
+    setOpen(true);
+  }, [setOpen]);
+  const handleClose = reactExports.useCallback(() => {
+    window.clearTimeout(openTimerRef.current);
+    openTimerRef.current = 0;
+    setOpen(false);
+  }, [setOpen]);
+  const handleDelayedOpen = reactExports.useCallback(() => {
+    window.clearTimeout(openTimerRef.current);
+    openTimerRef.current = window.setTimeout(() => {
+      wasOpenDelayedRef.current = true;
+      setOpen(true);
+      openTimerRef.current = 0;
+    }, delayDuration);
+  }, [delayDuration, setOpen]);
+  reactExports.useEffect(() => {
+    return () => {
+      if (openTimerRef.current) {
+        window.clearTimeout(openTimerRef.current);
+        openTimerRef.current = 0;
+      }
+    };
+  }, []);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2$4, { ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    TooltipContextProvider,
+    {
+      scope: __scopeTooltip,
+      contentId,
+      open,
+      stateAttribute,
+      trigger,
+      onTriggerChange: setTrigger,
+      onTriggerEnter: reactExports.useCallback(() => {
+        if (providerContext.isOpenDelayed) handleDelayedOpen();
+        else handleOpen();
+      }, [providerContext.isOpenDelayed, handleDelayedOpen, handleOpen]),
+      onTriggerLeave: reactExports.useCallback(() => {
+        if (disableHoverableContent) {
+          handleClose();
+        } else {
+          window.clearTimeout(openTimerRef.current);
+          openTimerRef.current = 0;
+        }
+      }, [handleClose, disableHoverableContent]),
+      onOpen: handleOpen,
+      onClose: handleClose,
+      disableHoverableContent,
+      children
+    }
+  ) });
+};
+Tooltip$1.displayName = TOOLTIP_NAME;
+var TRIGGER_NAME$3 = "TooltipTrigger";
+var TooltipTrigger$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeTooltip, ...triggerProps } = props;
+    const context = useTooltipContext(TRIGGER_NAME$3, __scopeTooltip);
+    const providerContext = useTooltipProviderContext(TRIGGER_NAME$3, __scopeTooltip);
+    const popperScope = usePopperScope(__scopeTooltip);
+    const ref = reactExports.useRef(null);
+    const composedRefs = useComposedRefs(forwardedRef, ref, context.onTriggerChange);
+    const isPointerDownRef = reactExports.useRef(false);
+    const hasPointerMoveOpenedRef = reactExports.useRef(false);
+    const handlePointerUp = reactExports.useCallback(() => isPointerDownRef.current = false, []);
+    reactExports.useEffect(() => {
+      return () => document.removeEventListener("pointerup", handlePointerUp);
+    }, [handlePointerUp]);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Anchor, { asChild: true, ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Primitive.button,
+      {
+        "aria-describedby": context.open ? context.contentId : void 0,
+        "data-state": context.stateAttribute,
+        ...triggerProps,
+        ref: composedRefs,
+        onPointerMove: composeEventHandlers(props.onPointerMove, (event) => {
+          if (event.pointerType === "touch") return;
+          if (!hasPointerMoveOpenedRef.current && !providerContext.isPointerInTransitRef.current) {
+            context.onTriggerEnter();
+            hasPointerMoveOpenedRef.current = true;
+          }
+        }),
+        onPointerLeave: composeEventHandlers(props.onPointerLeave, () => {
+          context.onTriggerLeave();
+          hasPointerMoveOpenedRef.current = false;
+        }),
+        onPointerDown: composeEventHandlers(props.onPointerDown, () => {
+          isPointerDownRef.current = true;
+          document.addEventListener("pointerup", handlePointerUp, { once: true });
+        }),
+        onFocus: composeEventHandlers(props.onFocus, () => {
+          if (!isPointerDownRef.current) context.onOpen();
+        }),
+        onBlur: composeEventHandlers(props.onBlur, context.onClose),
+        onClick: composeEventHandlers(props.onClick, context.onClose)
+      }
+    ) });
+  }
+);
+TooltipTrigger$1.displayName = TRIGGER_NAME$3;
+var PORTAL_NAME$1 = "TooltipPortal";
+var [PortalProvider, usePortalContext] = createTooltipContext(PORTAL_NAME$1, {
+  forceMount: void 0
+});
+var CONTENT_NAME$3 = "TooltipContent";
+var TooltipContent$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const portalContext = usePortalContext(CONTENT_NAME$3, props.__scopeTooltip);
+    const { forceMount = portalContext.forceMount, side = "top", ...contentProps } = props;
+    const context = useTooltipContext(CONTENT_NAME$3, props.__scopeTooltip);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: context.disableHoverableContent ? /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContentImpl, { side, ...contentProps, ref: forwardedRef }) : /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContentHoverable, { side, ...contentProps, ref: forwardedRef }) });
+  }
+);
+var TooltipContentHoverable = reactExports.forwardRef((props, forwardedRef) => {
+  const context = useTooltipContext(CONTENT_NAME$3, props.__scopeTooltip);
+  const providerContext = useTooltipProviderContext(CONTENT_NAME$3, props.__scopeTooltip);
+  const ref = reactExports.useRef(null);
+  const composedRefs = useComposedRefs(forwardedRef, ref);
+  const [pointerGraceArea, setPointerGraceArea] = reactExports.useState(null);
+  const { trigger, onClose } = context;
+  const content = ref.current;
+  const { onPointerInTransitChange } = providerContext;
+  const handleRemoveGraceArea = reactExports.useCallback(() => {
+    setPointerGraceArea(null);
+    onPointerInTransitChange(false);
+  }, [onPointerInTransitChange]);
+  const handleCreateGraceArea = reactExports.useCallback(
+    (event, hoverTarget) => {
+      const currentTarget = event.currentTarget;
+      const exitPoint = { x: event.clientX, y: event.clientY };
+      const exitSide = getExitSideFromRect(exitPoint, currentTarget.getBoundingClientRect());
+      const paddedExitPoints = getPaddedExitPoints(exitPoint, exitSide);
+      const hoverTargetPoints = getPointsFromRect(hoverTarget.getBoundingClientRect());
+      const graceArea = getHull([...paddedExitPoints, ...hoverTargetPoints]);
+      setPointerGraceArea(graceArea);
+      onPointerInTransitChange(true);
+    },
+    [onPointerInTransitChange]
+  );
+  reactExports.useEffect(() => {
+    return () => handleRemoveGraceArea();
+  }, [handleRemoveGraceArea]);
+  reactExports.useEffect(() => {
+    if (trigger && content) {
+      const handleTriggerLeave = (event) => handleCreateGraceArea(event, content);
+      const handleContentLeave = (event) => handleCreateGraceArea(event, trigger);
+      trigger.addEventListener("pointerleave", handleTriggerLeave);
+      content.addEventListener("pointerleave", handleContentLeave);
+      return () => {
+        trigger.removeEventListener("pointerleave", handleTriggerLeave);
+        content.removeEventListener("pointerleave", handleContentLeave);
+      };
+    }
+  }, [trigger, content, handleCreateGraceArea, handleRemoveGraceArea]);
+  reactExports.useEffect(() => {
+    if (pointerGraceArea) {
+      const handleTrackPointerGrace = (event) => {
+        const target = event.target;
+        const pointerPosition = { x: event.clientX, y: event.clientY };
+        const hasEnteredTarget = (trigger == null ? void 0 : trigger.contains(target)) || (content == null ? void 0 : content.contains(target));
+        const isPointerOutsideGraceArea = !isPointInPolygon(pointerPosition, pointerGraceArea);
+        if (hasEnteredTarget) {
+          handleRemoveGraceArea();
+        } else if (isPointerOutsideGraceArea) {
+          handleRemoveGraceArea();
+          onClose();
+        }
+      };
+      document.addEventListener("pointermove", handleTrackPointerGrace);
+      return () => document.removeEventListener("pointermove", handleTrackPointerGrace);
+    }
+  }, [trigger, content, pointerGraceArea, onClose, handleRemoveGraceArea]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContentImpl, { ...props, ref: composedRefs });
+});
+var [VisuallyHiddenContentContextProvider, useVisuallyHiddenContentContext] = createTooltipContext(TOOLTIP_NAME, { isInside: false });
+var TooltipContentImpl = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const {
+      __scopeTooltip,
+      children,
+      "aria-label": ariaLabel,
+      onEscapeKeyDown,
+      onPointerDownOutside,
+      ...contentProps
+    } = props;
+    const context = useTooltipContext(CONTENT_NAME$3, __scopeTooltip);
+    const popperScope = usePopperScope(__scopeTooltip);
+    const { onClose } = context;
+    reactExports.useEffect(() => {
+      document.addEventListener(TOOLTIP_OPEN, onClose);
+      return () => document.removeEventListener(TOOLTIP_OPEN, onClose);
+    }, [onClose]);
+    reactExports.useEffect(() => {
+      if (context.trigger) {
+        const handleScroll2 = (event) => {
+          const target = event.target;
+          if (target == null ? void 0 : target.contains(context.trigger)) onClose();
+        };
+        window.addEventListener("scroll", handleScroll2, { capture: true });
+        return () => window.removeEventListener("scroll", handleScroll2, { capture: true });
+      }
+    }, [context.trigger, onClose]);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      DismissableLayer,
+      {
+        asChild: true,
+        disableOutsidePointerEvents: false,
+        onEscapeKeyDown,
+        onPointerDownOutside,
+        onFocusOutside: (event) => event.preventDefault(),
+        onDismiss: onClose,
+        children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Content$1,
+          {
+            "data-state": context.stateAttribute,
+            ...popperScope,
+            ...contentProps,
+            ref: forwardedRef,
+            style: {
+              ...contentProps.style,
+              // re-namespace exposed content custom properties
+              ...{
+                "--radix-tooltip-content-transform-origin": "var(--radix-popper-transform-origin)",
+                "--radix-tooltip-content-available-width": "var(--radix-popper-available-width)",
+                "--radix-tooltip-content-available-height": "var(--radix-popper-available-height)",
+                "--radix-tooltip-trigger-width": "var(--radix-popper-anchor-width)",
+                "--radix-tooltip-trigger-height": "var(--radix-popper-anchor-height)"
+              }
+            },
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Slottable$1, { children }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(VisuallyHiddenContentContextProvider, { scope: __scopeTooltip, isInside: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root$4, { id: context.contentId, role: "tooltip", children: ariaLabel || children }) })
+            ]
+          }
+        )
+      }
+    );
+  }
+);
+TooltipContent$1.displayName = CONTENT_NAME$3;
+var ARROW_NAME = "TooltipArrow";
+var TooltipArrow = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeTooltip, ...arrowProps } = props;
+    const popperScope = usePopperScope(__scopeTooltip);
+    const visuallyHiddenContentContext = useVisuallyHiddenContentContext(
+      ARROW_NAME,
+      __scopeTooltip
+    );
+    return visuallyHiddenContentContext.isInside ? null : /* @__PURE__ */ jsxRuntimeExports.jsx(Arrow, { ...popperScope, ...arrowProps, ref: forwardedRef });
+  }
+);
+TooltipArrow.displayName = ARROW_NAME;
+function getExitSideFromRect(point, rect) {
+  const top = Math.abs(rect.top - point.y);
+  const bottom = Math.abs(rect.bottom - point.y);
+  const right = Math.abs(rect.right - point.x);
+  const left = Math.abs(rect.left - point.x);
+  switch (Math.min(top, bottom, right, left)) {
+    case left:
+      return "left";
+    case right:
+      return "right";
+    case top:
+      return "top";
+    case bottom:
+      return "bottom";
+    default:
+      throw new Error("unreachable");
+  }
+}
+function getPaddedExitPoints(exitPoint, exitSide, padding = 5) {
+  const paddedExitPoints = [];
+  switch (exitSide) {
+    case "top":
+      paddedExitPoints.push(
+        { x: exitPoint.x - padding, y: exitPoint.y + padding },
+        { x: exitPoint.x + padding, y: exitPoint.y + padding }
+      );
+      break;
+    case "bottom":
+      paddedExitPoints.push(
+        { x: exitPoint.x - padding, y: exitPoint.y - padding },
+        { x: exitPoint.x + padding, y: exitPoint.y - padding }
+      );
+      break;
+    case "left":
+      paddedExitPoints.push(
+        { x: exitPoint.x + padding, y: exitPoint.y - padding },
+        { x: exitPoint.x + padding, y: exitPoint.y + padding }
+      );
+      break;
+    case "right":
+      paddedExitPoints.push(
+        { x: exitPoint.x - padding, y: exitPoint.y - padding },
+        { x: exitPoint.x - padding, y: exitPoint.y + padding }
+      );
+      break;
+  }
+  return paddedExitPoints;
+}
+function getPointsFromRect(rect) {
+  const { top, right, bottom, left } = rect;
+  return [
+    { x: left, y: top },
+    { x: right, y: top },
+    { x: right, y: bottom },
+    { x: left, y: bottom }
+  ];
+}
+function isPointInPolygon(point, polygon) {
+  const { x, y } = point;
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].x;
+    const yi = polygon[i].y;
+    const xj = polygon[j].x;
+    const yj = polygon[j].y;
+    const intersect = yi > y !== yj > y && x < (xj - xi) * (y - yi) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+function getHull(points) {
+  const newPoints = points.slice();
+  newPoints.sort((a, b) => {
+    if (a.x < b.x) return -1;
+    else if (a.x > b.x) return 1;
+    else if (a.y < b.y) return -1;
+    else if (a.y > b.y) return 1;
+    else return 0;
+  });
+  return getHullPresorted(newPoints);
+}
+function getHullPresorted(points) {
+  if (points.length <= 1) return points.slice();
+  const upperHull = [];
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    while (upperHull.length >= 2) {
+      const q = upperHull[upperHull.length - 1];
+      const r2 = upperHull[upperHull.length - 2];
+      if ((q.x - r2.x) * (p.y - r2.y) >= (q.y - r2.y) * (p.x - r2.x)) upperHull.pop();
+      else break;
+    }
+    upperHull.push(p);
+  }
+  upperHull.pop();
+  const lowerHull = [];
+  for (let i = points.length - 1; i >= 0; i--) {
+    const p = points[i];
+    while (lowerHull.length >= 2) {
+      const q = lowerHull[lowerHull.length - 1];
+      const r2 = lowerHull[lowerHull.length - 2];
+      if ((q.x - r2.x) * (p.y - r2.y) >= (q.y - r2.y) * (p.x - r2.x)) lowerHull.pop();
+      else break;
+    }
+    lowerHull.push(p);
+  }
+  lowerHull.pop();
+  if (upperHull.length === 1 && lowerHull.length === 1 && upperHull[0].x === lowerHull[0].x && upperHull[0].y === lowerHull[0].y) {
+    return upperHull;
+  } else {
+    return upperHull.concat(lowerHull);
+  }
+}
+var Provider = TooltipProvider$1;
+var Root3 = Tooltip$1;
+var Trigger$1 = TooltipTrigger$1;
+var Content2$2 = TooltipContent$1;
+const TooltipProvider = Provider;
+const Tooltip = Root3;
+const TooltipTrigger = Trigger$1;
+const TooltipContent = reactExports.forwardRef(({ className, sideOffset = 4, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+  Content2$2,
+  {
+    ref,
+    sideOffset,
+    className: cn(
+      "z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+      className
+    ),
+    ...props
+  }
+));
+TooltipContent.displayName = Content2$2.displayName;
+function AddToWatchlistButton({ video, className, variant, size: size2, ...props }) {
+  const { watchlist, addToWatchlist: addToWatchlist2, removeFromWatchlist: removeFromWatchlist2 } = useWatchlist();
+  const isInWatchlist = !!watchlist[`${video.media_type}-${video.id}`];
+  const handleToggleWatchlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isInWatchlist) {
+      removeFromWatchlist2(video.id, video.media_type);
+    } else {
+      addToWatchlist2(video);
+    }
+  };
+  const tooltipText = isInWatchlist ? "Remove from Watchlist" : "Add to Watchlist";
+  const Icon2 = isInWatchlist ? Check : Plus;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Tooltip, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Button,
+      {
+        variant: variant || "ghost",
+        size: size2 || "icon",
+        onClick: handleToggleWatchlist,
+        className: cn("text-white hover:bg-white/20", { "bg-primary/80 hover:bg-primary": isInWatchlist }, className),
+        "aria-label": tooltipText,
+        ...props,
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx(Icon2, { className: "h-5 w-5" })
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: tooltipText }) })
+  ] }) });
+}
+var Slot = reactExports.forwardRef((props, forwardedRef) => {
+  const { children, ...slotProps } = props;
+  const childrenArray = reactExports.Children.toArray(children);
+  const slottable = childrenArray.find(isSlottable);
+  if (slottable) {
+    const newElement = slottable.props.children;
+    const newChildren = childrenArray.map((child) => {
+      if (child === slottable) {
+        if (reactExports.Children.count(newElement) > 1) return reactExports.Children.only(null);
+        return reactExports.isValidElement(newElement) ? newElement.props.children : null;
+      } else {
+        return child;
+      }
+    });
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone, { ...slotProps, ref: forwardedRef, children: reactExports.isValidElement(newElement) ? reactExports.cloneElement(newElement, void 0, newChildren) : null });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone, { ...slotProps, ref: forwardedRef, children });
+});
+Slot.displayName = "Slot";
+var SlotClone = reactExports.forwardRef((props, forwardedRef) => {
+  const { children, ...slotProps } = props;
+  if (reactExports.isValidElement(children)) {
+    const childrenRef = getElementRef(children);
+    const props2 = mergeProps(slotProps, children.props);
+    if (children.type !== reactExports.Fragment) {
+      props2.ref = forwardedRef ? composeRefs(forwardedRef, childrenRef) : childrenRef;
+    }
+    return reactExports.cloneElement(children, props2);
+  }
+  return reactExports.Children.count(children) > 1 ? reactExports.Children.only(null) : null;
+});
+SlotClone.displayName = "SlotClone";
+var Slottable = ({ children }) => {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children });
+};
+function isSlottable(child) {
+  return reactExports.isValidElement(child) && child.type === Slottable;
+}
+function mergeProps(slotProps, childProps) {
+  const overrideProps = { ...childProps };
+  for (const propName in childProps) {
+    const slotPropValue = slotProps[propName];
+    const childPropValue = childProps[propName];
+    const isHandler = /^on[A-Z]/.test(propName);
+    if (isHandler) {
+      if (slotPropValue && childPropValue) {
+        overrideProps[propName] = (...args) => {
+          childPropValue(...args);
+          slotPropValue(...args);
+        };
+      } else if (slotPropValue) {
+        overrideProps[propName] = slotPropValue;
+      }
+    } else if (propName === "style") {
+      overrideProps[propName] = { ...slotPropValue, ...childPropValue };
+    } else if (propName === "className") {
+      overrideProps[propName] = [slotPropValue, childPropValue].filter(Boolean).join(" ");
+    }
+  }
+  return { ...slotProps, ...overrideProps };
+}
+function getElementRef(element) {
+  var _a, _b;
+  let getter = (_a = Object.getOwnPropertyDescriptor(element.props, "ref")) == null ? void 0 : _a.get;
+  let mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
+  if (mayWarn) {
+    return element.ref;
+  }
+  getter = (_b = Object.getOwnPropertyDescriptor(element, "ref")) == null ? void 0 : _b.get;
+  mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
+  if (mayWarn) {
+    return element.props.ref;
+  }
+  return element.props.ref || element.ref;
+}
+var ROOT_NAME = "AlertDialog";
+var [createAlertDialogContext] = createContextScope(ROOT_NAME, [
+  createDialogScope
+]);
+var useDialogScope = createDialogScope();
+var AlertDialog$1 = (props) => {
+  const { __scopeAlertDialog, ...alertDialogProps } = props;
+  const dialogScope = useDialogScope(__scopeAlertDialog);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root$7, { ...dialogScope, ...alertDialogProps, modal: true });
+};
+AlertDialog$1.displayName = ROOT_NAME;
+var TRIGGER_NAME$2 = "AlertDialogTrigger";
+var AlertDialogTrigger = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeAlertDialog, ...triggerProps } = props;
+    const dialogScope = useDialogScope(__scopeAlertDialog);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Trigger$3, { ...dialogScope, ...triggerProps, ref: forwardedRef });
+  }
+);
+AlertDialogTrigger.displayName = TRIGGER_NAME$2;
+var PORTAL_NAME = "AlertDialogPortal";
+var AlertDialogPortal$1 = (props) => {
+  const { __scopeAlertDialog, ...portalProps } = props;
+  const dialogScope = useDialogScope(__scopeAlertDialog);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal$1, { ...dialogScope, ...portalProps });
+};
+AlertDialogPortal$1.displayName = PORTAL_NAME;
+var OVERLAY_NAME = "AlertDialogOverlay";
+var AlertDialogOverlay$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeAlertDialog, ...overlayProps } = props;
+    const dialogScope = useDialogScope(__scopeAlertDialog);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Overlay, { ...dialogScope, ...overlayProps, ref: forwardedRef });
+  }
+);
+AlertDialogOverlay$1.displayName = OVERLAY_NAME;
+var CONTENT_NAME$2 = "AlertDialogContent";
+var [AlertDialogContentProvider, useAlertDialogContentContext] = createAlertDialogContext(CONTENT_NAME$2);
+var AlertDialogContent$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeAlertDialog, children, ...contentProps } = props;
+    const dialogScope = useDialogScope(__scopeAlertDialog);
+    const contentRef = reactExports.useRef(null);
+    const composedRefs = useComposedRefs(forwardedRef, contentRef);
+    const cancelRef = reactExports.useRef(null);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      WarningProvider,
+      {
+        contentName: CONTENT_NAME$2,
+        titleName: TITLE_NAME,
+        docsSlug: "alert-dialog",
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogContentProvider, { scope: __scopeAlertDialog, cancelRef, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Content$2,
+          {
+            role: "alertdialog",
+            ...dialogScope,
+            ...contentProps,
+            ref: composedRefs,
+            onOpenAutoFocus: composeEventHandlers(contentProps.onOpenAutoFocus, (event) => {
+              var _a;
+              event.preventDefault();
+              (_a = cancelRef.current) == null ? void 0 : _a.focus({ preventScroll: true });
+            }),
+            onPointerDownOutside: (event) => event.preventDefault(),
+            onInteractOutside: (event) => event.preventDefault(),
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Slottable, { children }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(DescriptionWarning, { contentRef })
+            ]
+          }
+        ) })
+      }
+    );
+  }
+);
+AlertDialogContent$1.displayName = CONTENT_NAME$2;
+var TITLE_NAME = "AlertDialogTitle";
+var AlertDialogTitle$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeAlertDialog, ...titleProps } = props;
+    const dialogScope = useDialogScope(__scopeAlertDialog);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Title$1, { ...dialogScope, ...titleProps, ref: forwardedRef });
+  }
+);
+AlertDialogTitle$1.displayName = TITLE_NAME;
+var DESCRIPTION_NAME = "AlertDialogDescription";
+var AlertDialogDescription$1 = reactExports.forwardRef((props, forwardedRef) => {
+  const { __scopeAlertDialog, ...descriptionProps } = props;
+  const dialogScope = useDialogScope(__scopeAlertDialog);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Description$1, { ...dialogScope, ...descriptionProps, ref: forwardedRef });
+});
+AlertDialogDescription$1.displayName = DESCRIPTION_NAME;
+var ACTION_NAME = "AlertDialogAction";
+var AlertDialogAction$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeAlertDialog, ...actionProps } = props;
+    const dialogScope = useDialogScope(__scopeAlertDialog);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Close$1, { ...dialogScope, ...actionProps, ref: forwardedRef });
+  }
+);
+AlertDialogAction$1.displayName = ACTION_NAME;
+var CANCEL_NAME = "AlertDialogCancel";
+var AlertDialogCancel$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeAlertDialog, ...cancelProps } = props;
+    const { cancelRef } = useAlertDialogContentContext(CANCEL_NAME, __scopeAlertDialog);
+    const dialogScope = useDialogScope(__scopeAlertDialog);
+    const ref = useComposedRefs(forwardedRef, cancelRef);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Close$1, { ...dialogScope, ...cancelProps, ref });
+  }
+);
+AlertDialogCancel$1.displayName = CANCEL_NAME;
+var DescriptionWarning = ({ contentRef }) => {
+  const MESSAGE = `\`${CONTENT_NAME$2}\` requires a description for the component to be accessible for screen reader users.
+
+You can add a description to the \`${CONTENT_NAME$2}\` by passing a \`${DESCRIPTION_NAME}\` component as a child, which also benefits sighted users by adding visible context to the dialog.
+
+Alternatively, you can use your own component as a description by assigning it an \`id\` and passing the same value to the \`aria-describedby\` prop in \`${CONTENT_NAME$2}\`. If the description is confusing or duplicative for sighted users, you can use the \`@radix-ui/react-visually-hidden\` primitive as a wrapper around your description component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/alert-dialog`;
+  reactExports.useEffect(() => {
+    var _a;
+    const hasDescription = document.getElementById(
+      (_a = contentRef.current) == null ? void 0 : _a.getAttribute("aria-describedby")
+    );
+    if (!hasDescription) console.warn(MESSAGE);
+  }, [MESSAGE, contentRef]);
+  return null;
+};
+var Root2$1 = AlertDialog$1;
+var Portal2 = AlertDialogPortal$1;
+var Overlay2 = AlertDialogOverlay$1;
+var Content2$1 = AlertDialogContent$1;
+var Action = AlertDialogAction$1;
+var Cancel = AlertDialogCancel$1;
+var Title2 = AlertDialogTitle$1;
+var Description2 = AlertDialogDescription$1;
+const AlertDialog = Root2$1;
+const AlertDialogPortal = Portal2;
+const AlertDialogOverlay = reactExports.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+  Overlay2,
+  {
+    className: cn(
+      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      className
+    ),
+    ...props,
+    ref
+  }
+));
+AlertDialogOverlay.displayName = Overlay2.displayName;
+const AlertDialogContent = reactExports.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogPortal, { children: [
+  /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogOverlay, {}),
+  /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Content2$1,
+    {
+      ref,
+      className: cn(
+        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        className
+      ),
+      ...props
+    }
+  )
+] }));
+AlertDialogContent.displayName = Content2$1.displayName;
+const AlertDialogHeader = ({
+  className,
+  ...props
+}) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+  "div",
+  {
+    className: cn(
+      "flex flex-col space-y-2 text-center sm:text-left",
+      className
+    ),
+    ...props
+  }
+);
+AlertDialogHeader.displayName = "AlertDialogHeader";
+const AlertDialogFooter = ({
+  className,
+  ...props
+}) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+  "div",
+  {
+    className: cn(
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      className
+    ),
+    ...props
+  }
+);
+AlertDialogFooter.displayName = "AlertDialogFooter";
+const AlertDialogTitle = reactExports.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+  Title2,
+  {
+    ref,
+    className: cn("text-lg font-semibold", className),
+    ...props
+  }
+));
+AlertDialogTitle.displayName = Title2.displayName;
+const AlertDialogDescription = reactExports.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+  Description2,
+  {
+    ref,
+    className: cn("text-sm text-muted-foreground", className),
+    ...props
+  }
+));
+AlertDialogDescription.displayName = Description2.displayName;
+const AlertDialogAction = reactExports.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+  Action,
+  {
+    ref,
+    className: cn(buttonVariants(), className),
+    ...props
+  }
+));
+AlertDialogAction.displayName = Action.displayName;
+const AlertDialogCancel = reactExports.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+  Cancel,
+  {
+    ref,
+    className: cn(
+      buttonVariants({ variant: "outline" }),
+      "mt-2 sm:mt-0",
+      className
+    ),
+    ...props
+  }
+));
+AlertDialogCancel.displayName = Cancel.displayName;
+function DismissButton({ video, className, variant, size: size2, onDismiss, ...props }) {
+  const { removeFromWatchlist: removeFromWatchlist2, watchlist } = useWatchlist();
+  const { dismissItem, dismissedItems } = useDismissed();
+  const [isAlertOpen, setIsAlertOpen] = reactExports.useState(false);
+  const isInWatchlist = !!watchlist[`${video.media_type}-${video.id}`];
+  const historyKey = video.media_type === "anime" ? `mal-${video.mal_id || video.id}` : `tmdb-${video.id}`;
+  const isInHistory = !!getWatchHistory()[historyKey];
+  const isDismissed = !!dismissedItems[`${video.media_type}-${video.id}`];
+  const handleDismissClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isDismissed) return;
+    if (isInWatchlist || isInHistory) {
+      setIsAlertOpen(true);
+    } else {
+      dismissItem(video);
+      onDismiss == null ? void 0 : onDismiss(video);
+    }
+  };
+  const handleConfirm = () => {
+    if (isInWatchlist) {
+      removeFromWatchlist2(video.id, video.media_type);
+    }
+    if (isInHistory) {
+      removeFromHistory(video.id, video.media_type, video.mal_id);
+    }
+    dismissItem(video);
+    onDismiss == null ? void 0 : onDismiss(video);
+    setIsAlertOpen(false);
+  };
+  const tooltipText = isDismissed ? "Already dismissed" : "Not interested";
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Tooltip, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button,
+        {
+          variant: variant || "ghost",
+          size: size2 || "icon",
+          onClick: handleDismissClick,
+          disabled: isDismissed,
+          className: cn("text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed", className),
+          "aria-label": tooltipText,
+          ...props,
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx(ThumbsDown, { className: "h-5 w-5" })
+        }
+      ) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: tooltipText }) })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialog, { open: isAlertOpen, onOpenChange: setIsAlertOpen, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogContent, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogHeader, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogTitle, { children: "Are you sure?" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogDescription, { children: [
+          "This title is in your ",
+          isInWatchlist ? "Watchlist" : "",
+          isInWatchlist && isInHistory ? " and " : "",
+          isInHistory ? "History" : "",
+          ". Dismissing it will also remove it from these lists."
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogFooter, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogCancel, { children: "Cancel" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogAction, { onClick: handleConfirm, children: "Confirm & Dismiss" })
+      ] })
+    ] }) })
+  ] });
+}
+function WatchHistoryCard({
+  item,
+  variant = "default"
+}) {
   const navigate = useNavigate();
   const posterUrl = item.poster_path ? item.poster_path.startsWith("http") ? item.poster_path : `https://image.tmdb.org/t/p/w342${item.poster_path}` : "https://picsum.photos/seed/default-poster/342/513";
   const isSeries = item.type === "tv" || item.type === "anime";
   const handlePlayClick = (e) => {
     e.stopPropagation();
-    const url = isSeries ? `/watch?id=${item.id}&type=${item.type}&s=${item.last_season_watched || 1}&e=${item.last_episode_watched || 1}` : `/watch?id=${item.id}&type=${item.type}`;
+    const season = isSeries ? Number(item.last_season_watched || 1) : void 0;
+    const episode = isSeries ? Number(item.last_episode_watched || 1) : void 0;
+    updateWatchPositionOnNavigate(String(item.id), item.type, season ?? null, episode ?? null, item.title);
+    const url = isSeries ? `/watch?id=${item.id}&type=${item.type}&s=${season || 1}&e=${episode || 1}` : `/watch?id=${item.id}&type=${item.type}`;
     navigate(url);
   };
   const handleCardClick = () => {
-    const url = isSeries ? `/watch?id=${item.id}&type=${item.type}&s=${item.last_season_watched || 1}&e=${item.last_episode_watched || 1}` : `/watch?id=${item.id}&type=${item.type}`;
+    const season = isSeries ? Number(item.last_season_watched || 1) : void 0;
+    const episode = isSeries ? Number(item.last_episode_watched || 1) : void 0;
+    updateWatchPositionOnNavigate(String(item.id), item.type, season ?? null, episode ?? null, item.title);
+    const url = isSeries ? `/watch?id=${item.id}&type=${item.type}&s=${season || 1}&e=${episode || 1}` : `/watch?id=${item.id}&type=${item.type}`;
     navigate(url);
+  };
+  const detailHref = `/media/${item.type}/${item.id}`;
+  const handleDetailsClick = (e) => {
+    e.stopPropagation();
+    navigate(detailHref);
   };
   const percentage = item.progress ? item.progress.watched / item.progress.duration * 100 : 0;
   const currSeason = isSeries && item.last_episode_watched ? Number(item.last_season_watched || 1) : void 0;
@@ -19649,10 +20657,14 @@ function WatchHistoryCard({ item, variant = "default" }) {
     let tentativeNextSeason = currSeason || 1;
     let tentativeNextEpisode = (currEpisode || 0) + 1;
     if (item.seasons && item.seasons.length > 0) {
-      const currentSeasonData = item.seasons.find((s) => s.season_number === (currSeason || 1));
+      const currentSeasonData = item.seasons.find(
+        (s) => s.season_number === (currSeason || 1)
+      );
       if (currentSeasonData) {
         if (tentativeNextEpisode > currentSeasonData.episode_count) {
-          const currentIndex = item.seasons.findIndex((s) => s.season_number === (currSeason || 1));
+          const currentIndex = item.seasons.findIndex(
+            (s) => s.season_number === (currSeason || 1)
+          );
           const nextSeasonData = item.seasons[currentIndex + 1];
           if (nextSeasonData) {
             tentativeNextSeason = nextSeasonData.season_number;
@@ -19684,7 +20696,8 @@ function WatchHistoryCard({ item, variant = "default" }) {
     "div",
     {
       className: cn(
-        "group relative overflow-hidden rounded-lg bg-muted cursor-pointer transition-all hover:shadow-xl hover:scale-105",
+        // allow visible overflow so tooltips and badges can render outside the poster area
+        "group relative overflow-visible rounded-lg bg-muted cursor-pointer transition-all hover:shadow-xl hover:scale-105",
         variant === "compact" && "w-24"
       ),
       onClick: handleCardClick,
@@ -19695,37 +20708,47 @@ function WatchHistoryCard({ item, variant = "default" }) {
             {
               src: posterUrl,
               alt: `Poster for ${item.title}`,
-              className: "w-full h-full object-cover"
+              className: "w-full h-full object-cover rounded-lg"
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute inset-y-0 right-3 flex flex-col items-end justify-center gap-2 z-20 md:opacity-0 md:pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200", children: /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: (e) => {
-            e.stopPropagation();
-            handlePlayClick(e);
-          }, title: "Continue", className: "bg-black/70 hover:bg-red-600/80 text-white rounded-full p-2 h-8 w-8 flex items-center justify-center shadow transition-colors", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Play, { className: "h-4 w-4" }) }) }),
-          item.rating && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute top-2 right-2 flex items-center gap-1 bg-black/80 rounded px-2 py-1 z-30", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs font-semibold text-white", children: item.rating }) }),
-          item.progress && item.progress.watched > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute bottom-0 left-0 right-0 h-1 bg-gray-600", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-full bg-primary", style: { width: `${percentage}%` } }) })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 rounded-lg" }),
+          currSeason != null && currEpisode != null && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute left-1/2 transform -translate-x-1/2 bottom-14 z-40 pointer-events-none text-center", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-black/80 px-3 py-1 rounded-md inline-block", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-muted-foreground", children: "Continue Watching" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm font-semibold text-white", children: formatEp(currSeason, currEpisode) })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "absolute top-2 right-2 z-50 flex flex-col items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "ghost", size: "icon", className: "text-white hover:bg-white/20", onClick: (e) => {
+              e.stopPropagation();
+              handlePlayClick(e);
+            }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Play, { className: "h-4 w-4" }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "ghost", size: "icon", className: "text-white hover:bg-white/20", onClick: (e) => {
+              e.stopPropagation();
+              handleDetailsClick(e);
+            }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Info, { className: "h-4 w-4" }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(AddToWatchlistButton, { video: { id: String(item.id), mal_id: item.mal_id, media_type: item.type, title: item.title, description: "", categories: [], thumbnailSeed: "", poster_path: item.poster_path, rating: item.rating, seasons: item.seasons, episodes: item.episodes } }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(DismissButton, { video: { id: String(item.id), mal_id: item.mal_id, media_type: item.type, title: item.title, description: "", categories: [], thumbnailSeed: "", poster_path: item.poster_path, rating: item.rating, seasons: item.seasons, episodes: item.episodes }, onDismiss: () => {
+            } })
+          ] }),
+          item.rating && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute top-2 left-2 flex items-center gap-1 bg-black/80 rounded px-2 py-1 z-30", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs font-semibold text-white", children: item.rating }) }),
+          item.progress && item.progress.watched > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute bottom-0 left-0 right-0 h-1 bg-gray-600 rounded-b-lg", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-full bg-primary", style: { width: `${percentage}%` } }) })
         ] }),
-        nextEpisodeHref && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-2 px-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-muted-foreground", children: "Continue Watching" }),
-          currSeason != null && currEpisode != null && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm font-semibold", children: formatEp(currSeason, currEpisode) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            "button",
-            {
-              onClick: (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                navigate(nextEpisodeHref);
-              },
-              className: "inline-flex items-center justify-center gap-2 bg-primary text-white px-4 h-10 rounded-md hover:opacity-90 w-full",
-              title: `Watch next ${formatEp(nextSeason, nextEpisode)}`,
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-medium", children: "Watch Next" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-semibold", children: formatEp(nextSeason, nextEpisode) })
-              ]
-            }
-          ) })
-        ] })
+        nextEpisodeHref && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-2 px-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "button",
+          {
+            onClick: (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              updateWatchPositionOnNavigate(String(item.id), item.type, nextSeason, nextEpisode, item.title);
+              navigate(nextEpisodeHref);
+            },
+            className: "inline-flex items-center justify-center gap-2 bg-primary text-white px-4 h-10 rounded-md hover:opacity-90 w-full",
+            title: `Watch next ${formatEp(nextSeason, nextEpisode)}`,
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-medium", children: "Watch Next" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-semibold", children: formatEp(nextSeason, nextEpisode) })
+            ]
+          }
+        ) }) })
       ]
     }
   );
@@ -20470,113 +21493,16 @@ function VidlinkPlayer({ video, playerUrl, season, episode }) {
     playerUrl
   );
 }
-const isCapacitor = typeof window !== "undefined" && window.Capacitor !== void 0;
-const isElectron$2 = typeof window !== "undefined" && !!window.electronDownload;
+const electronApi = typeof window !== "undefined" ? window.electronDownload : null;
+const capacitorPresent = typeof window !== "undefined" ? !!window.Capacitor : false;
 function getDownloadAPI() {
-  if (isElectron$2) {
-    return getElectronAPI();
+  var _a, _b;
+  if (electronApi) return electronApi;
+  if (capacitorPresent) {
+    const capacitorApi = (_b = (_a = window.Capacitor) == null ? void 0 : _a.Plugins) == null ? void 0 : _b.HLSDownloader;
+    if (capacitorApi) return capacitorApi;
   }
-  if (isCapacitor) {
-    return getCapacitorAPI();
-  }
-  return getWebAPI();
-}
-function getElectronAPI() {
-  const download = window.electronDownload;
-  return {
-    getCapturedStreams: async () => {
-      var _a;
-      try {
-        const streams = await ((_a = download == null ? void 0 : download.getStreams) == null ? void 0 : _a.call(download));
-        return streams || [];
-      } catch (e) {
-        console.error("Electron getCapturedStreams error:", e);
-        return [];
-      }
-    },
-    startDownload: async (url, filename, quality) => {
-      var _a;
-      try {
-        const result = await ((_a = download == null ? void 0 : download.downloadStream) == null ? void 0 : _a.call(download, {
-          url,
-          filename: `${filename}.mkv`,
-          quality
-        }));
-        return result || { success: false, error: "Download API not available" };
-      } catch (e) {
-        return { success: false, error: e.message };
-      }
-    },
-    getQualityVariants: async (url) => {
-      var _a;
-      try {
-        const variants = await ((_a = download == null ? void 0 : download.getQualities) == null ? void 0 : _a.call(download, { url }));
-        return variants || [{ url, bandwidth: 0, label: "Default Quality" }];
-      } catch (e) {
-        return [{ url, bandwidth: 0, label: "Default Quality" }];
-      }
-    },
-    cancelDownload: async () => {
-      var _a;
-      try {
-        await ((_a = download == null ? void 0 : download.cancelDownload) == null ? void 0 : _a.call(download));
-        return { success: true };
-      } catch (e) {
-        return { success: false };
-      }
-    },
-    getDownloadsList: async () => [],
-    removeDownload: async () => ({ success: false }),
-    clearCompletedDownloads: async () => ({ success: false }),
-    onStreamCaptured: () => () => {
-    },
-    onDownloadProgress: () => () => {
-    },
-    onDownloadsUpdated: () => () => {
-    }
-  };
-}
-function getCapacitorAPI() {
-  const Cap = window.Capacitor;
-  return {
-    getCapturedStreams: async () => {
-      try {
-        const result = await Cap.Plugins.HLSDownloader.getCapturedStreams();
-        return result.streams || [];
-      } catch (e) {
-        console.error("getCapturedStreams error:", e);
-        return [];
-      }
-    },
-    startDownload: async (url, filename, quality) => {
-      try {
-        return await Cap.Plugins.HLSDownloader.startDownload({ url, filename, quality });
-      } catch (e) {
-        return { success: false, error: e.message };
-      }
-    },
-    getQualityVariants: async (url) => {
-      try {
-        const result = await Cap.Plugins.HLSDownloader.getQualityVariants({ url });
-        return result.variants || [];
-      } catch (e) {
-        return [{ url, bandwidth: 0, label: "Default" }];
-      }
-    },
-    cancelDownload: async () => ({ success: false }),
-    getDownloadsList: async () => [],
-    removeDownload: async () => ({ success: false }),
-    clearCompletedDownloads: async () => ({ success: false }),
-    onStreamCaptured: () => () => {
-    },
-    onDownloadProgress: () => () => {
-    },
-    onDownloadsUpdated: () => () => {
-    }
-  };
-}
-function getWebAPI() {
-  return {
+  const fallback = {
     getCapturedStreams: async () => [],
     startDownload: async () => ({ success: false, error: "Not available" }),
     getQualityVariants: async () => [],
@@ -20586,30 +21512,40 @@ function getWebAPI() {
     clearCompletedDownloads: async () => ({ success: false }),
     onStreamCaptured: () => () => {
     },
+    onCapturedStreamsList: () => () => {
+    },
     onDownloadProgress: () => () => {
     },
     onDownloadsUpdated: () => () => {
-    }
+    },
+    requestCapturedStreamsPush: async () => ({ success: false }),
+    getBuildInfo: async () => ({ buildTime: (/* @__PURE__ */ new Date()).toISOString() }),
+    openFile: async () => ({ success: false })
   };
+  return fallback;
 }
 function isDownloadAvailable() {
-  return isElectron$2 || isCapacitor;
+  return !!electronApi || !!capacitorPresent;
 }
 function getPlatform() {
-  if (isElectron$2) return "electron";
-  if (isCapacitor) return "capacitor";
+  if (typeof window === "undefined") return "unknown";
+  if (window.electronDownload) return "electron";
+  if (window.Capacitor) return "capacitor";
   return "web";
 }
-function DownloadButton() {
+getDownloadAPI();
+function sanitizeFilename(name) {
+  return name.replace(/[\\/:*?"<>|]/g, "_").replace(/\s+/g, "_").trim();
+}
+function DownloadButton({ suggestedFilename }) {
   const [isLoading, setIsLoading] = reactExports.useState(false);
   const [message, setMessage] = reactExports.useState("");
   const handleClick = reactExports.useCallback(async () => {
+    var _a;
     setIsLoading(true);
     setMessage("Starting...");
-    console.log("=== DOWNLOAD CLICKED ===");
     try {
       const platform2 = getPlatform();
-      console.log("Platform:", platform2);
       setMessage(`Platform: ${platform2}`);
       if (!isDownloadAvailable()) {
         setMessage("Downloads not available on this platform");
@@ -20617,54 +21553,84 @@ function DownloadButton() {
         return;
       }
       const api = getDownloadAPI();
-      console.log("Got API:", !!api);
-      setMessage("Got API...");
-      if (!(api == null ? void 0 : api.getCapturedStreams)) {
+      if (typeof (api == null ? void 0 : api.getCapturedStreams) !== "function") {
         setMessage("No getCapturedStreams method");
         setIsLoading(false);
         return;
       }
-      console.log("Calling getCapturedStreams...");
-      setMessage("Fetching streams...");
-      const streams = await api.getCapturedStreams();
-      console.log("Got streams:", streams);
-      setMessage(`Got ${(streams == null ? void 0 : streams.length) || 0} streams`);
+      let streams = await api.getCapturedStreams();
       if (!streams || streams.length === 0) {
-        setMessage("No streams captured - play video first");
+        for (let i = 0; i < 3; i++) {
+          await new Promise((res) => setTimeout(res, 500));
+          try {
+            const retry = await api.getCapturedStreams();
+            if (retry && retry.length > 0) {
+              streams = retry;
+              break;
+            }
+          } catch {
+          }
+        }
+      }
+      if (!streams || streams.length === 0) {
+        setMessage("No streams captured - play the video first");
         setIsLoading(false);
         return;
       }
-      const url = typeof streams[0] === "string" ? streams[0] : streams[0].url;
-      console.log("Starting download with URL:", url == null ? void 0 : url.substring(0, 80));
-      setMessage("Starting download...");
-      const result = await api.startDownload(url, `video_${Date.now()}`, "auto");
-      console.log("Download result:", result);
-      setMessage(result.success ? "Download started!" : `Error: ${result.error}`);
+      const sourceList = streams && streams.length > 0 ? streams : [];
+      const raw = sourceList[0];
+      const url = typeof raw === "string" ? raw : raw == null ? void 0 : raw.url;
+      if (!url) {
+        setMessage("Could not determine a stream URL");
+        setIsLoading(false);
+        return;
+      }
+      let suggestedName = suggestedFilename || `video_${Date.now()}`;
+      if (!suggestedFilename) {
+        try {
+          const win = window;
+          const currentLocation = ((_a = win == null ? void 0 : win.location) == null ? void 0 : _a.href) || "";
+          const params = new URLSearchParams(currentLocation.split("?")[1] || "");
+          const id = params.get("id");
+          const type = params.get("type");
+          const s = params.get("s");
+          const e = params.get("e");
+          if (type && id && (type === "tv" || type === "anime") && s && e) {
+            const titleEl = document.querySelector("h1") || document.querySelector("title");
+            const titleText = ((titleEl == null ? void 0 : titleEl.textContent) || "").trim() || `series_${id}`;
+            const sP = String(s).padStart(2, "0");
+            const eP = String(e).padStart(2, "0");
+            suggestedName = `${titleText}_S${sP}E${eP}`;
+          } else {
+            const titleEl = document.querySelector("h1") || document.querySelector("title");
+            const titleText = ((titleEl == null ? void 0 : titleEl.textContent) || "").trim();
+            if (titleText) suggestedName = titleText;
+          }
+        } catch (ex) {
+        }
+      }
+      suggestedName = sanitizeFilename(suggestedName);
+      const result = await api.startDownload(url, suggestedName);
+      setMessage((result == null ? void 0 : result.success) ? "Download started!" : `Error: ${(result == null ? void 0 : result.error) || "unknown"}`);
     } catch (e) {
-      console.error("ERROR:", e);
-      setMessage(`Error: ${e.message}`);
+      setMessage(`Error: ${(e == null ? void 0 : e.message) || e}`);
     } finally {
       setIsLoading(false);
     }
-  }, []);
-  if (!isDownloadAvailable()) {
-    return null;
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1 items-center", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Button,
-      {
-        onClick: handleClick,
-        disabled: isLoading,
-        variant: "ghost",
-        size: "icon",
-        className: "h-9 w-9 text-white hover:bg-white/20",
-        title: `Download (${getPlatform()})`,
-        children: isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-4 w-4 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "h-4 w-4" })
-      }
-    ),
-    message && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-white bg-black/50 px-2 py-1 rounded max-w-[100px]", children: message })
-  ] });
+  }, [suggestedFilename]);
+  if (!isDownloadAvailable()) return null;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Button,
+    {
+      onClick: handleClick,
+      disabled: isLoading,
+      variant: "ghost",
+      size: "icon",
+      className: "h-7 w-7 sm:h-8 sm:w-8 text-white hover:bg-white/20 flex-shrink-0",
+      title: `Download (${getPlatform()})`,
+      children: isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-3 w-3 sm:h-4 sm:w-4 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "h-3 w-3 sm:h-4 sm:w-4" })
+    }
+  );
 }
 function WatchHeader({
   video,
@@ -20682,80 +21648,81 @@ function WatchHeader({
   const handleGoBack = () => {
     navigate(-1);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("header", { className: "absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent p-4 text-white", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "container max-w-screen-2xl mx-auto flex items-center justify-between", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Button,
-      {
-        variant: "outline",
-        size: "icon",
-        onClick: handleGoBack,
-        className: "rounded-full",
-        "aria-label": "Go back",
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronLeft, { className: "h-6 w-6" })
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 px-4", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-xl font-bold text-white truncate", children: video.title }),
-      isSeries && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm text-gray-300", children: [
-        "Season ",
-        currentSeason,
-        ", Episode ",
-        currentEpisode
-      ] })
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("header", { className: "absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/90 to-transparent p-2 sm:p-3 lg:p-4 text-white", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-2 sm:gap-3", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-2 min-h-[40px]", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button,
+        {
+          variant: "outline",
+          size: "icon",
+          onClick: handleGoBack,
+          className: "rounded-full flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10",
+          "aria-label": "Go back",
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronLeft, { className: "h-4 w-4 sm:h-5 sm:w-5" })
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 min-w-0 px-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-sm sm:text-base lg:text-lg font-bold text-white truncate", children: video.title }),
+        isSeries && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs sm:text-sm text-gray-300 truncate", children: [
+          "S",
+          currentSeason,
+          "E",
+          currentEpisode
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsx(DownloadButton, {}) })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(DownloadButton, {}),
-      isSeries && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          Button,
-          {
-            size: "sm",
-            variant: "outline",
-            onClick: (e) => {
-              e.stopPropagation();
-              onPrev();
-            },
-            disabled: !hasPrev,
-            "aria-label": "Previous episode",
-            className: "inline-flex items-center gap-2",
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronLeft, { className: "h-4 w-4" }),
-              "Prev"
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Button,
-          {
-            size: "sm",
-            variant: "outline",
-            onClick: (e) => {
-              e.stopPropagation();
-              onOpenEpisodes();
-            },
-            "aria-label": "Select episode",
-            children: "Episodes"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          Button,
-          {
-            size: "sm",
-            variant: "outline",
-            onClick: (e) => {
-              e.stopPropagation();
-              onNext();
-            },
-            disabled: !hasNext,
-            "aria-label": "Next episode",
-            className: "inline-flex items-center gap-2",
-            children: [
-              "Next",
-              /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "h-4 w-4" })
-            ]
-          }
-        )
-      ] })
+    isSeries && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-end gap-1 sm:gap-2 flex-wrap", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Button,
+        {
+          size: "xs",
+          variant: "outline",
+          onClick: (e) => {
+            e.stopPropagation();
+            onPrev();
+          },
+          disabled: !hasPrev,
+          "aria-label": "Previous episode",
+          className: "text-xs py-1 px-2 h-7 sm:h-8",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronLeft, { className: "h-3 w-3 sm:h-4 sm:w-4" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "hidden sm:inline ml-1", children: "Prev" })
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button,
+        {
+          size: "xs",
+          variant: "outline",
+          onClick: (e) => {
+            e.stopPropagation();
+            onOpenEpisodes();
+          },
+          "aria-label": "Select episode",
+          className: "text-xs py-1 px-2 h-7 sm:h-8 whitespace-nowrap",
+          children: "Episodes"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Button,
+        {
+          size: "xs",
+          variant: "outline",
+          onClick: (e) => {
+            e.stopPropagation();
+            onNext();
+          },
+          disabled: !hasNext,
+          "aria-label": "Next episode",
+          className: "text-xs py-1 px-2 h-7 sm:h-8",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "hidden sm:inline mr-1", children: "Next" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "h-3 w-3 sm:h-4 sm:w-4" })
+          ]
+        }
+      )
     ] })
   ] }) });
 }
@@ -21538,11 +22505,11 @@ var Collapsible = reactExports.forwardRef(
   }
 );
 Collapsible.displayName = COLLAPSIBLE_NAME;
-var TRIGGER_NAME$2 = "CollapsibleTrigger";
+var TRIGGER_NAME$1 = "CollapsibleTrigger";
 var CollapsibleTrigger = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { __scopeCollapsible, ...triggerProps } = props;
-    const context = useCollapsibleContext(TRIGGER_NAME$2, __scopeCollapsible);
+    const context = useCollapsibleContext(TRIGGER_NAME$1, __scopeCollapsible);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
       Primitive.button,
       {
@@ -21559,19 +22526,19 @@ var CollapsibleTrigger = reactExports.forwardRef(
     );
   }
 );
-CollapsibleTrigger.displayName = TRIGGER_NAME$2;
-var CONTENT_NAME$2 = "CollapsibleContent";
+CollapsibleTrigger.displayName = TRIGGER_NAME$1;
+var CONTENT_NAME$1 = "CollapsibleContent";
 var CollapsibleContent = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { forceMount, ...contentProps } = props;
-    const context = useCollapsibleContext(CONTENT_NAME$2, props.__scopeCollapsible);
+    const context = useCollapsibleContext(CONTENT_NAME$1, props.__scopeCollapsible);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: ({ present }) => /* @__PURE__ */ jsxRuntimeExports.jsx(CollapsibleContentImpl, { ...contentProps, ref: forwardedRef, present }) });
   }
 );
-CollapsibleContent.displayName = CONTENT_NAME$2;
+CollapsibleContent.displayName = CONTENT_NAME$1;
 var CollapsibleContentImpl = reactExports.forwardRef((props, forwardedRef) => {
   const { __scopeCollapsible, present, children, ...contentProps } = props;
-  const context = useCollapsibleContext(CONTENT_NAME$2, __scopeCollapsible);
+  const context = useCollapsibleContext(CONTENT_NAME$1, __scopeCollapsible);
   const [isPresent, setIsPresent] = reactExports.useState(present);
   const ref = reactExports.useRef(null);
   const composedRefs = useComposedRefs(forwardedRef, ref);
@@ -21627,7 +22594,7 @@ function getState$1(open) {
   return open ? "open" : "closed";
 }
 var Root$2 = Collapsible;
-var Trigger$1 = CollapsibleTrigger;
+var Trigger = CollapsibleTrigger;
 var Content = CollapsibleContent;
 var ACCORDION_NAME = "Accordion";
 var ACCORDION_KEYS = ["Home", "End", "ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"];
@@ -21866,16 +22833,16 @@ var AccordionHeader = React.forwardRef(
   }
 );
 AccordionHeader.displayName = HEADER_NAME;
-var TRIGGER_NAME$1 = "AccordionTrigger";
+var TRIGGER_NAME = "AccordionTrigger";
 var AccordionTrigger$1 = React.forwardRef(
   (props, forwardedRef) => {
     const { __scopeAccordion, ...triggerProps } = props;
     const accordionContext = useAccordionContext(ACCORDION_NAME, __scopeAccordion);
-    const itemContext = useAccordionItemContext(TRIGGER_NAME$1, __scopeAccordion);
-    const collapsibleContext = useAccordionCollapsibleContext(TRIGGER_NAME$1, __scopeAccordion);
+    const itemContext = useAccordionItemContext(TRIGGER_NAME, __scopeAccordion);
+    const collapsibleContext = useAccordionCollapsibleContext(TRIGGER_NAME, __scopeAccordion);
     const collapsibleScope = useCollapsibleScope(__scopeAccordion);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(Collection.ItemSlot, { scope: __scopeAccordion, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Trigger$1,
+      Trigger,
       {
         "aria-disabled": itemContext.open && !collapsibleContext.collapsible || void 0,
         "data-orientation": accordionContext.orientation,
@@ -21887,13 +22854,13 @@ var AccordionTrigger$1 = React.forwardRef(
     ) });
   }
 );
-AccordionTrigger$1.displayName = TRIGGER_NAME$1;
-var CONTENT_NAME$1 = "AccordionContent";
+AccordionTrigger$1.displayName = TRIGGER_NAME;
+var CONTENT_NAME = "AccordionContent";
 var AccordionContent$1 = React.forwardRef(
   (props, forwardedRef) => {
     const { __scopeAccordion, ...contentProps } = props;
     const accordionContext = useAccordionContext(ACCORDION_NAME, __scopeAccordion);
-    const itemContext = useAccordionItemContext(CONTENT_NAME$1, __scopeAccordion);
+    const itemContext = useAccordionItemContext(CONTENT_NAME, __scopeAccordion);
     const collapsibleScope = useCollapsibleScope(__scopeAccordion);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
       Content,
@@ -21913,7 +22880,7 @@ var AccordionContent$1 = React.forwardRef(
     );
   }
 );
-AccordionContent$1.displayName = CONTENT_NAME$1;
+AccordionContent$1.displayName = CONTENT_NAME;
 function getState(open) {
   return open ? "open" : "closed";
 }
@@ -21921,7 +22888,7 @@ var Root2 = Accordion$1;
 var Item = AccordionItem$1;
 var Header = AccordionHeader;
 var Trigger2 = AccordionTrigger$1;
-var Content2$1 = AccordionContent$1;
+var Content2 = AccordionContent$1;
 const Accordion = Root2;
 const AccordionItem = reactExports.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
   Item,
@@ -21949,7 +22916,7 @@ const AccordionTrigger = reactExports.forwardRef(({ className, children, ...prop
 ) }));
 AccordionTrigger.displayName = Trigger2.displayName;
 const AccordionContent = reactExports.forwardRef(({ className, children, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-  Content2$1,
+  Content2,
   {
     ref,
     className: "overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down",
@@ -21957,7 +22924,7 @@ const AccordionContent = reactExports.forwardRef(({ className, children, ...prop
     children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: cn("pb-4 pt-0", className), children })
   }
 ));
-AccordionContent.displayName = Content2$1.displayName;
+AccordionContent.displayName = Content2.displayName;
 function ExpandableText({ text, className, charLimit = 200 }) {
   const [isExpanded, setIsExpanded] = reactExports.useState(false);
   if (text.length <= charLimit) {
@@ -22198,6 +23165,7 @@ function WatchPageContent() {
   const handleEpisodeSelect = (season, episode) => {
     setCurrentSeason(season);
     setCurrentEpisode(episode);
+    updateWatchPositionOnNavigate(String(tmdbId || ""), mediaType, season, episode, (video == null ? void 0 : video.title) || "");
     const newUrl = `/watch?id=${tmdbId}&type=${mediaType}&s=${season}&e=${episode}`;
     navigate(newUrl);
   };
@@ -22256,8 +23224,8 @@ function WatchPageContent() {
   if (!video) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-screen w-screen bg-black flex justify-center items-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: "Video not found" }) });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "h-screen w-screen bg-black", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative h-full w-full", children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "h-screen w-screen bg-black overflow-hidden", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative h-full w-full flex flex-col", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         WatchHeader,
         {
@@ -22272,7 +23240,7 @@ function WatchPageContent() {
           playerUrl
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1 relative w-full", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
         VidlinkPlayer,
         {
           video,
@@ -22280,7 +23248,7 @@ function WatchPageContent() {
           season: currentSeason,
           episode: currentEpisode
         }
-      )
+      ) })
     ] }),
     mediaType !== "movie" && /* @__PURE__ */ jsxRuntimeExports.jsx(
       EpisodeSelectionSheet,
@@ -24756,579 +25724,35 @@ function WatchlistPage() {
   }, []);
   const watchlistItems = Object.values(watchlist);
   if (!isMounted) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "container max-w-screen-2xl py-8 md:py-12", children: [
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Header$1, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "container max-w-screen-2xl py-8 md:py-12", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("h1", { className: "text-3xl md:text-4xl font-bold mb-8 flex items-center gap-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(ListVideo, { className: "h-8 w-8 text-primary" }),
+          " Your Watchlist"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10", children: Array.from({ length: 10 }).map((_, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "aspect-[2/3] w-full rounded-lg" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-5 w-3/4 rounded-md" })
+        ] }, i)) })
+      ] })
+    ] });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Header$1, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "container max-w-screen-2xl py-8 md:py-12", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("h1", { className: "text-3xl md:text-4xl font-bold mb-8 flex items-center gap-3", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(ListVideo, { className: "h-8 w-8 text-primary" }),
         " Your Watchlist"
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10", children: Array.from({ length: 10 }).map((_, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "aspect-[2/3] w-full rounded-lg" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-5 w-3/4 rounded-md" })
-      ] }, i)) })
-    ] });
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "container max-w-screen-2xl py-8 md:py-12", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("h1", { className: "text-3xl md:text-4xl font-bold mb-8 flex items-center gap-3", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(ListVideo, { className: "h-8 w-8 text-primary" }),
-      " Your Watchlist"
-    ] }),
-    watchlistItems.length > 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10", children: watchlistItems.map((video) => /* @__PURE__ */ jsxRuntimeExports.jsx(VideoCard, { video }, `${video.id}-${video.media_type}`)) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center justify-center text-center py-20 border-2 border-dashed border-secondary rounded-lg", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(ListX, { className: "w-16 h-16 text-muted-foreground/50 mb-4" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-lg text-muted-foreground", children: "Your watchlist is empty." }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground/70", children: "Add movies and shows to your watchlist to see them here." })
+      watchlistItems.length > 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-10", children: watchlistItems.map((video) => /* @__PURE__ */ jsxRuntimeExports.jsx(VideoCard, { video }, `${video.id}-${video.media_type}`)) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center justify-center text-center py-20 border-2 border-dashed border-secondary rounded-lg", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ListX, { className: "w-16 h-16 text-muted-foreground/50 mb-4" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-lg text-muted-foreground", children: "Your watchlist is empty." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground/70", children: "Add movies and shows to your watchlist to see them here." })
+      ] })
     ] })
   ] });
 }
-var Slot = reactExports.forwardRef((props, forwardedRef) => {
-  const { children, ...slotProps } = props;
-  const childrenArray = reactExports.Children.toArray(children);
-  const slottable = childrenArray.find(isSlottable);
-  if (slottable) {
-    const newElement = slottable.props.children;
-    const newChildren = childrenArray.map((child) => {
-      if (child === slottable) {
-        if (reactExports.Children.count(newElement) > 1) return reactExports.Children.only(null);
-        return reactExports.isValidElement(newElement) ? newElement.props.children : null;
-      } else {
-        return child;
-      }
-    });
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone, { ...slotProps, ref: forwardedRef, children: reactExports.isValidElement(newElement) ? reactExports.cloneElement(newElement, void 0, newChildren) : null });
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone, { ...slotProps, ref: forwardedRef, children });
-});
-Slot.displayName = "Slot";
-var SlotClone = reactExports.forwardRef((props, forwardedRef) => {
-  const { children, ...slotProps } = props;
-  if (reactExports.isValidElement(children)) {
-    const childrenRef = getElementRef(children);
-    const props2 = mergeProps(slotProps, children.props);
-    if (children.type !== reactExports.Fragment) {
-      props2.ref = forwardedRef ? composeRefs(forwardedRef, childrenRef) : childrenRef;
-    }
-    return reactExports.cloneElement(children, props2);
-  }
-  return reactExports.Children.count(children) > 1 ? reactExports.Children.only(null) : null;
-});
-SlotClone.displayName = "SlotClone";
-var Slottable = ({ children }) => {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children });
-};
-function isSlottable(child) {
-  return reactExports.isValidElement(child) && child.type === Slottable;
-}
-function mergeProps(slotProps, childProps) {
-  const overrideProps = { ...childProps };
-  for (const propName in childProps) {
-    const slotPropValue = slotProps[propName];
-    const childPropValue = childProps[propName];
-    const isHandler = /^on[A-Z]/.test(propName);
-    if (isHandler) {
-      if (slotPropValue && childPropValue) {
-        overrideProps[propName] = (...args) => {
-          childPropValue(...args);
-          slotPropValue(...args);
-        };
-      } else if (slotPropValue) {
-        overrideProps[propName] = slotPropValue;
-      }
-    } else if (propName === "style") {
-      overrideProps[propName] = { ...slotPropValue, ...childPropValue };
-    } else if (propName === "className") {
-      overrideProps[propName] = [slotPropValue, childPropValue].filter(Boolean).join(" ");
-    }
-  }
-  return { ...slotProps, ...overrideProps };
-}
-function getElementRef(element) {
-  var _a, _b;
-  let getter = (_a = Object.getOwnPropertyDescriptor(element.props, "ref")) == null ? void 0 : _a.get;
-  let mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
-  if (mayWarn) {
-    return element.ref;
-  }
-  getter = (_b = Object.getOwnPropertyDescriptor(element, "ref")) == null ? void 0 : _b.get;
-  mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
-  if (mayWarn) {
-    return element.props.ref;
-  }
-  return element.props.ref || element.ref;
-}
-var [createTooltipContext] = createContextScope("Tooltip", [
-  createPopperScope
-]);
-var usePopperScope = createPopperScope();
-var PROVIDER_NAME = "TooltipProvider";
-var DEFAULT_DELAY_DURATION = 700;
-var TOOLTIP_OPEN = "tooltip.open";
-var [TooltipProviderContextProvider, useTooltipProviderContext] = createTooltipContext(PROVIDER_NAME);
-var TooltipProvider$1 = (props) => {
-  const {
-    __scopeTooltip,
-    delayDuration = DEFAULT_DELAY_DURATION,
-    skipDelayDuration = 300,
-    disableHoverableContent = false,
-    children
-  } = props;
-  const [isOpenDelayed, setIsOpenDelayed] = reactExports.useState(true);
-  const isPointerInTransitRef = reactExports.useRef(false);
-  const skipDelayTimerRef = reactExports.useRef(0);
-  reactExports.useEffect(() => {
-    const skipDelayTimer = skipDelayTimerRef.current;
-    return () => window.clearTimeout(skipDelayTimer);
-  }, []);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    TooltipProviderContextProvider,
-    {
-      scope: __scopeTooltip,
-      isOpenDelayed,
-      delayDuration,
-      onOpen: reactExports.useCallback(() => {
-        window.clearTimeout(skipDelayTimerRef.current);
-        setIsOpenDelayed(false);
-      }, []),
-      onClose: reactExports.useCallback(() => {
-        window.clearTimeout(skipDelayTimerRef.current);
-        skipDelayTimerRef.current = window.setTimeout(
-          () => setIsOpenDelayed(true),
-          skipDelayDuration
-        );
-      }, [skipDelayDuration]),
-      isPointerInTransitRef,
-      onPointerInTransitChange: reactExports.useCallback((inTransit) => {
-        isPointerInTransitRef.current = inTransit;
-      }, []),
-      disableHoverableContent,
-      children
-    }
-  );
-};
-TooltipProvider$1.displayName = PROVIDER_NAME;
-var TOOLTIP_NAME = "Tooltip";
-var [TooltipContextProvider, useTooltipContext] = createTooltipContext(TOOLTIP_NAME);
-var Tooltip$1 = (props) => {
-  const {
-    __scopeTooltip,
-    children,
-    open: openProp,
-    defaultOpen = false,
-    onOpenChange,
-    disableHoverableContent: disableHoverableContentProp,
-    delayDuration: delayDurationProp
-  } = props;
-  const providerContext = useTooltipProviderContext(TOOLTIP_NAME, props.__scopeTooltip);
-  const popperScope = usePopperScope(__scopeTooltip);
-  const [trigger, setTrigger] = reactExports.useState(null);
-  const contentId = useId();
-  const openTimerRef = reactExports.useRef(0);
-  const disableHoverableContent = disableHoverableContentProp ?? providerContext.disableHoverableContent;
-  const delayDuration = delayDurationProp ?? providerContext.delayDuration;
-  const wasOpenDelayedRef = reactExports.useRef(false);
-  const [open = false, setOpen] = useControllableState({
-    prop: openProp,
-    defaultProp: defaultOpen,
-    onChange: (open2) => {
-      if (open2) {
-        providerContext.onOpen();
-        document.dispatchEvent(new CustomEvent(TOOLTIP_OPEN));
-      } else {
-        providerContext.onClose();
-      }
-      onOpenChange == null ? void 0 : onOpenChange(open2);
-    }
-  });
-  const stateAttribute = reactExports.useMemo(() => {
-    return open ? wasOpenDelayedRef.current ? "delayed-open" : "instant-open" : "closed";
-  }, [open]);
-  const handleOpen = reactExports.useCallback(() => {
-    window.clearTimeout(openTimerRef.current);
-    openTimerRef.current = 0;
-    wasOpenDelayedRef.current = false;
-    setOpen(true);
-  }, [setOpen]);
-  const handleClose = reactExports.useCallback(() => {
-    window.clearTimeout(openTimerRef.current);
-    openTimerRef.current = 0;
-    setOpen(false);
-  }, [setOpen]);
-  const handleDelayedOpen = reactExports.useCallback(() => {
-    window.clearTimeout(openTimerRef.current);
-    openTimerRef.current = window.setTimeout(() => {
-      wasOpenDelayedRef.current = true;
-      setOpen(true);
-      openTimerRef.current = 0;
-    }, delayDuration);
-  }, [delayDuration, setOpen]);
-  reactExports.useEffect(() => {
-    return () => {
-      if (openTimerRef.current) {
-        window.clearTimeout(openTimerRef.current);
-        openTimerRef.current = 0;
-      }
-    };
-  }, []);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2$3, { ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-    TooltipContextProvider,
-    {
-      scope: __scopeTooltip,
-      contentId,
-      open,
-      stateAttribute,
-      trigger,
-      onTriggerChange: setTrigger,
-      onTriggerEnter: reactExports.useCallback(() => {
-        if (providerContext.isOpenDelayed) handleDelayedOpen();
-        else handleOpen();
-      }, [providerContext.isOpenDelayed, handleDelayedOpen, handleOpen]),
-      onTriggerLeave: reactExports.useCallback(() => {
-        if (disableHoverableContent) {
-          handleClose();
-        } else {
-          window.clearTimeout(openTimerRef.current);
-          openTimerRef.current = 0;
-        }
-      }, [handleClose, disableHoverableContent]),
-      onOpen: handleOpen,
-      onClose: handleClose,
-      disableHoverableContent,
-      children
-    }
-  ) });
-};
-Tooltip$1.displayName = TOOLTIP_NAME;
-var TRIGGER_NAME = "TooltipTrigger";
-var TooltipTrigger$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeTooltip, ...triggerProps } = props;
-    const context = useTooltipContext(TRIGGER_NAME, __scopeTooltip);
-    const providerContext = useTooltipProviderContext(TRIGGER_NAME, __scopeTooltip);
-    const popperScope = usePopperScope(__scopeTooltip);
-    const ref = reactExports.useRef(null);
-    const composedRefs = useComposedRefs(forwardedRef, ref, context.onTriggerChange);
-    const isPointerDownRef = reactExports.useRef(false);
-    const hasPointerMoveOpenedRef = reactExports.useRef(false);
-    const handlePointerUp = reactExports.useCallback(() => isPointerDownRef.current = false, []);
-    reactExports.useEffect(() => {
-      return () => document.removeEventListener("pointerup", handlePointerUp);
-    }, [handlePointerUp]);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Anchor, { asChild: true, ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Primitive.button,
-      {
-        "aria-describedby": context.open ? context.contentId : void 0,
-        "data-state": context.stateAttribute,
-        ...triggerProps,
-        ref: composedRefs,
-        onPointerMove: composeEventHandlers(props.onPointerMove, (event) => {
-          if (event.pointerType === "touch") return;
-          if (!hasPointerMoveOpenedRef.current && !providerContext.isPointerInTransitRef.current) {
-            context.onTriggerEnter();
-            hasPointerMoveOpenedRef.current = true;
-          }
-        }),
-        onPointerLeave: composeEventHandlers(props.onPointerLeave, () => {
-          context.onTriggerLeave();
-          hasPointerMoveOpenedRef.current = false;
-        }),
-        onPointerDown: composeEventHandlers(props.onPointerDown, () => {
-          isPointerDownRef.current = true;
-          document.addEventListener("pointerup", handlePointerUp, { once: true });
-        }),
-        onFocus: composeEventHandlers(props.onFocus, () => {
-          if (!isPointerDownRef.current) context.onOpen();
-        }),
-        onBlur: composeEventHandlers(props.onBlur, context.onClose),
-        onClick: composeEventHandlers(props.onClick, context.onClose)
-      }
-    ) });
-  }
-);
-TooltipTrigger$1.displayName = TRIGGER_NAME;
-var PORTAL_NAME = "TooltipPortal";
-var [PortalProvider, usePortalContext] = createTooltipContext(PORTAL_NAME, {
-  forceMount: void 0
-});
-var CONTENT_NAME = "TooltipContent";
-var TooltipContent$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const portalContext = usePortalContext(CONTENT_NAME, props.__scopeTooltip);
-    const { forceMount = portalContext.forceMount, side = "top", ...contentProps } = props;
-    const context = useTooltipContext(CONTENT_NAME, props.__scopeTooltip);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: context.disableHoverableContent ? /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContentImpl, { side, ...contentProps, ref: forwardedRef }) : /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContentHoverable, { side, ...contentProps, ref: forwardedRef }) });
-  }
-);
-var TooltipContentHoverable = reactExports.forwardRef((props, forwardedRef) => {
-  const context = useTooltipContext(CONTENT_NAME, props.__scopeTooltip);
-  const providerContext = useTooltipProviderContext(CONTENT_NAME, props.__scopeTooltip);
-  const ref = reactExports.useRef(null);
-  const composedRefs = useComposedRefs(forwardedRef, ref);
-  const [pointerGraceArea, setPointerGraceArea] = reactExports.useState(null);
-  const { trigger, onClose } = context;
-  const content = ref.current;
-  const { onPointerInTransitChange } = providerContext;
-  const handleRemoveGraceArea = reactExports.useCallback(() => {
-    setPointerGraceArea(null);
-    onPointerInTransitChange(false);
-  }, [onPointerInTransitChange]);
-  const handleCreateGraceArea = reactExports.useCallback(
-    (event, hoverTarget) => {
-      const currentTarget = event.currentTarget;
-      const exitPoint = { x: event.clientX, y: event.clientY };
-      const exitSide = getExitSideFromRect(exitPoint, currentTarget.getBoundingClientRect());
-      const paddedExitPoints = getPaddedExitPoints(exitPoint, exitSide);
-      const hoverTargetPoints = getPointsFromRect(hoverTarget.getBoundingClientRect());
-      const graceArea = getHull([...paddedExitPoints, ...hoverTargetPoints]);
-      setPointerGraceArea(graceArea);
-      onPointerInTransitChange(true);
-    },
-    [onPointerInTransitChange]
-  );
-  reactExports.useEffect(() => {
-    return () => handleRemoveGraceArea();
-  }, [handleRemoveGraceArea]);
-  reactExports.useEffect(() => {
-    if (trigger && content) {
-      const handleTriggerLeave = (event) => handleCreateGraceArea(event, content);
-      const handleContentLeave = (event) => handleCreateGraceArea(event, trigger);
-      trigger.addEventListener("pointerleave", handleTriggerLeave);
-      content.addEventListener("pointerleave", handleContentLeave);
-      return () => {
-        trigger.removeEventListener("pointerleave", handleTriggerLeave);
-        content.removeEventListener("pointerleave", handleContentLeave);
-      };
-    }
-  }, [trigger, content, handleCreateGraceArea, handleRemoveGraceArea]);
-  reactExports.useEffect(() => {
-    if (pointerGraceArea) {
-      const handleTrackPointerGrace = (event) => {
-        const target = event.target;
-        const pointerPosition = { x: event.clientX, y: event.clientY };
-        const hasEnteredTarget = (trigger == null ? void 0 : trigger.contains(target)) || (content == null ? void 0 : content.contains(target));
-        const isPointerOutsideGraceArea = !isPointInPolygon(pointerPosition, pointerGraceArea);
-        if (hasEnteredTarget) {
-          handleRemoveGraceArea();
-        } else if (isPointerOutsideGraceArea) {
-          handleRemoveGraceArea();
-          onClose();
-        }
-      };
-      document.addEventListener("pointermove", handleTrackPointerGrace);
-      return () => document.removeEventListener("pointermove", handleTrackPointerGrace);
-    }
-  }, [trigger, content, pointerGraceArea, onClose, handleRemoveGraceArea]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContentImpl, { ...props, ref: composedRefs });
-});
-var [VisuallyHiddenContentContextProvider, useVisuallyHiddenContentContext] = createTooltipContext(TOOLTIP_NAME, { isInside: false });
-var TooltipContentImpl = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const {
-      __scopeTooltip,
-      children,
-      "aria-label": ariaLabel,
-      onEscapeKeyDown,
-      onPointerDownOutside,
-      ...contentProps
-    } = props;
-    const context = useTooltipContext(CONTENT_NAME, __scopeTooltip);
-    const popperScope = usePopperScope(__scopeTooltip);
-    const { onClose } = context;
-    reactExports.useEffect(() => {
-      document.addEventListener(TOOLTIP_OPEN, onClose);
-      return () => document.removeEventListener(TOOLTIP_OPEN, onClose);
-    }, [onClose]);
-    reactExports.useEffect(() => {
-      if (context.trigger) {
-        const handleScroll2 = (event) => {
-          const target = event.target;
-          if (target == null ? void 0 : target.contains(context.trigger)) onClose();
-        };
-        window.addEventListener("scroll", handleScroll2, { capture: true });
-        return () => window.removeEventListener("scroll", handleScroll2, { capture: true });
-      }
-    }, [context.trigger, onClose]);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      DismissableLayer,
-      {
-        asChild: true,
-        disableOutsidePointerEvents: false,
-        onEscapeKeyDown,
-        onPointerDownOutside,
-        onFocusOutside: (event) => event.preventDefault(),
-        onDismiss: onClose,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          Content$1,
-          {
-            "data-state": context.stateAttribute,
-            ...popperScope,
-            ...contentProps,
-            ref: forwardedRef,
-            style: {
-              ...contentProps.style,
-              // re-namespace exposed content custom properties
-              ...{
-                "--radix-tooltip-content-transform-origin": "var(--radix-popper-transform-origin)",
-                "--radix-tooltip-content-available-width": "var(--radix-popper-available-width)",
-                "--radix-tooltip-content-available-height": "var(--radix-popper-available-height)",
-                "--radix-tooltip-trigger-width": "var(--radix-popper-anchor-width)",
-                "--radix-tooltip-trigger-height": "var(--radix-popper-anchor-height)"
-              }
-            },
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Slottable, { children }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(VisuallyHiddenContentContextProvider, { scope: __scopeTooltip, isInside: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root$4, { id: context.contentId, role: "tooltip", children: ariaLabel || children }) })
-            ]
-          }
-        )
-      }
-    );
-  }
-);
-TooltipContent$1.displayName = CONTENT_NAME;
-var ARROW_NAME = "TooltipArrow";
-var TooltipArrow = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeTooltip, ...arrowProps } = props;
-    const popperScope = usePopperScope(__scopeTooltip);
-    const visuallyHiddenContentContext = useVisuallyHiddenContentContext(
-      ARROW_NAME,
-      __scopeTooltip
-    );
-    return visuallyHiddenContentContext.isInside ? null : /* @__PURE__ */ jsxRuntimeExports.jsx(Arrow, { ...popperScope, ...arrowProps, ref: forwardedRef });
-  }
-);
-TooltipArrow.displayName = ARROW_NAME;
-function getExitSideFromRect(point, rect) {
-  const top = Math.abs(rect.top - point.y);
-  const bottom = Math.abs(rect.bottom - point.y);
-  const right = Math.abs(rect.right - point.x);
-  const left = Math.abs(rect.left - point.x);
-  switch (Math.min(top, bottom, right, left)) {
-    case left:
-      return "left";
-    case right:
-      return "right";
-    case top:
-      return "top";
-    case bottom:
-      return "bottom";
-    default:
-      throw new Error("unreachable");
-  }
-}
-function getPaddedExitPoints(exitPoint, exitSide, padding = 5) {
-  const paddedExitPoints = [];
-  switch (exitSide) {
-    case "top":
-      paddedExitPoints.push(
-        { x: exitPoint.x - padding, y: exitPoint.y + padding },
-        { x: exitPoint.x + padding, y: exitPoint.y + padding }
-      );
-      break;
-    case "bottom":
-      paddedExitPoints.push(
-        { x: exitPoint.x - padding, y: exitPoint.y - padding },
-        { x: exitPoint.x + padding, y: exitPoint.y - padding }
-      );
-      break;
-    case "left":
-      paddedExitPoints.push(
-        { x: exitPoint.x + padding, y: exitPoint.y - padding },
-        { x: exitPoint.x + padding, y: exitPoint.y + padding }
-      );
-      break;
-    case "right":
-      paddedExitPoints.push(
-        { x: exitPoint.x - padding, y: exitPoint.y - padding },
-        { x: exitPoint.x - padding, y: exitPoint.y + padding }
-      );
-      break;
-  }
-  return paddedExitPoints;
-}
-function getPointsFromRect(rect) {
-  const { top, right, bottom, left } = rect;
-  return [
-    { x: left, y: top },
-    { x: right, y: top },
-    { x: right, y: bottom },
-    { x: left, y: bottom }
-  ];
-}
-function isPointInPolygon(point, polygon) {
-  const { x, y } = point;
-  let inside = false;
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const xi = polygon[i].x;
-    const yi = polygon[i].y;
-    const xj = polygon[j].x;
-    const yj = polygon[j].y;
-    const intersect = yi > y !== yj > y && x < (xj - xi) * (y - yi) / (yj - yi) + xi;
-    if (intersect) inside = !inside;
-  }
-  return inside;
-}
-function getHull(points) {
-  const newPoints = points.slice();
-  newPoints.sort((a, b) => {
-    if (a.x < b.x) return -1;
-    else if (a.x > b.x) return 1;
-    else if (a.y < b.y) return -1;
-    else if (a.y > b.y) return 1;
-    else return 0;
-  });
-  return getHullPresorted(newPoints);
-}
-function getHullPresorted(points) {
-  if (points.length <= 1) return points.slice();
-  const upperHull = [];
-  for (let i = 0; i < points.length; i++) {
-    const p = points[i];
-    while (upperHull.length >= 2) {
-      const q = upperHull[upperHull.length - 1];
-      const r2 = upperHull[upperHull.length - 2];
-      if ((q.x - r2.x) * (p.y - r2.y) >= (q.y - r2.y) * (p.x - r2.x)) upperHull.pop();
-      else break;
-    }
-    upperHull.push(p);
-  }
-  upperHull.pop();
-  const lowerHull = [];
-  for (let i = points.length - 1; i >= 0; i--) {
-    const p = points[i];
-    while (lowerHull.length >= 2) {
-      const q = lowerHull[lowerHull.length - 1];
-      const r2 = lowerHull[lowerHull.length - 2];
-      if ((q.x - r2.x) * (p.y - r2.y) >= (q.y - r2.y) * (p.x - r2.x)) lowerHull.pop();
-      else break;
-    }
-    lowerHull.push(p);
-  }
-  lowerHull.pop();
-  if (upperHull.length === 1 && lowerHull.length === 1 && upperHull[0].x === lowerHull[0].x && upperHull[0].y === lowerHull[0].y) {
-    return upperHull;
-  } else {
-    return upperHull.concat(lowerHull);
-  }
-}
-var Provider = TooltipProvider$1;
-var Root3 = Tooltip$1;
-var Trigger = TooltipTrigger$1;
-var Content2 = TooltipContent$1;
-const TooltipProvider = Provider;
-const Tooltip = Root3;
-const TooltipTrigger = Trigger;
-const TooltipContent = reactExports.forwardRef(({ className, sideOffset = 4, ...props }, ref) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-  Content2,
-  {
-    ref,
-    sideOffset,
-    className: cn(
-      "z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-      className
-    ),
-    ...props
-  }
-));
-TooltipContent.displayName = Content2.displayName;
 function DismissedCarousel() {
   const { dismissedItems, unDismissItem } = useDismissed();
   const [isMounted, setIsMounted] = reactExports.useState(false);
@@ -25420,36 +25844,6 @@ function WatchHistoryPage() {
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-12", children: /* @__PURE__ */ jsxRuntimeExports.jsx(DismissedCarousel, {}) })
   ] });
-}
-function AddToWatchlistButton({ video, className, variant, size: size2, ...props }) {
-  const { watchlist, addToWatchlist: addToWatchlist2, removeFromWatchlist: removeFromWatchlist2 } = useWatchlist();
-  const isInWatchlist = !!watchlist[`${video.media_type}-${video.id}`];
-  const handleToggleWatchlist = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isInWatchlist) {
-      removeFromWatchlist2(video.id, video.media_type);
-    } else {
-      addToWatchlist2(video);
-    }
-  };
-  const tooltipText = isInWatchlist ? "Remove from Watchlist" : "Add to Watchlist";
-  const Icon2 = isInWatchlist ? Check : Plus;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Tooltip, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Button,
-      {
-        variant: variant || "ghost",
-        size: size2 || "icon",
-        onClick: handleToggleWatchlist,
-        className: cn("text-white hover:bg-white/20", { "bg-primary/80 hover:bg-primary": isInWatchlist }, className),
-        "aria-label": tooltipText,
-        ...props,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(Icon2, { className: "h-5 w-5" })
-      }
-    ) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: tooltipText }) })
-  ] }) });
 }
 const Dialog = Root$7;
 const DialogPortal = Portal$1;
@@ -27716,102 +28110,107 @@ const Progress = reactExports.forwardRef(({ className, value, ...props }, ref) =
   }
 ));
 Progress.displayName = Root.displayName;
-const isElectron$1 = typeof navigator !== "undefined" && navigator.userAgent.toLowerCase().includes("electron");
+const badgeVariants = cva(
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        outline: "text-foreground"
+      }
+    },
+    defaultVariants: {
+      variant: "default"
+    }
+  }
+);
+function Badge({ className, variant, ...props }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: cn(badgeVariants({ variant }), className), ...props });
+}
 const formatFileSize = (bytes) => {
-  if (bytes === 0) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  if (!bytes && bytes !== 0) return "�";
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  const mb = kb / 1024;
+  if (mb < 1024) return `${mb.toFixed(1)} MB`;
+  const gb = mb / 1024;
+  return `${gb.toFixed(2)} GB`;
 };
 const formatDuration = (ms) => {
-  const seconds = Math.floor(ms / 1e3);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  if (hours > 0) return `${hours}h ${minutes % 60}m`;
-  if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
-  return `${seconds}s`;
+  if (!ms) return "0s";
+  const s = Math.floor(ms / 1e3);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  const rem = s % 60;
+  return `${m}m ${rem}s`;
 };
 const statusLabels = {
-  idle: "Waiting",
-  fetching: "Fetching Stream...",
-  parsing: "Analyzing...",
-  downloading: "Downloading...",
-  merging: "Merging Segments...",
-  converting: "Converting to MKV...",
+  idle: "Idle",
+  fetching: "Fetching",
+  parsing: "Parsing",
+  downloading: "Downloading",
+  merging: "Merging",
+  converting: "Converting",
   complete: "Complete",
-  error: "Failed",
+  error: "Error",
   cancelled: "Cancelled"
 };
 const StatusIcon = ({ status }) => {
-  switch (status) {
-    case "complete":
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheckBig, { className: "h-5 w-5 text-green-500" });
-    case "error":
-    case "cancelled":
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(CircleX, { className: "h-5 w-5 text-red-500" });
-    case "downloading":
-    case "fetching":
-    case "parsing":
-    case "merging":
-    case "converting":
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-5 w-5 text-blue-500 animate-spin" });
-    default:
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "h-5 w-5 text-muted-foreground" });
-  }
+  if (status === "complete") return /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheckBig, { className: "h-6 w-6 text-green-400" });
+  if (status === "error") return /* @__PURE__ */ jsxRuntimeExports.jsx(CircleX, { className: "h-6 w-6 text-red-400" });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Badge, { variant: "secondary", children: statusLabels[status] || status });
 };
-function QualityBadge({ download }) {
-  const displayQuality = download.estimatedQuality || download.detectedQuality || download.resolution || download.quality;
-  if (!displayQuality || displayQuality === "Default Quality") return null;
-  let badgeClass = "bg-gray-500/20 text-gray-400 border-gray-500/30";
-  const q = displayQuality.toLowerCase();
-  if (q.includes("1080") || q.includes("fhd")) {
-    badgeClass = "bg-blue-500/20 text-blue-400 border-blue-500/30";
-  } else if (q.includes("720") || q.includes("hd")) {
-    badgeClass = "bg-green-500/20 text-green-400 border-green-500/30";
-  } else if (q.includes("480") || q.includes("sd")) {
-    badgeClass = "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
-  } else if (q.includes("360") || q.includes("low")) {
-    badgeClass = "bg-orange-500/20 text-orange-400 border-orange-500/30";
-  } else if (q.includes("4k") || q.includes("2160")) {
-    badgeClass = "bg-purple-500/20 text-purple-400 border-purple-500/30";
-  } else if (q.includes("240")) {
-    badgeClass = "bg-red-500/20 text-red-400 border-red-500/30";
-  }
-  const bitrateText = download.bitrateMbps ? ` (${download.bitrateMbps.toFixed(1)} Mbps)` : "";
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: `inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold border ${badgeClass}`, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Monitor, { className: "h-3 w-3" }),
-    displayQuality,
-    bitrateText
-  ] });
-}
+const QualityBadge = ({ download }) => {
+  const q = (download == null ? void 0 : download.estimatedQuality) || (download == null ? void 0 : download.detectedQuality) || (download == null ? void 0 : download.quality) || "";
+  if (!q) return null;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Badge, { variant: "outline", children: String(q) });
+};
 function DownloadsPage() {
+  getDownloadAPI();
   const [downloads, setDownloads] = reactExports.useState([]);
-  reactExports.useEffect(() => {
-    if (!isElectron$1) return;
-    const api = window.electronDownload;
-    if (!api) return;
-    api.getDownloadsList().then((list) => {
-      console.log("[DOWNLOADS] Loaded downloads:", list);
-      setDownloads(list || []);
-    });
-    const unsub = api.onDownloadsUpdated((list) => {
-      console.log("[DOWNLOADS] Updated downloads:", list);
-      setDownloads(list || []);
-    });
-    return () => unsub == null ? void 0 : unsub();
+  const [removeId, setRemoveId] = reactExports.useState(null);
+  const [removeDeleteFile, setRemoveDeleteFile] = reactExports.useState(false);
+  const loadList = reactExports.useCallback(async () => {
+    const apiLocal = getDownloadAPI();
+    const list = await apiLocal.getDownloadsList();
+    setDownloads(list || []);
   }, []);
-  const handleRemove = async (id) => {
-    const api = window.electronDownload;
-    if (api) {
-      await api.removeDownload(id);
-    }
+  reactExports.useEffect(() => {
+    var _a;
+    loadList();
+    const apiLocal = getDownloadAPI();
+    const unsub = (_a = apiLocal.onDownloadsUpdated) == null ? void 0 : _a.call(apiLocal, (list) => {
+      setDownloads(list || []);
+    });
+    return () => {
+      try {
+        unsub == null ? void 0 : unsub();
+      } catch {
+      }
+    };
+  }, [loadList]);
+  const handleRemove = async (id, deleteFile = false) => {
+    setRemoveDeleteFile(deleteFile);
+    setRemoveId(id);
+  };
+  const confirmRemove = async () => {
+    if (!removeId) return;
+    const apiLocal = getDownloadAPI();
+    await apiLocal.removeDownload(removeId, removeDeleteFile);
+    setRemoveId(null);
+    setRemoveDeleteFile(false);
+  };
+  const cancelRemove = () => {
+    setRemoveId(null);
+    setRemoveDeleteFile(false);
   };
   const handleClearCompleted = async () => {
-    const api = window.electronDownload;
-    if (api) {
-      await api.clearCompletedDownloads();
-    }
+    const apiLocal = getDownloadAPI();
+    await apiLocal.clearCompletedDownloads();
+    loadList();
   };
   const activeDownloads = downloads.filter(
     (d) => d.status === "downloading" || d.status === "fetching" || d.status === "parsing" || d.status === "merging" || d.status === "converting"
@@ -27830,24 +28229,22 @@ function DownloadsPage() {
         "Clear Completed"
       ] })
     ] }),
-    !isElectron$1 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-lg border bg-yellow-500/10 border-yellow-500/30 p-8 text-center", children: [
+    !isDownloadAvailable() ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-lg border bg-yellow-500/10 border-yellow-500/30 p-8 text-center", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "h-12 w-12 mx-auto mb-4 text-yellow-500 opacity-50" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-yellow-400 font-medium text-lg", children: "Downloads require the desktop app" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground mt-2", children: "The download feature is only available in the Electron desktop application." })
-    ] }),
-    isElectron$1 && downloads.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-lg border border-dashed p-16 text-center", children: [
+    ] }) : downloads.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-lg border border-dashed p-16 text-center", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "h-16 w-16 mx-auto mb-4 opacity-20" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-xl font-medium mb-2", children: "No downloads yet" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground max-w-md mx-auto", children: "When you download a video, it will appear here. You can track progress and access completed downloads." })
-    ] }),
-    isElectron$1 && downloads.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-8", children: [
+    ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-8", children: [
       activeDownloads.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4", children: [
           "Active Downloads (",
           activeDownloads.length,
           ")"
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3", children: activeDownloads.map((download) => /* @__PURE__ */ jsxRuntimeExports.jsx(DownloadCard, { download, onRemove: handleRemove }, download.id)) })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3", children: activeDownloads.map((download) => /* @__PURE__ */ jsxRuntimeExports.jsx(DownloadCard, { download, onRequestRemove: (id) => handleRemove(id, false), onRequestDelete: (id) => handleRemove(id, true) }, download.id)) })
       ] }),
       completedDownloads.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4", children: [
@@ -27855,14 +28252,34 @@ function DownloadsPage() {
           completedDownloads.length,
           ")"
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3", children: completedDownloads.map((download) => /* @__PURE__ */ jsxRuntimeExports.jsx(DownloadCard, { download, onRemove: handleRemove }, download.id)) })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3", children: completedDownloads.map((download) => /* @__PURE__ */ jsxRuntimeExports.jsx(DownloadCard, { download, onRequestRemove: (id) => handleRemove(id, false), onRequestDelete: (id) => handleRemove(id, true) }, download.id)) })
       ] })
-    ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialog, { open: !!removeId, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogContent, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogHeader, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogTitle, { children: "Remove download?" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogDescription, { children: "Do you want to remove this download from the list, or delete the file from disk?" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogFooter, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogCancel, { onClick: cancelRemove, children: "Cancel" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogAction, { onClick: async () => {
+          const a = getDownloadAPI();
+          await a.removeDownload(removeId, false);
+          confirmRemove();
+        }, children: "Remove from list" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogAction, { onClick: async () => {
+          const a = getDownloadAPI();
+          await a.removeDownload(removeId, true);
+          confirmRemove();
+        }, children: "Delete file & remove" })
+      ] })
+    ] }) })
   ] }) });
 }
-function DownloadCard({ download, onRemove }) {
+function DownloadCard({ download, onRequestRemove, onRequestDelete }) {
   const elapsed = Date.now() - download.startTime;
   const isActive = ["downloading", "fetching", "parsing", "merging", "converting"].includes(download.status);
+  const apiLocal = getDownloadAPI();
   return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `rounded-xl border p-5 transition-colors ${download.status === "complete" ? "bg-green-500/5 border-green-500/20" : download.status === "error" ? "bg-red-500/5 border-red-500/20" : "bg-card hover:bg-accent/50"}`, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-4", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx(StatusIcon, { status: download.status }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 min-w-0", children: [
@@ -27874,16 +28291,13 @@ function DownloadCard({ download, onRemove }) {
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "flex items-center gap-1", children: statusLabels[download.status] }) })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Button,
-          {
-            variant: "ghost",
-            size: "icon",
-            className: "h-8 w-8 flex-shrink-0 hover:bg-red-500/20 hover:text-red-400",
-            onClick: () => onRemove(download.id),
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "h-4 w-4" })
-          }
-        )
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "ghost", size: "icon", className: "h-8 w-8 flex-shrink-0 hover:bg-red-500/20 hover:text-red-400", onClick: () => onRequestRemove(download.id), children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "h-4 w-4" }) }),
+          download.filePath && /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "ghost", size: "icon", className: "h-8 w-8", onClick: () => {
+            var _a;
+            (_a = apiLocal.openFile) == null ? void 0 : _a.call(apiLocal, download.filePath);
+          }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(HardDrive, { className: "h-4 w-4" }) })
+        ] })
       ] }),
       isActive && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 space-y-2", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between text-sm", children: [
@@ -28127,4 +28541,4 @@ function App() {
 ReactDOM$1.createRoot(document.getElementById("root")).render(
   /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) })
 );
-//# sourceMappingURL=index-pBk988bY.js.map
+//# sourceMappingURL=index-CtCouRAc.js.map
