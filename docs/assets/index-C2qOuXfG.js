@@ -18976,19 +18976,43 @@ async function searchAnime(query) {
   return data.data;
 }
 const EXPLICIT_RATINGS = [
+  // MPAA Movie Ratings (US)
   "R",
+  "NC-17",
+  // TV Ratings
+  "TV-MA",
+  "TV-14",
+  // Can contain strong sexual dialogue/content
+  // Anime/MyAnimeList Ratings
   "R - 17+",
   "R+",
-  "NC-17",
-  "TV-MA",
-  "Rx",
-  "Hentai",
-  "Adult",
   "MA",
-  // MyAnimeList Mature Audiences rating
+  // MyAnimeList Mature Audiences
+  "Rx",
+  // Explicit/Ecchi
+  "Hentai",
+  // Pornographic anime
+  // Generic Adult/Restricted Ratings
+  "Adult",
+  "Restricted",
+  "RESTRICTED",
+  // Age-based Ratings
+  "17+",
+  "17 Plus",
+  "Rated 17",
   "18",
   "18+",
-  "Restricted"
+  "18 Plus",
+  "Rated 18",
+  "21+",
+  "Adults Only",
+  // International Variants
+  "M/PG",
+  // Australian/NZ
+  "M",
+  // Some regions
+  "UA"
+  // Indian rating (but can have adult content)
 ];
 const animeRatingCache = /* @__PURE__ */ new Map();
 function tmdbMediaToBasicVideo(media) {
@@ -28560,4 +28584,4 @@ function App() {
 ReactDOM$1.createRoot(document.getElementById("root")).render(
   /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) })
 );
-//# sourceMappingURL=index-RlMjWxHC.js.map
+//# sourceMappingURL=index-C2qOuXfG.js.map

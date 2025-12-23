@@ -85,16 +85,39 @@ export type CustomVideoData = {
 export type VideoSource = 'default' | 'vidsrc' | 'godrive' | 'mostream';
 
 export const EXPLICIT_RATINGS = [
-  'R', 
-  'R - 17+', 
-  'R+',
+  // MPAA Movie Ratings (US)
+  'R',
   'NC-17',
+  
+  // TV Ratings
   'TV-MA',
-  'Rx', 
-  'Hentai', 
+  'TV-14',  // Can contain strong sexual dialogue/content
+  
+  // Anime/MyAnimeList Ratings
+  'R - 17+',
+  'R+',
+  'MA',           // MyAnimeList Mature Audiences
+  'Rx',           // Explicit/Ecchi
+  'Hentai',       // Pornographic anime
+  
+  // Generic Adult/Restricted Ratings
   'Adult',
-  'MA',      // MyAnimeList Mature Audiences rating
+  'Restricted',
+  'RESTRICTED',
+  
+  // Age-based Ratings
+  '17+',
+  '17 Plus',
+  'Rated 17',
   '18',
   '18+',
-  'Restricted'
+  '18 Plus',
+  'Rated 18',
+  '21+',
+  'Adults Only',
+  
+  // International Variants
+  'M/PG',         // Australian/NZ
+  'M',            // Some regions
+  'UA',           // Indian rating (but can have adult content)
 ];
