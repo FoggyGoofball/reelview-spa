@@ -4,6 +4,8 @@ import { getVideosByGenre, tmdbMediaToVideo } from '@/lib/api';
 import type { Video } from '@/lib/data';
 import { VideoCard } from '@/components/video/video-card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { ChevronDown } from 'lucide-react';
 
 export function GenreGridPage({ mediaType }: { mediaType: 'movie' | 'tv' | 'anime' }) {
   const location = useLocation();
@@ -14,36 +16,49 @@ export function GenreGridPage({ mediaType }: { mediaType: 'movie' | 'tv' | 'anim
 
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [seen, setSeen] = useState<Set<string>>(new Set());
 
   // Determine if this is the Adult Animation genre page
   const isAdultAnimationGenre = mediaType === 'tv' && genreId === '16-adult';
   const isRegularAnimationGenre = mediaType === 'tv' && genreId === '16';
 
-  useEffect(() => {
-    let cancelled = false;
-    async function fetchGenre() {
-      setLoading(true);
-      setError(null);
-      let page = 1;
-      const results: Video[] = [];
-      const seen = new Set<string>();
-      try {
-        while (results.length < 40 && page <= 5) {
-          let raw;
-          try {
-            // For Adult Animation, fetch from regular animation genre but filter explicitly
-            const fetchGenreId = isAdultAnimationGenre ? '16' : genreId;
-            raw = await getVideosByGenre(fetchGenreId!, mediaType, isKeyword, page);
-          } catch (fetchErr: any) {
-            console.error('[GENRE GRID] Failed to fetch page', page, 'for', genreId, 'mediaType', mediaType, fetchErr);
-            setError(`Failed to fetch data (page ${page}).`);
+  const ITEMS_PER_PAGE = 40;
+  const MAX_PAGES = 20; // Prevent infinite requests
+
+  const fetchPage = async (pageNum: number, append: boolean = false) => {
+    if (!pageNum || !genreId) return;
+    
+    const isLoading = append ? setLoadingMore : setLoading;
+    isLoading(true);
+    setError(null);
+
+    try {
+      let results: Video[] = append ? videos : [];
+      let newSeen = append ? seen : new Set<string>();
+      let itemsNeeded = ITEMS_PER_PAGE;
+      let apiPage = pageNum;
+
+      while (itemsNeeded > 0 && apiPage <= MAX_PAGES && hasMore) {
+        try {
+          // For Adult Animation, fetch from regular animation genre but filter explicitly
+          const fetchGenreId = isAdultAnimationGenre ? '16' : genreId;
+          const raw = await getVideosByGenre(fetchGenreId!, mediaType, isKeyword, apiPage);
+
+          if (!raw || raw.length === 0) {
+            setHasMore(false);
             break;
           }
-          if (!raw || raw.length === 0) break;
+
           for (const basic of raw) {
+            if (itemsNeeded <= 0) break;
+
             const key = `${mediaType}-${basic.id}`;
-            if (seen.has(key)) continue;
+            if (newSeen.has(key)) continue;
+
             try {
               const enriched = await tmdbMediaToVideo(basic);
               if (enriched) {
@@ -77,28 +92,46 @@ export function GenreGridPage({ mediaType }: { mediaType: 'movie' | 'tv' | 'anim
                 }
                 
                 results.push(enriched);
-                seen.add(key);
+                newSeen.add(key);
+                itemsNeeded--;
               }
             } catch (e) {
               console.error('[GENRE GRID] Failed to enrich video', basic?.id, e);
             }
-            if (results.length >= 40) break;
           }
-          page++;
+          
+          apiPage++;
+        } catch (fetchErr: any) {
+          console.error('[GENRE GRID] Failed to fetch page', apiPage, 'for', genreId, 'mediaType', mediaType, fetchErr);
+          setError(`Failed to fetch data (page ${apiPage}).`);
+          break;
         }
-      } catch (e: any) {
-        console.error('[GENRE GRID] Unexpected error:', e);
-        setError('Unexpected error while fetching genre data.');
       }
-      if (!cancelled) {
-        setVideos(results);
-        setLoading(false);
-      }
+
+      setVideos(results);
+      setSeen(newSeen);
+      setHasMore(itemsNeeded > 0 && apiPage <= MAX_PAGES); // Has more if we got full page and haven't hit max
+    } catch (e: any) {
+      console.error('[GENRE GRID] Unexpected error:', e);
+      setError('Unexpected error while fetching genre data.');
+    } finally {
+      isLoading(false);
     }
-    if (genreId) fetchGenre();
-    else setError('No genre specified');
-    return () => { cancelled = true; };
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setSeen(new Set());
+    setVideos([]);
+    setHasMore(true);
+    fetchPage(1, false);
   }, [genreId, genreName, isKeyword, mediaType, isAdultAnimationGenre, isRegularAnimationGenre]);
+
+  const handleLoadMore = () => {
+    const nextPage = currentPage + 1;
+    setCurrentPage(nextPage);
+    fetchPage(nextPage, true);
+  };
 
   return (
     <div className="container max-w-screen-2xl py-8 md:py-12">
@@ -108,18 +141,49 @@ export function GenreGridPage({ mediaType }: { mediaType: 'movie' | 'tv' | 'anim
           <strong>Error:</strong> {error}
         </div>
       )}
-      {loading ? (
+      {loading && videos.length === 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {Array.from({ length: 20 }).map((_, i) => (
             <Skeleton key={i} className="aspect-[2/3] w-full rounded-lg" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-          {videos.map(video => (
-            <VideoCard key={`${video.media_type}-${video.id}`} video={video} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-8">
+            {videos.map(video => (
+              <VideoCard key={`${video.media_type}-${video.id}`} video={video} />
+            ))}
+          </div>
+          
+          {hasMore && (
+            <div className="flex justify-center mt-12">
+              <Button
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                size="lg"
+                className="gap-2"
+              >
+                {loadingMore ? (
+                  <>
+                    <span className="animate-spin">?</span>
+                    Loading More...
+                  </>
+                ) : (
+                  <>
+                    Load More
+                    <ChevronDown className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+          
+          {!hasMore && videos.length > 0 && (
+            <div className="text-center mt-12 text-muted-foreground">
+              No more {genreName.toLowerCase()} to load
+            </div>
+          )}
+        </>
       )}
     </div>
   );

@@ -28366,32 +28366,37 @@ function GenreGridPage({ mediaType }) {
   const isKeyword = params.get("is_keyword") === "1";
   const [videos, setVideos] = reactExports.useState([]);
   const [loading, setLoading] = reactExports.useState(true);
+  const [loadingMore, setLoadingMore] = reactExports.useState(false);
   const [error, setError] = reactExports.useState(null);
+  const [currentPage, setCurrentPage] = reactExports.useState(1);
+  const [hasMore, setHasMore] = reactExports.useState(true);
+  const [seen, setSeen] = reactExports.useState(/* @__PURE__ */ new Set());
   const isAdultAnimationGenre = mediaType === "tv" && genreId === "16-adult";
   const isRegularAnimationGenre = mediaType === "tv" && genreId === "16";
-  reactExports.useEffect(() => {
-    let cancelled = false;
-    async function fetchGenre2() {
-      setLoading(true);
-      setError(null);
-      let page = 1;
-      const results = [];
-      const seen = /* @__PURE__ */ new Set();
-      try {
-        while (results.length < 40 && page <= 5) {
-          let raw;
-          try {
-            const fetchGenreId = isAdultAnimationGenre ? "16" : genreId;
-            raw = await getVideosByGenre(fetchGenreId, mediaType, isKeyword, page);
-          } catch (fetchErr) {
-            console.error("[GENRE GRID] Failed to fetch page", page, "for", genreId, "mediaType", mediaType, fetchErr);
-            setError(`Failed to fetch data (page ${page}).`);
+  const ITEMS_PER_PAGE = 40;
+  const MAX_PAGES = 20;
+  const fetchPage = async (pageNum, append = false) => {
+    if (!pageNum || !genreId) return;
+    const isLoading = append ? setLoadingMore : setLoading;
+    isLoading(true);
+    setError(null);
+    try {
+      let results = append ? videos : [];
+      let newSeen = append ? seen : /* @__PURE__ */ new Set();
+      let itemsNeeded = ITEMS_PER_PAGE;
+      let apiPage = pageNum;
+      while (itemsNeeded > 0 && apiPage <= MAX_PAGES && hasMore) {
+        try {
+          const fetchGenreId = isAdultAnimationGenre ? "16" : genreId;
+          const raw = await getVideosByGenre(fetchGenreId, mediaType, isKeyword, apiPage);
+          if (!raw || raw.length === 0) {
+            setHasMore(false);
             break;
           }
-          if (!raw || raw.length === 0) break;
           for (const basic of raw) {
+            if (itemsNeeded <= 0) break;
             const key = `${mediaType}-${basic.id}`;
-            if (seen.has(key)) continue;
+            if (newSeen.has(key)) continue;
             try {
               const enriched = await tmdbMediaToVideo(basic);
               if (enriched) {
@@ -28410,30 +28415,42 @@ function GenreGridPage({ mediaType }) {
                   }
                 }
                 results.push(enriched);
-                seen.add(key);
+                newSeen.add(key);
+                itemsNeeded--;
               }
             } catch (e) {
               console.error("[GENRE GRID] Failed to enrich video", basic == null ? void 0 : basic.id, e);
             }
-            if (results.length >= 40) break;
           }
-          page++;
+          apiPage++;
+        } catch (fetchErr) {
+          console.error("[GENRE GRID] Failed to fetch page", apiPage, "for", genreId, "mediaType", mediaType, fetchErr);
+          setError(`Failed to fetch data (page ${apiPage}).`);
+          break;
         }
-      } catch (e) {
-        console.error("[GENRE GRID] Unexpected error:", e);
-        setError("Unexpected error while fetching genre data.");
       }
-      if (!cancelled) {
-        setVideos(results);
-        setLoading(false);
-      }
+      setVideos(results);
+      setSeen(newSeen);
+      setHasMore(itemsNeeded > 0 && apiPage <= MAX_PAGES);
+    } catch (e) {
+      console.error("[GENRE GRID] Unexpected error:", e);
+      setError("Unexpected error while fetching genre data.");
+    } finally {
+      isLoading(false);
     }
-    if (genreId) fetchGenre2();
-    else setError("No genre specified");
-    return () => {
-      cancelled = true;
-    };
+  };
+  reactExports.useEffect(() => {
+    setCurrentPage(1);
+    setSeen(/* @__PURE__ */ new Set());
+    setVideos([]);
+    setHasMore(true);
+    fetchPage(1, false);
   }, [genreId, genreName, isKeyword, mediaType, isAdultAnimationGenre, isRegularAnimationGenre]);
+  const handleLoadMore = () => {
+    const nextPage = currentPage + 1;
+    setCurrentPage(nextPage);
+    fetchPage(nextPage, true);
+  };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "container max-w-screen-2xl py-8 md:py-12", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-3xl md:text-4xl font-bold mb-8 text-red-500", children: genreName || "Genre" }),
     error && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-4 mb-6 rounded bg-red-600/10 border border-red-600/20 text-red-500", children: [
@@ -28441,7 +28458,30 @@ function GenreGridPage({ mediaType }) {
       " ",
       error
     ] }),
-    loading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6", children: Array.from({ length: 20 }).map((_, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "aspect-[2/3] w-full rounded-lg" }, i)) }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6", children: videos.map((video) => /* @__PURE__ */ jsxRuntimeExports.jsx(VideoCard, { video }, `${video.media_type}-${video.id}`)) })
+    loading && videos.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6", children: Array.from({ length: 20 }).map((_, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "aspect-[2/3] w-full rounded-lg" }, i)) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-8", children: videos.map((video) => /* @__PURE__ */ jsxRuntimeExports.jsx(VideoCard, { video }, `${video.media_type}-${video.id}`)) }),
+      hasMore && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-center mt-12", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button,
+        {
+          onClick: handleLoadMore,
+          disabled: loadingMore,
+          size: "lg",
+          className: "gap-2",
+          children: loadingMore ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "animate-spin", children: "?" }),
+            "Loading More..."
+          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            "Load More",
+            /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "h-4 w-4" })
+          ] })
+        }
+      ) }),
+      !hasMore && videos.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center mt-12 text-muted-foreground", children: [
+        "No more ",
+        genreName.toLowerCase(),
+        " to load"
+      ] })
+    ] })
   ] });
 }
 function MovieGenrePage() {
@@ -28584,4 +28624,4 @@ function App() {
 ReactDOM$1.createRoot(document.getElementById("root")).render(
   /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) })
 );
-//# sourceMappingURL=index-C2qOuXfG.js.map
+//# sourceMappingURL=index-C9ZVwYkc.js.map
