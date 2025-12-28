@@ -85,8 +85,16 @@ jobs:
             exit 1
           fi
           
+          cp docs/chromecast-receiver.html fresh-migrated/dist/chromecast-receiver.html
+          if [ $? -eq 0 ]; then
+            echo "✓ chromecast-receiver.html copied successfully"
+          else
+            echo "✗ Failed to copy chromecast-receiver.html"
+            exit 1
+          fi
+          
           echo -e "\nVerifying files in dist:"
-          ls -la fresh-migrated/dist/ | grep -E "404|nojekyll|index.html"
+          ls -la fresh-migrated/dist/ | grep -E "404|nojekyll|chromecast|index.html"
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
