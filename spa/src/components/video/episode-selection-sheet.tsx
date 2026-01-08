@@ -50,9 +50,9 @@ export function EpisodeSelectionSheet({
   }
 
   const isAnime = video.media_type === 'anime';
-  const history = getWatchHistory();
+  const history = getWatchHistory() || {};
   const historyKey = video.mal_id ? `mal-${video.mal_id}` : `tmdb-${video.id}`;
-  const watchedEpisodes = history[historyKey]?.show_progress || {};
+  const watchedEpisodes = (history && history[historyKey]?.show_progress) || {};
 
   const seasonsToDisplay = isAnime && video.episodes && (!video.seasons || video.seasons.length === 0)
     ? [{ season_number: 1, episode_count: video.episodes, name: 'Episodes' }]
@@ -61,7 +61,7 @@ export function EpisodeSelectionSheet({
   const isEpisodeWatched = (season: number, episode: number): boolean => {
     const seasonKey = String(season);
     const episodeKey = String(episode);
-    return seasonKey in watchedEpisodes && episodeKey in watchedEpisodes[seasonKey];
+    return watchedEpisodes?.[seasonKey]?.[episodeKey] !== undefined;
   };
 
   return (

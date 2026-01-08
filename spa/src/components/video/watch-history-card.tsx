@@ -63,7 +63,7 @@ export function WatchHistoryCard({
     navigate(detailHref);
   };
 
-  const percentage = item.progress
+  const percentage = item.progress && item.progress.duration > 0
     ? (item.progress.watched / item.progress.duration) * 100
     : 0;
 

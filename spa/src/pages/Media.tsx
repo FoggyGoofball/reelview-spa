@@ -293,7 +293,7 @@ function MediaDetailsPageContent() {
                               // Check if episode has been watched
                               const seasonKey = String(season.season_number);
                               const episodeKey = String(epNum);
-                              const episodeWatched = seasonKey in lastWatched?.show_progress && episodeKey in lastWatched.show_progress[seasonKey];
+                              const episodeWatched = lastWatched?.show_progress?.[seasonKey]?.[episodeKey] !== undefined;
 
                               return (
                                 <div key={epNum} className="border-b border-border pb-4 last:border-b-0">
