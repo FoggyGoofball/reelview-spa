@@ -25,7 +25,11 @@ export function getDownloadAPI(): DownloadAPI {
   if (electronApi) return electronApi;
   if (capacitorPresent) {
     const capacitorApi = (window as any).Capacitor?.Plugins?.HLSDownloader as DownloadAPI | undefined;
-    if (capacitorApi) return capacitorApi;
+    if (capacitorApi) {
+      console.log('[DOWNLOAD] Using Capacitor HLSDownloaderPlugin');
+      return capacitorApi;
+    }
+    console.warn('[DOWNLOAD] Capacitor present but HLSDownloader plugin not available');
   }
 
   const fallback: DownloadAPI = {
@@ -49,7 +53,12 @@ export function getDownloadAPI(): DownloadAPI {
 }
 
 export function isDownloadAvailable(): boolean {
-  return !!electronApi || !!capacitorPresent;
+  const available = !!electronApi || !!capacitorPresent;
+  if (!available && typeof window !== 'undefined') {
+    const api = (window as any).Capacitor?.Plugins?.HLSDownloader;
+    if (api) return true;
+  }
+  return available;
 }
 
 export function getPlatform(): 'electron' | 'capacitor' | 'web' | 'unknown' {
