@@ -23,6 +23,16 @@ export function getWatchHistory(): Record<string, WatchProgress> {
   }
 }
 
+export function setWatchHistory(history: Record<string, WatchProgress>) {
+  if (isServer()) return;
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history || {}));
+    window.dispatchEvent(new CustomEvent('history-updated', { detail: history || {} }));
+  } catch (error) {
+    console.error('Failed to set watch history', error);
+  }
+}
+
 export function saveWatchProgress(progress: WatchProgress) {
     if (isServer() || (!progress.id && !progress.mal_id)) {
         return;
