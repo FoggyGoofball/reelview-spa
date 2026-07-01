@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { Video, CustomVideoData } from '@/lib/data';
 import { getAnimeEpisodes, type JikanEpisode } from '@/lib/jikan';
@@ -9,9 +9,12 @@ import { tmdbMediaToVideo } from '@/lib/api';
 import { getCustomVideoData, updateWatchPositionOnNavigate } from '@/lib/client-api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VidlinkPlayer } from '@/components/video/vidlink-player';
+import { DirectStreamPlayer } from '@/components/video/direct-stream-player';
 import { WatchHeader } from '@/components/video/watch-header';
 import { EpisodeSelectionSheet } from '@/components/video/episode-selection-sheet';
 import { useSource } from '@/context/source-context';
+import { apiUrl } from '@/lib/api-base';
+import type { ResolvedStream } from '@/components/video/stream-source-selector';
 
 function WatchPageContent() {
   const navigate = useNavigate();
@@ -30,9 +33,18 @@ function WatchPageContent() {
   const [currentEpisode, setCurrentEpisode] = useState(initialEpisode || 1);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const resolveSafetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [animeEpisodeDetails, setAnimeEpisodeDetails] = useState<JikanEpisode[]>([]);
   const [tvSeasonDetails, setTvSeasonDetails] = useState<Record<number, TMDBEpisode[]>>({});
   const { source } = useSource();
+  const [resolvedStreams, setResolvedStreams] = useState<ResolvedStream[]>([]);
+  const [selectedStreamUrl, setSelectedStreamUrl] = useState<string | null>(null);
+  const [isResolving, setIsResolving] = useState(false);
+
+  // Direct URL from Search Direct Links modal
+  const directUrlParam = params.get('directUrl');
 
   useEffect(() => {
     if (mediaType && mediaType !== 'movie' && (!initialSeason || !initialEpisode)) {
@@ -118,48 +130,169 @@ function WatchPageContent() {
     fetchData();
   }, [tmdbId, mediaType, applyCustomData]);
 
+  // Handle a directUrl passed from the Search Direct Links modal.
+  // This must work regardless of the currently selected source so that
+  // clicking "Open" on a resolved link always plays that link.
+  useEffect(() => {
+    if (directUrlParam && directUrlParam.startsWith('http')) {
+      setSelectedStreamUrl(directUrlParam);
+      setResolvedStreams([
+        {
+          url: directUrlParam,
+          type: directUrlParam.includes('.m3u8') ? 'hls' : 'mp4',
+          quality: 'auto',
+          server: 'direct-link',
+        } as ResolvedStream,
+      ]);
+      // Clean up URL to prevent re-triggering on re-renders
+      const cleanUrl = `/watch?id=${tmdbId}&type=${mediaType}&s=${currentSeason}&e=${currentEpisode}`;
+      window.history.replaceState(null, '', cleanUrl);
+    }
+    // We intentionally do NOT clear selectedStreamUrl when directUrlParam is
+    // absent — the user may have selected a stream from the selector.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [directUrlParam]);
+
+  // ReelView Engine: auto-resolve streams when source is reelview-engine
+  useEffect(() => {
+    // If a directUrl was passed from Search Direct Links modal, skip auto-resolve
+    if (directUrlParam && directUrlParam.startsWith('http')) return;
+
+    if (source !== 'reelview-engine' || !tmdbId || !video) return;
+    if (mediaType === 'movie') return; // Only for TV for now
+
+    // Cancel any previous in-flight request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    // Clear any previous safety timeout
+    if (resolveSafetyTimerRef.current) {
+      clearTimeout(resolveSafetyTimerRef.current);
+    }
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    // Safety timeout: auto-clear isResolving after 95 seconds.
+    // Render.com free tier can take 50+ seconds to cold-start, plus up to
+    // 18s for the resolution engine itself. 95s gives plenty of headroom.
+    resolveSafetyTimerRef.current = setTimeout(() => {
+      setIsResolving(false);
+    }, 95000);
+
+    const fetchStreams = async () => {
+      setIsResolving(true);
+      setResolvedStreams([]);
+      setSelectedStreamUrl(null);
+      try {
+        const res = await fetch(apiUrl('/api/resolve-stream'), {
+          signal: AbortSignal.timeout(90000), // 90s timeout (covers cold start)
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tmdbId,
+            type: 'tv',
+            season: currentSeason,
+            episode: currentEpisode,
+            title: video.title || video.name || '',
+          }),
+        });
+        const data = await res.json();
+        if (data.success && data.sources && data.sources.length > 0) {
+          const streams: ResolvedStream[] = data.sources.map((s: any) => ({
+            url: s.url,
+            type: s.type,
+            quality: s.quality,
+            server: s.server,
+          }));
+          setResolvedStreams(streams);
+          setSelectedStreamUrl(streams[0].url);
+        }
+      } catch (err) {
+        console.error('Failed to resolve streams:', err);
+      } finally {
+        setIsResolving(false);
+        if (resolveSafetyTimerRef.current) {
+          clearTimeout(resolveSafetyTimerRef.current);
+          resolveSafetyTimerRef.current = null;
+        }
+      }
+    };
+    fetchStreams();
+
+    return () => {
+      controller.abort();
+      if (resolveSafetyTimerRef.current) {
+        clearTimeout(resolveSafetyTimerRef.current);
+        resolveSafetyTimerRef.current = null;
+      }
+    };
+  }, [source, tmdbId, video, mediaType, currentSeason, currentEpisode, directUrlParam]);
+
   const playerUrl = useMemo(() => {
     if (!video) return '';
 
     const s = currentSeason || 1;
     const e = currentEpisode || 1;
     
-    const defaultUrl = video.media_type === 'movie'
+    const vidlinkUrl = video.media_type === 'movie'
       ? `https://vidlink.pro/movie/${video.id}?autoplay=true`
       : `https://vidlink.pro/tv/${video.id}/${s}/${e}?autoplay=true`;
 
+    const xpassUrl = video.media_type === 'movie'
+      ? `https://play.xpass.top/e/movie/${video.id}?autostart=true`
+      : `https://play.xpass.top/e/tv/${video.id}/${s}/${e}?autostart=true`;
+
     let url = '';
-    
-    switch (source) {
-      case 'vidsrc':
-        url = video.media_type === 'movie'
-          ? `https://vidsrc.net/embed/movie?tmdb=${video.id}`
-          : `https://vidsrc.net/embed/tv?tmdb=${video.id}&season=${s}&episode=${e}`;
-        break;
-      case 'godrive':
-        if (video.media_type === 'movie') {
-          url = `https://godriveplayer.com/player.php?type=movie&tmdb=${video.id}`;
-        } else {
-          url = `https://godriveplayer.com/player.php?type=series&tmdb=${video.id}&season=${s}&episode=${e}`;
-        }
-        break;
-      case 'mostream':
-        if (video.media_type === 'movie') {
-          url = `https://mostream.us/embed.php?tmdb=${video.id}`;
-        } else {
-          url = `https://mostream.us/embed.php?tmdb=${video.id}&s=${s}&e=${e}`;
-        }
-        break;
-      case 'default':
-      default:
-        url = defaultUrl;
-        break;
+
+    // If a direct stream URL was selected (via Search Direct Links modal or
+    // the stream selector), always prefer it over any embed source.
+    if (selectedStreamUrl) {
+      url = selectedStreamUrl;
+    } else {
+      switch (source) {
+        case 'vidlink':
+          url = vidlinkUrl;
+          break;
+        case 'vidsrc':
+          url = video.media_type === 'movie'
+            ? `https://vidsrc.net/embed/movie?tmdb=${video.id}`
+            : `https://vidsrc.net/embed/tv?tmdb=${video.id}&season=${s}&episode=${e}`;
+          break;
+        case 'godrive':
+          if (video.media_type === 'movie') {
+            url = `https://godriveplayer.com/player.php?type=movie&tmdb=${video.id}`;
+          } else {
+            url = `https://godriveplayer.com/player.php?type=series&tmdb=${video.id}&season=${s}&episode=${e}`;
+          }
+          break;
+        case 'mostream':
+          if (video.media_type === 'movie') {
+            url = `https://mostream.us/embed.php?tmdb=${video.id}`;
+          } else {
+            url = `https://mostream.us/embed.php?tmdb=${video.id}&s=${s}&e=${e}`;
+          }
+          break;
+        case 'reelview-engine':
+          url = '';
+          break;
+        case 'default':
+        default:
+          url = xpassUrl;
+          break;
+      }
+    }
+
+    // When ReelView Engine is selected with no resolved URL, never silently
+    // fallback to xpass — return empty so the player shows a placeholder.
+    if (source === 'reelview-engine' && !url) {
+      return '';
     }
     
-    const finalUrl = url || defaultUrl;
-    console.log(`[VidlinkPlayer] Generated player URL for "${video.title}" (Source: ${source}): ${finalUrl}`);
+    const finalUrl = url || xpassUrl;
+    console.log(`[Player] Generated player URL for "${video.title}" (Source: ${source}): ${finalUrl}`);
     return finalUrl;
-  }, [video, currentSeason, currentEpisode, source]);
+  }, [video, currentSeason, currentEpisode, source, selectedStreamUrl]);
 
 
   const seasonsToDisplay = useMemo(() => {
@@ -261,14 +394,32 @@ function WatchPageContent() {
             hasNext={hasNext}
             hasPrev={hasPrev}
             playerUrl={playerUrl}
+            resolvedStreams={resolvedStreams}
+            selectedStreamUrl={selectedStreamUrl}
+            onStreamSelect={setSelectedStreamUrl}
+            isResolving={isResolving}
+            showStreamSelector={source === 'reelview-engine'}
         />
         <div className="flex-1 relative w-full">
-          <VidlinkPlayer 
+          {selectedStreamUrl ? (
+            <DirectStreamPlayer
+              video={video}
+              streamUrl={playerUrl}
+              streamType={
+                (resolvedStreams.find((s) => s.url === selectedStreamUrl)?.type ||
+                (playerUrl.includes('.m3u8') || playerUrl.includes('proxy-stream') ? 'hls' : 'mp4')) as 'hls' | 'mp4' | 'mkv'
+              }
+              season={currentSeason}
+              episode={currentEpisode}
+            />
+          ) : (
+            <VidlinkPlayer
               video={video}
               playerUrl={playerUrl}
               season={currentSeason}
               episode={currentEpisode}
-          />
+            />
+          )}
         </div>
       </div>
       

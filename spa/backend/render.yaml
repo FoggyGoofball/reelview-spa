@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: reelview-spa
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: spa/backend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3006
+      - key: PROXY_BASE_URL
+        value: https://reelview-spa.onrender.com
+      - key: CORS_ORIGIN
+        value: '*'
