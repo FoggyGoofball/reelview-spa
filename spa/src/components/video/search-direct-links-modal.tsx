@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, ExternalLink, Search } from 'lucide-react';
+import { apiUrl } from '@/lib/api-base';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -67,7 +68,7 @@ export function SearchDirectLinksModal({ tmdbId, mediaType }: { tmdbId: string; 
     setResults(null);
 
     try {
-      const res = await fetch('/api/resolve-stream', {
+      const res = await fetch(apiUrl('/api/resolve-stream'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

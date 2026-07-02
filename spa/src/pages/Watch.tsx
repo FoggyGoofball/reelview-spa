@@ -199,17 +199,34 @@ function WatchPageContent() {
         });
         const data = await res.json();
         if (data.success && data.sources && data.sources.length > 0) {
+          console.log(
+            `[Watch] RESOLVE OK  tmdbId=${tmdbId}  S=${currentSeason}  E=${currentEpisode}  ` +
+            `sources=${data.sources.length}  provider=${data.provider ?? '?'}  ` +
+            `fromCache=${data.fromCache ?? false}  ` +
+            `firstUrl=${data.sources[0].url?.slice(0, 80)}...`
+          );
+
           const streams: ResolvedStream[] = data.sources.map((s: any) => ({
-            url: s.url,
+            // Prefix relative proxy URLs with API_BASE so they hit the backend
+            // instead of the GitHub Pages domain.
+            url: s.url?.startsWith('/') ? apiUrl(s.url) : s.url,
             type: s.type,
             quality: s.quality,
             server: s.server,
           }));
+
+          console.log(`[Watch] Setting ${streams.length} streams, first proxied=${streams[0]?.url?.slice(0, 80)}...`);
+
           setResolvedStreams(streams);
           setSelectedStreamUrl(streams[0].url);
+        } else {
+          console.warn(
+            `[Watch] RESOLVE FAIL  tmdbId=${tmdbId}  S=${currentSeason}  E=${currentEpisode}  ` +
+            `reason=${data.error ?? 'no sources returned'}`
+          );
         }
       } catch (err) {
-        console.error('Failed to resolve streams:', err);
+        console.error(`[Watch] RESOLVE ERROR  tmdbId=${tmdbId}  S=${currentSeason}  E=${currentEpisode}`, err);
       } finally {
         setIsResolving(false);
         if (resolveSafetyTimerRef.current) {

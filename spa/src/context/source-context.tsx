@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import type { VideoSource } from '@/lib/data';
 
 const SOURCE_KEY = 'crimson-stream-source';
-const VALID_SOURCES: VideoSource[] = ['default', 'vidsrc', 'godrive', 'mostream'];
+const VALID_SOURCES: VideoSource[] = ['default', 'vidlink', 'vidsrc', 'godrive', 'mostream', 'reelview-engine'];
 
 interface SourceContextType {
   source: VideoSource;

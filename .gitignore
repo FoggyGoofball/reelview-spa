@@ -18,6 +18,7 @@ www/
 
 # IDE
 .vscode/
+.vs/
 .idea/
 *.swp
 *.swo
@@ -41,3 +42,31 @@ coverage/
 
 # Misc
 *.jks
+
+# PoC test project — contains hardcoded API keys for local testing
+poc/
+
+# Build artifacts / backup directories
+c/
+www_backend/
+www_old/
+www_old_dev/
+www_backup/
+www_backup_final/
+fresh-app/
+fresh-migrated/
+fresh-build/
+spa-source-of-truth/
+truth_final/
+truth_temp/
+apk-extract/
+apk-extract-debug/
+apk-extract-latest/
+apk-extract-spa-source/
+apk-working-extract/
+current-device-extract/
+temp_apk_extract/
+apk_analysis/
+offline/
+desktop/
+docs/

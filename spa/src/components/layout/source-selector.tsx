@@ -23,9 +23,11 @@ interface SourceSelectorProps {
 
 const sourceLabels: Record<string, string> = {
   default: 'Default',
+  vidlink: 'VidLink',
   vidsrc: 'VidSrc',
   godrive: 'GoDrive (Ads)',
   mostream: 'MoStream (Anime)',
+  'reelview-engine': 'ReelView Engine (Consumet + CinePro)',
 };
 
 export function SourceSelector({ buttonVariant, className }: SourceSelectorProps) {

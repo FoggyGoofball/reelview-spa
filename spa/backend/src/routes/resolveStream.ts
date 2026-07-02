@@ -50,18 +50,25 @@ router.post('/resolve-stream', async (req: Request, res: Response) => {
 
   const s = Number(season) || 1;
   const e = Number(episode) || 1;
+  const showTitle = title || '';
 
   // ─── Cache Check ─────────────────────────────────────────────────────────
   const cacheKey = getCacheKey(tmdbId, s, e);
   const cached = getFromCache<ResolveStreamResponse>(cacheKey);
   if (cached) {
     cached.fromCache = true;
+    const srcCount = cached.sources?.length ?? 0;
+    console.log(
+      `[ResolveStream] CACHE HIT  tmdbId=${tmdbId}  S=${s}  E=${e}  sources=${srcCount}  provider=${cached.provider ?? '?'}`,
+    );
     res.json(cached);
     return;
   }
+  console.log(
+    `[ResolveStream] CACHE MISS  tmdbId=${tmdbId}  S=${s}  E=${e}  title="${showTitle}" — starting waterfall`,
+  );
 
   // ─── Waterfall Resolution ────────────────────────────────────────────────
-  const showTitle = title || '';
   let sources: StreamSource[] = [];
 
   // Helper: race a promise against a timeout so no single step can hang the
