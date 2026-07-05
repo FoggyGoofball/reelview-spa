@@ -22,10 +22,12 @@ const DISK_SYNC_DEBOUNCE_MS = 2_000; // wait 2 s after last write before flushin
 const VERIFY_INTERVAL_MS = 6 * 60 * 60 * 1000; // verify cached entries every 6 h
 const VERIFY_TIMEOUT_MS = 8_000; // per-URL timeout during verification
 
-const DISK_PATH = path.resolve(
-  import.meta.dirname ?? path.dirname(new URL(import.meta.url).pathname),
-  '../../data/cache.json',
-);
+const DISK_PATH = process.env.CACHE_FILE_PATH
+  ? path.resolve(process.env.CACHE_FILE_PATH)
+  : path.resolve(
+      import.meta.dirname ?? path.dirname(new URL(import.meta.url).pathname),
+      '../../data/cache.json',
+    );
 
 // ── Types ──────────────────────────────────────────────────────────────────
 

@@ -81,17 +81,22 @@ export function SearchDirectLinksModal({ tmdbId, mediaType }: { tmdbId: string; 
 
       const json: ResolveResponse = await res.json();
 
-      if (!json.success || !json.data) {
-        setError(json.error || json.data?.message || 'Failed to resolve stream');
+      // Handle both response shapes:
+      //   Fresh: { success, data: { sources: [...] } }
+      //   Cached: { success, sources: [...] }
+      const sources = json.data?.sources || (json as any).sources;
+
+      if (!json.success || !sources) {
+        setError(json.error || (json as any).data?.message || 'Failed to resolve stream');
         return;
       }
 
-      if (json.data.sources.length === 0) {
+      if (sources.length === 0) {
         setError('No direct links found for this episode.');
         return;
       }
 
-      setResults(json.data.sources);
+      setResults(sources);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error');
     } finally {

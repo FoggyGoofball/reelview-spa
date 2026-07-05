@@ -11,6 +11,8 @@ import express from 'express';
 import cors from 'cors';
 import resolveRouter from './routes/resolveStream.js';
 import proxyRouter from './routes/proxyStream.js';
+import persistentCache from './cache.js';
+import { CACHE_TTL_SECONDS } from './cache.js';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3006;
@@ -26,6 +28,24 @@ app.use('/api', proxyRouter);
 // Health check
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Clear cache endpoint (for debugging / manual invalidation)
+app.get('/api/clear-cache', (_req, res) => {
+  const statsBefore = persistentCache.stats();
+  // We can only clear the persistent cache exposed via the singleton.
+  // The PersistentCache has a flushSync but no public "clear all" — we
+  // enumerate keys and delete them individually.
+  for (const key of statsBefore.keys) {
+    persistentCache.del(key);
+  }
+  const statsAfter = persistentCache.stats();
+  res.json({
+    success: true,
+    message: 'Cache cleared',
+    cleared: statsBefore.keyCount,
+    remaining: statsAfter.keyCount,
+  });
 });
 
 // ─── Start ──────────────────────────────────────────────────────────────────
