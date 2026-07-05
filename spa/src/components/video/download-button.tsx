@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Loader2 } from 'lucide-react';
 import { getDownloadAPI, isDownloadAvailable, getPlatform } from '@/lib/unified-download';
+import { useToast } from '@/hooks/use-toast';
 
 function sanitizeFilename(name: string) {
   return name.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_').trim();
@@ -9,18 +10,20 @@ function sanitizeFilename(name: string) {
 
 export function DownloadButton({ suggestedFilename }: { suggestedFilename?: string }) {
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const { toast } = useToast();
 
   const handleClick = useCallback(async () => {
     setIsLoading(true);
-    setMessage('Starting...');
 
     try {
       const platform = getPlatform();
-      setMessage(`Platform: ${platform}`);
-
+      
       if (!isDownloadAvailable()) {
-        setMessage('Downloads not available on this platform');
+        toast({
+          title: "Downloads not available",
+          description: "Download feature is only available on desktop and Android apps",
+          variant: "destructive",
+        });
         setIsLoading(false);
         return;
       }
@@ -28,14 +31,24 @@ export function DownloadButton({ suggestedFilename }: { suggestedFilename?: stri
       const api = getDownloadAPI();
 
       if (typeof api?.getCapturedStreams !== 'function') {
-        setMessage('No getCapturedStreams method');
+        toast({
+          title: "API Error",
+          description: "Download API is not available",
+          variant: "destructive",
+        });
         setIsLoading(false);
         return;
       }
 
+      toast({
+        title: "Scanning for streams...",
+        description: "Looking for video streams on the page",
+      });
+
       let streams = await api.getCapturedStreams!();
 
       if ((!streams || streams.length === 0)) {
+        // Retry a few times
         for (let i = 0; i < 3; i++) {
           await new Promise(res => setTimeout(res, 500));
           try {
@@ -46,7 +59,11 @@ export function DownloadButton({ suggestedFilename }: { suggestedFilename?: stri
       }
 
       if ((!streams || streams.length === 0)) {
-        setMessage('No streams captured - play the video first');
+        toast({
+          title: "No streams found",
+          description: "Please play a video first to capture the stream",
+          variant: "destructive",
+        });
         setIsLoading(false);
         return;
       }
@@ -56,7 +73,11 @@ export function DownloadButton({ suggestedFilename }: { suggestedFilename?: stri
       const url = typeof raw === 'string' ? raw : raw?.url;
 
       if (!url) {
-        setMessage('Could not determine a stream URL');
+        toast({
+          title: "Invalid stream",
+          description: "Could not determine a stream URL",
+          variant: "destructive",
+        });
         setIsLoading(false);
         return;
       }
@@ -79,7 +100,6 @@ export function DownloadButton({ suggestedFilename }: { suggestedFilename?: stri
             const eP = String(e).padStart(2, '0');
             suggestedName = `${titleText}_S${sP}E${eP}`;
           } else {
-            // try document.title or h1
             const titleEl = document.querySelector('h1') || document.querySelector('title');
             const titleText = (titleEl?.textContent || '').trim();
             if (titleText) suggestedName = titleText;
@@ -89,15 +109,35 @@ export function DownloadButton({ suggestedFilename }: { suggestedFilename?: stri
 
       suggestedName = sanitizeFilename(suggestedName);
 
+      toast({
+        title: "Starting download",
+        description: `Downloading: ${suggestedName}`,
+      });
+
       const result = await api.startDownload(url, suggestedName);
 
-      setMessage(result?.success ? 'Download started!' : `Error: ${result?.error || 'unknown'}`);
+      if (result?.success) {
+        toast({
+          title: "Download started!",
+          description: `${suggestedName} is being downloaded. Check the Downloads page for progress.`,
+        });
+      } else {
+        toast({
+          title: "Download failed",
+          description: result?.error || "Unknown error occurred",
+          variant: "destructive",
+        });
+      }
     } catch (e: any) {
-      setMessage(`Error: ${e?.message || e}`);
+      toast({
+        title: "Error",
+        description: e?.message || String(e),
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
-  }, [suggestedFilename]);
+  }, [suggestedFilename, toast]);
 
   if (!isDownloadAvailable()) return null;
 

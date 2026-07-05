@@ -5,13 +5,23 @@ import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import React from 'react';
 
+function getQueryParam(search: unknown, key: string): string {
+  if (typeof search !== 'string' || !search) return '';
+
+  try {
+    const params = new URLSearchParams(search);
+    const value = params?.get?.(key);
+    return value ?? '';
+  } catch {
+    return '';
+  }
+}
+
 export function SearchInput() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Parse query from URL
-  const params = new URLSearchParams(location.search);
-  const defaultQuery = params.get('q') || '';
+  const defaultQuery = getQueryParam(location?.search, 'q');
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

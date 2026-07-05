@@ -125,14 +125,14 @@ ipcMain.handle('start-download', async (event, { url, filename, quality }) => {
     logToFile(`Filename derivation error: ${e?.message || e}`);
   }
 
-  // Always save as MKV (bundled FFmpeg handles conversion)
-  const finalFilename = `${baseName.replace(/\.[^/.]+$/, '')}.mkv`;
+  // Save as MP4 by default (bundled FFmpeg handles remuxing)
+  const finalFilename = `${baseName.replace(/\.[^/.]+$/, '')}.mp4`;
 
   const { filePath } = await dialog.showSaveDialog(window!, {
-    title: 'Save Video as MKV',
+    title: 'Save Video as MP4',
     defaultPath: path.join(app.getPath('downloads'), finalFilename),
     filters: [
-      { name: 'Matroska Video (MKV)', extensions: ['mkv'] },
+      { name: 'MPEG-4 Video (MP4)', extensions: ['mp4'] },
       { name: 'All Files', extensions: ['*'] }
     ]
   });

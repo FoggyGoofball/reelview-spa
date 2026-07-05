@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "initiatorDomains": ["vidlink.pro", "mostream.us", "vidsrc.net"],
+      "resourceTypes": ["sub_frame"],
+      "urlFilter": "||*^$popup"
+    }
+  }
+]

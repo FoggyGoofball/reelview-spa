@@ -2,6 +2,7 @@ import React, { useEffect, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { ApiKeyDialogProvider } from '@/context/api-key-dialog-context';
 import { ApiKeyNotice } from '@/components/api-key-notice';
+import { initializeAdCapture } from '@/lib/ad-capture'
 
 // Global error handler - catch EVERYTHING
 window.addEventListener('error', (event) => {
@@ -152,6 +153,9 @@ function AppRoutes() {
     window.scrollTo(0, 0)
   }, [location.pathname])
 
+  // NOTE: Overlay neutralizer is now handled at native Android level
+  // See ReelViewWebViewClient.java - injects blocker into embed iframes directly
+
   try {
     return (
       <Routes>
@@ -177,18 +181,37 @@ function AppRoutes() {
   }
 }
 
+const routerBasename = (() => {
+  const base = import.meta.env.BASE_URL || '/'
+
+  if (base === './' || base === '.') {
+    return '/'
+  }
+
+  return base.endsWith('/') && base.length > 1 ? base.slice(0, -1) : base
+})()
+
 export default function App() {
   console.log('[APP] Rendering App component')
 
   useEffect(() => {
     console.log('[APP] React mounted')
+    
+    // Initialize ad capture (global, works everywhere)
+    try {
+      console.log('[APP] Initializing ad-blocking systems...')
+      initializeAdCapture({ enableLogging: true })
+      console.log('[APP] ? Ad-capture system initialized')
+    } catch (error) {
+      console.error('[APP] Error initializing ad-blocking systems:', error)
+    }
   }, [])
 
   try {
     return (
       <ApiKeyDialogProvider>
         <ErrorBoundary>
-          <BrowserRouter basename="/">
+          <BrowserRouter basename={routerBasename}>
             <ClientLayout>
               <AppRoutes />
               <ApiKeyNotice />

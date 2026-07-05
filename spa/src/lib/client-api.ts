@@ -23,6 +23,16 @@ export function getWatchHistory(): Record<string, WatchProgress> {
   }
 }
 
+export function setWatchHistory(history: Record<string, WatchProgress>) {
+  if (isServer()) return;
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history || {}));
+    window.dispatchEvent(new CustomEvent('history-updated', { detail: history || {} }));
+  } catch (error) {
+    console.error('Failed to set watch history', error);
+  }
+}
+
 export function saveWatchProgress(progress: WatchProgress) {
     if (isServer() || (!progress.id && !progress.mal_id)) {
         return;
@@ -66,7 +76,9 @@ export function getWatchlist(): Record<string, Video> {
   if (isServer()) return {};
   try {
     const watchlistJson = localStorage.getItem(WATCHLIST_KEY);
-    return watchlistJson ? JSON.parse(watchlistJson) : {};
+    if (!watchlistJson) return {};
+    const parsed = JSON.parse(watchlistJson);
+    return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
   } catch (error) {
     console.error("Failed to parse watchlist", error);
     return {};
@@ -137,7 +149,9 @@ export function getDismissedItems(): Record<string, Video> {
   if (isServer()) return {};
   try {
     const dismissedJson = localStorage.getItem(DISMISSED_KEY);
-    return dismissedJson ? JSON.parse(dismissedJson) : {};
+    if (!dismissedJson) return {};
+    const parsed = JSON.parse(dismissedJson);
+    return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
   } catch (error) {
     console.error("Failed to parse dismissed items", error);
     return {};

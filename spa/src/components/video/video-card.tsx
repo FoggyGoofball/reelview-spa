@@ -27,8 +27,8 @@ export function VideoCard({ video, variant = 'default', onDismiss, watchHref }: 
       : `https://image.tmdb.org/t/p/w342${video.poster_path}`
     : 'https://picsum.photos/seed/default-poster/342/513';
 
-  const isVideoInWatchlist = isInWatchlist(video.id, video.media_type);
-  const isVideoDismissed = isDismissed(video.id, video.media_type);
+  const isVideoInWatchlist = video?.id && video?.media_type ? isInWatchlist(video.id, video.media_type) : false;
+  const isVideoDismissed = video?.id && video?.media_type ? isDismissed(video.id, video.media_type) : false;
 
   const detailHref = `/media/${video.media_type}/${video.id}`;
   const defaultWatchHref = isSeries ? `/watch?id=${video.id}&type=${video.media_type}&s=1&e=1` : `/watch?id=${video.id}&type=${video.media_type}`;

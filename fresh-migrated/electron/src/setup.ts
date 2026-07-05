@@ -244,7 +244,7 @@ export class ElectronCapacitorApp {
       defaultHeight: 800,
     });
 
-    const preloadPath = join(app.getAppPath(), 'build', 'src', 'preload.js');
+    const preloadPath = join(app.getAppPath(), 'build', 'preload.js');
     logToFile(`Preload path: ${preloadPath}`);
     logToFile(`Preload exists: ${fs.existsSync(preloadPath)}`);
     console.log(`[SETUP] Preload path: ${preloadPath}`);

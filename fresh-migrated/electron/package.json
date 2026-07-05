@@ -1,6 +1,6 @@
 {
   "name": "reelview",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "ReelView - Stream your favorite movies, TV shows, and anime",
   "author": {
     "name": "ReelView Team",
@@ -11,7 +11,7 @@
     "url": "https://github.com/reelview/reelview.git"
   },
   "license": "MIT",
-  "main": "build/src/index.js",
+  "main": "build/index.js",
   "scripts": {
     "build": "tsc --noEmit false --skipLibCheck true --esModuleInterop true && electron-rebuild",
     "prepare-spa": "node ./scripts/prepare-spa.js",

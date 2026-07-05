@@ -48,9 +48,15 @@ jobs:
           npm install --legacy-peer-deps
         
       - name: Build for GitHub Pages
+        env:
+          VITE_BASE_URL: /reelview-spa/
+          VITE_SYNC_GITHUB_OWNER: ${{ vars.VITE_SYNC_GITHUB_OWNER }}
+          VITE_SYNC_GITHUB_REPO: ${{ vars.VITE_SYNC_GITHUB_REPO }}
+          VITE_SYNC_GITHUB_BRANCH: ${{ vars.VITE_SYNC_GITHUB_BRANCH }}
+          VITE_SYNC_GITHUB_PATH_PREFIX: ${{ vars.VITE_SYNC_GITHUB_PATH_PREFIX }}
+          VITE_SYNC_GITHUB_TOKEN: ${{ secrets.VITE_SYNC_GITHUB_TOKEN }}
         run: |
           cd fresh-migrated
-          export VITE_BASE_URL=/reelview-spa/
           npm run build
           
       - name: Debug - Check build output

@@ -10,7 +10,14 @@ function log(msg) {
 async function run() {
   try {
     const repoRoot = path.resolve(__dirname, '..'); // fresh-migrated/electron
-    const spaDir = path.resolve(repoRoot, '..', 'spa');
+    const spaDirCandidates = [
+      path.resolve(repoRoot, '..', '..', 'spa'),
+      path.resolve(repoRoot, '..', 'spa'),
+    ];
+    const spaDir = spaDirCandidates.find((p) => fs.existsSync(path.join(p, 'package.json')));
+    if (!spaDir) {
+      throw new Error(`Could not locate SPA directory. Tried: ${spaDirCandidates.join(', ')}`);
+    }
     const spaDist = path.join(spaDir, 'dist');
     const targetAppDir = path.join(repoRoot, 'app');
 
@@ -48,6 +55,19 @@ async function run() {
     }
 
     log('SPA prepared and copied successfully.');
+
+    // Ensure build/src/rt/electron-plugins.js exists.
+    // @capacitor-community/electron hardcodes this path regardless of tsconfig rootDir.
+    // tsc never creates it (no .ts counterpart), so we write it here after every build.
+    const pluginsDir = path.join(repoRoot, 'build', 'src', 'rt');
+    const pluginsFile = path.join(pluginsDir, 'electron-plugins.js');
+    if (!fs.existsSync(pluginsFile)) {
+      fs.mkdirSync(pluginsDir, { recursive: true });
+      fs.writeFileSync(pluginsFile, '/* Capacitor Electron plugin registry */\nmodule.exports = {};\n', { encoding: 'utf8' });
+      log('Created missing build/src/rt/electron-plugins.js');
+    } else {
+      log('build/src/rt/electron-plugins.js already present.');
+    }
   } catch (err) {
     console.error('[prepare-spa] Error:', err);
     process.exit(1);

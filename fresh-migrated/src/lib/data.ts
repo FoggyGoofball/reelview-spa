@@ -82,7 +82,7 @@ export type CustomVideoData = {
   seasons?: { season_number: number, episode_count: number }[];
 }
 
-export type VideoSource = 'default' | 'vidsrc' | 'godrive' | 'mostream';
+export type VideoSource = 'default' | 'vidlink' | 'vidsrc' | 'godrive' | 'mostream';
 
 export const EXPLICIT_RATINGS = [
   // MPAA Movie Ratings (US)

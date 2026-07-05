@@ -1,0 +1,14 @@
+declare module 'react';
+declare module 'react/jsx-runtime';
+declare module 'react-dom/client';
+declare module 'vite';
+declare module '@vitejs/plugin-react';
+declare module 'lucide-react';
+declare module 'genkit';
+declare module '@genkit-ai/google-genai';
+declare module '@genkit-ai/next/client';
+declare module 'jszip';
+declare module '@/ai/server';
+declare module '@/hooks/use-toast';
+declare module '@/components/ui/button';
+declare module '@/components/ui/alert-dialog';

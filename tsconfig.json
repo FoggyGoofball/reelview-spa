@@ -1,0 +1,65 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "typeRoots": [
+      "src/types",
+      "node_modules/@types"
+    ],
+    "strictNullChecks": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "spa",
+    "out",
+    "dist",
+    ".next",
+    "src/ai",
+    "src/ai/**",
+    "src/ai/**/*",
+    "src/components",
+    "src/components/**",
+    "src/components/**/*",
+    "src/pages",
+    "src/pages/**",
+    "src/pages/**/*",
+    "src/app",
+    "src/app/**",
+    "src/app/**/*",
+    "src/components/dev",
+    "src/pages/api",
+    "fresh-migrated"
+  ]
+}

@@ -2,10 +2,12 @@ package com.reelview.app;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.webkit.WebView;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -18,6 +20,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -312,7 +315,15 @@ public class HLSDownloaderPlugin extends Plugin {
         state.startTime = System.currentTimeMillis();
         downloads.put(downloadId, state);
         
-        Log.d(TAG, "Starting download: " + downloadId + " for " + filename);
+        Log.d(TAG, "[DOWNLOAD] Starting download: " + downloadId + " for " + filename);
+        
+        // Retrieve stored headers for this URL (CRITICAL for authenticated streams)
+        Map<String, String> headers = ReelViewWebViewClient.getHeaders(url);
+        if (!headers.isEmpty()) {
+            Log.d(TAG, "[DOWNLOAD] Using " + headers.size() + " stored headers for download");
+        } else {
+            Log.w(TAG, "[DOWNLOAD] ? No headers found for URL - download may fail with 403/401");
+        }
         
         saveDownloadsToPreferences();
         notifyListeners("downloads-updated", new JSObject().put("downloads", createDownloadsArray()));
@@ -331,31 +342,38 @@ public class HLSDownloaderPlugin extends Plugin {
         downloadIntent.putExtra("quality", quality);
         downloadIntent.putExtra("filename", filename);
         
+        // Pass headers as a Bundle (serializable)
+        Bundle headersBundle = new Bundle();
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            headersBundle.putString(entry.getKey(), entry.getValue());
+        }
+        downloadIntent.putExtra("headers", headersBundle);
+        
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 // Android 8+ requires startForegroundService for foreground services
                 getContext().startForegroundService(downloadIntent);
-                Log.d(TAG, "Download started via foreground service: " + downloadId);
+                Log.d(TAG, "[DOWNLOAD] Download started via foreground service: " + downloadId);
             } else {
                 getContext().startService(downloadIntent);
-                Log.d(TAG, "Download started via service: " + downloadId);
+                Log.d(TAG, "[DOWNLOAD] Download started via service: " + downloadId);
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error starting foreground service: " + e.getMessage());
+            Log.e(TAG, "[DOWNLOAD] Error starting foreground service: " + e.getMessage());
             // Fallback to thread-based download if service fails
-            startDownloadThread(downloadId, url, quality, filename, state);
+            startDownloadThread(downloadId, url, quality, filename, state, headers);
         }
     }
     
     /**
      * Fallback: Start download in background thread if service unavailable
      */
-    private void startDownloadThread(String downloadId, String url, String quality, String filename, DownloadState state) {
+    private void startDownloadThread(String downloadId, String url, String quality, String filename, DownloadState state, Map<String, String> headers) {
         new Thread(() -> {
             try {
-                Log.d(TAG, "Download thread started (fallback) for " + downloadId);
+                Log.d(TAG, "[DOWNLOAD] Download thread started (fallback) for " + downloadId + " with " + (headers != null ? headers.size() : 0) + " headers");
                 
-                hlsDownloader.downloadStream(url, quality, filename, new HLSDownloader.DownloadProgressCallback() {
+                hlsDownloader.downloadStream(url, quality, filename, headers, new HLSDownloader.DownloadProgressCallback() {
                     @Override
                     public void onProgress(String status, int progress, String estimatedQuality, double bitrateMbps) {
                         state.status = mapStatus(status);
@@ -363,7 +381,7 @@ public class HLSDownloaderPlugin extends Plugin {
                         state.estimatedQuality = estimatedQuality;
                         state.bitrateMbps = bitrateMbps;
                         
-                        Log.d(TAG, String.format("Progress: %s - %d%% - Quality: %s @ %.1f Mbps", 
+                        Log.d(TAG, String.format("[DOWNLOAD] Progress: %s - %d%% - Quality: %s @ %.1f Mbps", 
                             status, progress, estimatedQuality, bitrateMbps));
                         
                         saveDownloadsToPreferences();
@@ -389,7 +407,7 @@ public class HLSDownloaderPlugin extends Plugin {
                             state.downloadedBytes = file.length();
                         }
                         
-                        Log.d(TAG, String.format("Download complete: %s - Quality: %s @ %.2f Mbps", 
+                        Log.d(TAG, String.format("[DOWNLOAD] Complete: %s - Quality: %s @ %.2f Mbps", 
                             filePath, estimatedQuality, bitrateMbps));
                         
                         saveDownloadsToPreferences();
@@ -406,7 +424,7 @@ public class HLSDownloaderPlugin extends Plugin {
                     public void onError(String error) {
                         state.status = "error";
                         state.error = error;
-                        Log.e(TAG, "Download error: " + error);
+                        Log.e(TAG, "[DOWNLOAD] Error: " + error);
                         
                         saveDownloadsToPreferences();
                         
@@ -420,7 +438,7 @@ public class HLSDownloaderPlugin extends Plugin {
                 });
                 
             } catch (Exception e) {
-                Log.e(TAG, "Download thread exception for " + downloadId + ": " + e.getMessage(), e);
+                Log.e(TAG, "[DOWNLOAD] Download thread exception for " + downloadId + ": " + e.getMessage(), e);
                 state.status = "error";
                 state.error = e.getMessage();
                 saveDownloadsToPreferences();
@@ -441,6 +459,7 @@ public class HLSDownloaderPlugin extends Plugin {
             case "analyzing segments": return "parsing";
             case "downloading": return "downloading";
             case "merging segments": return "merging";
+            case "converting to mp4":
             case "converting to mkv": return "converting";
             case "complete": return "complete";
             default: return status;
@@ -460,7 +479,10 @@ public class HLSDownloaderPlugin extends Plugin {
         return obj;
     }
     
-    private JSONArray createDownloadsArray() {
+    /**
+     * Public accessor for createDownloadsArray (used by DownloadService)
+     */
+    public synchronized JSONArray createDownloadsArray() {
         JSONArray array = new JSONArray();
         for (DownloadState state : downloads.values()) {
             try {
@@ -579,6 +601,120 @@ public class HLSDownloaderPlugin extends Plugin {
         } catch (Exception e) {
             Log.e(TAG, "Error clearing streams: " + e.getMessage());
             call.resolve(new JSObject().put("success", false));
+        }
+    }
+    
+    @PluginMethod
+    public void storeHeaders(PluginCall call) {
+        try {
+            String url = call.getString("url");
+            JSObject headersObj = call.getObject("headers");
+            
+            if (url != null && headersObj != null) {
+                Map<String, String> headers = new HashMap<>();
+                for (Iterator<String> it = headersObj.keys(); it.hasNext(); ) {
+                    String key = it.next();
+                    headers.put(key, headersObj.getString(key));
+                }
+                
+                ReelViewWebViewClient.storeHeaders(url, headers);
+                Log.d(TAG, "[PLUGIN] Headers stored via storeHeaders call for: " + url.substring(0, Math.min(80, url.length())));
+                
+                call.resolve(new JSObject().put("success", true));
+            } else {
+                call.reject("URL and headers are required");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error in storeHeaders: " + e.getMessage());
+            call.reject(e.getMessage());
+        }
+    }
+    
+    /**
+     * Update download progress (called by DownloadService)
+     */
+    public synchronized void updateDownloadProgress(String downloadId, String status, int progress, String quality, double bitrate) {
+        try {
+            DownloadState state = downloads.get(downloadId);
+            if (state != null) {
+                state.status = mapStatus(status);
+                state.progress = progress;
+                state.estimatedQuality = quality;
+                state.bitrateMbps = bitrate;
+                saveDownloadsToPreferences();
+                
+                // Emit event to notify UI
+                try {
+                    notifyListeners("downloads-updated", new JSObject().put("downloads", createDownloadsArray()));
+                } catch (Exception e) {
+                    Log.e(TAG, "Error emitting downloads-updated event: " + e.getMessage());
+                }
+                
+                Log.d(TAG, "[UPDATE-PROGRESS] " + downloadId + " - " + progress + "%");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error updating progress: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Update download completion (called by DownloadService)
+     */
+    public synchronized void updateDownloadComplete(String downloadId, String filePath, String quality, double bitrate) {
+        try {
+            DownloadState state = downloads.get(downloadId);
+            if (state != null) {
+                state.status = "complete";
+                state.progress = 100;
+                state.filePath = filePath;
+                state.estimatedQuality = quality;
+                state.bitrateMbps = bitrate;
+                
+                if (filePath != null) {
+                    File file = new File(filePath);
+                    if (file.exists()) {
+                        state.downloadedBytes = file.length();
+                    }
+                }
+                
+                saveDownloadsToPreferences();
+                
+                // Emit event to notify UI
+                try {
+                    notifyListeners("downloads-updated", new JSObject().put("downloads", createDownloadsArray()));
+                } catch (Exception e) {
+                    Log.e(TAG, "Error emitting downloads-updated event: " + e.getMessage());
+                }
+                
+                Log.d(TAG, "[UPDATE-COMPLETE] " + downloadId);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error updating completion: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Update download error (called by DownloadService)
+     */
+    public synchronized void updateDownloadError(String downloadId, String error) {
+        try {
+            DownloadState state = downloads.get(downloadId);
+            if (state != null) {
+                state.status = "error";
+                state.error = error;
+                saveDownloadsToPreferences();
+                
+                // Emit event to notify UI
+                try {
+                    notifyListeners("downloads-updated", new JSObject().put("downloads", createDownloadsArray()));
+                } catch (Exception e) {
+                    Log.e(TAG, "Error emitting downloads-updated event: " + e.getMessage());
+                }
+                
+                Log.d(TAG, "[UPDATE-ERROR] " + downloadId + " - " + error);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error updating error: " + e.getMessage());
         }
     }
 }

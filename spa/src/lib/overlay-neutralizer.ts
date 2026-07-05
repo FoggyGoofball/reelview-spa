@@ -43,51 +43,56 @@ function isLikelyOverlay(element: Element): boolean {
     const style = window.getComputedStyle(element);
     const rect = element.getBoundingClientRect();
     
+    // Don't target elements that are clearly part of the main UI
+    const id = element.id?.toLowerCase?.() || '';
+    const classNames = element.className?.toLowerCase?.() || '';
+    
+    // Never target these - they're core UI
+    if (id === 'root' || classNames.includes('react') || classNames.includes('app')) return false;
+    if (classNames.includes('header') || classNames.includes('nav') || classNames.includes('main')) return false;
+    if (classNames.includes('button') || classNames.includes('input') || classNames.includes('form')) return false;
+    
     // Check for full-screen or large overlays
     const isFullScreen = (
-      rect.width >= window.innerWidth * 0.8 &&
-      rect.height >= window.innerHeight * 0.8
+      rect.width >= window.innerWidth * 0.9 &&
+      rect.height >= window.innerHeight * 0.9
     );
     
     // Check for fixed/absolute positioning
     const isPositioned = ['fixed', 'absolute'].includes(style.position);
     
-    // Check for high z-index
+    // Check for high z-index (must be very high to be suspicious)
     const zIndex = parseInt(style.zIndex) || 0;
-    const isHighZ = zIndex > 100;
+    const isHighZ = zIndex > 1000;
     
     // Check for transparent/semi-transparent background
     const bgColor = style.backgroundColor;
     const isTransparent = (
       bgColor === 'transparent' ||
       bgColor === 'rgba(0, 0, 0, 0)' ||
-      (bgColor.includes('rgba') && parseFloat(bgColor.split(',')[3]) < 0.5)
+      (bgColor.includes('rgba') && parseFloat(bgColor.split(',')[3]) < 0.3)
     );
     
-    // Check for overlay-like class names
-    const classNames = element.className?.toLowerCase?.() || '';
+    // Check for overlay-like class names (very specific)
     const hasOverlayClass = (
       classNames.includes('overlay') ||
-      classNames.includes('click') ||
       classNames.includes('interceptor') ||
-      classNames.includes('blocker') ||
-      classNames.includes('layer') ||
-      classNames.includes('cover')
+      classNames.includes('popads') ||
+      classNames.includes('popcash')
     );
     
     // Check for empty/minimal content (click catchers usually have no content)
     const hasMinimalContent = element.children.length === 0 && element.textContent?.trim() === '';
     
-    // Scoring system
+    // Scoring system - be VERY conservative
     let score = 0;
-    if (isFullScreen) score += 3;
-    if (isPositioned) score += 2;
-    if (isHighZ) score += 2;
-    if (isTransparent) score += 2;
-    if (hasOverlayClass) score += 3;
-    if (hasMinimalContent) score += 2;
+    if (isFullScreen && isTransparent) score += 4;  // Transparent fullscreen is suspicious
+    if (isPositioned && isHighZ && isTransparent) score += 3;  // Fixed with very high z-index and transparent
+    if (hasOverlayClass) score += 3;  // Explicit overlay class
+    if (hasMinimalContent && isPositioned && isTransparent) score += 2;  // No content + positioned + transparent
     
-    return score >= 5;
+    // Only treat as overlay if score is high
+    return score >= 4;
   } catch (error) {
     log('Error checking if element is overlay:', error);
     return false;
@@ -130,10 +135,11 @@ function neutralizeOverlay(element: HTMLElement) {
   try {
     log('Neutralizing overlay:', element.tagName, element.className);
     
-    // Push overlay behind everything
+    // Push overlay behind everything - use z-index and pointer-events instead of visibility
     element.style.setProperty('z-index', String(config.interceptorZIndex), 'important');
     element.style.setProperty('pointer-events', 'none', 'important');
-    element.style.setProperty('visibility', 'hidden', 'important');
+    // DO NOT use visibility: hidden - it hides the entire element
+    // Instead just make it non-interactive
   } catch (error) {
     log('Error neutralizing overlay:', error);
   }

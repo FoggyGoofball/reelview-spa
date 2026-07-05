@@ -57,8 +57,9 @@ export function DismissedProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const isDismissed = useCallback((videoId: string, mediaType: 'movie' | 'tv' | 'anime') => {
+    if (!videoId || !mediaType) return false;
     const key = `${mediaType}-${videoId}`;
-    return key in dismissedItems;
+    return !!dismissedItems && key in dismissedItems;
   }, [dismissedItems]);
 
   return (

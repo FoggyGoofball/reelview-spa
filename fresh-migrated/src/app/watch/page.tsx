@@ -122,13 +122,20 @@ function WatchPageContent() {
     const s = currentSeason || 1;
     const e = currentEpisode || 1;
     
-    const defaultUrl = video.media_type === 'movie'
+    const vidlinkUrl = video.media_type === 'movie'
       ? `https://vidlink.pro/movie/${video.id}?autoplay=true`
       : `https://vidlink.pro/tv/${video.id}/${s}/${e}?autoplay=true`;
 
+    const xpassUrl = video.media_type === 'movie'
+      ? `https://play.xpass.top/e/movie/${video.id}?autostart=true`
+      : `https://play.xpass.top/e/tv/${video.id}/${s}/${e}?autostart=true`;
+
     let url = '';
-    
+
     switch (source) {
+      case 'vidlink':
+        url = vidlinkUrl;
+        break;
       case 'vidsrc':
         url = video.media_type === 'movie'
           ? `https://vidsrc.net/embed/movie?tmdb=${video.id}`
@@ -150,12 +157,12 @@ function WatchPageContent() {
         break;
       case 'default':
       default:
-        url = defaultUrl;
+        url = xpassUrl;
         break;
     }
-    
-    const finalUrl = url || defaultUrl;
-    console.log(`[VidlinkPlayer] Generated player URL for "${video.title}" (Source: ${source}): ${finalUrl}`);
+
+    const finalUrl = url || xpassUrl;
+    console.log(`[Player] Generated player URL for "${video.title}" (Source: ${source}): ${finalUrl}`);
     return finalUrl;
   }, [video, currentSeason, currentEpisode, source]);
 

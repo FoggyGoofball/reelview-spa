@@ -52,8 +52,9 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const isInWatchlist = useCallback((videoId: string, mediaType: 'movie' | 'tv' | 'anime') => {
+    if (!videoId || !mediaType) return false;
     const key = `${mediaType}-${videoId}`;
-    return key in watchlist;
+    return !!watchlist && key in watchlist;
   }, [watchlist]);
 
   return (

@@ -29,11 +29,24 @@ function log(...args: any[]) {
   }
 }
 
+function isInternalUrl(url: string): boolean {
+  const lowerUrl = (url || '').toLowerCase();
+  return (
+    lowerUrl.startsWith('about:blank') ||
+    lowerUrl.startsWith('https://localhost') ||
+    lowerUrl.startsWith('http://localhost') ||
+    lowerUrl.startsWith('capacitor://localhost') ||
+    lowerUrl.startsWith('data:') ||
+    lowerUrl.startsWith('#')
+  );
+}
+
 /**
  * Check if URL is from an allowed embed provider
  */
 function isEmbedProviderUrl(url: string): boolean {
   const embedProviders = [
+    'play.xpass.top', 'xpass.top',
     'vidsrc.net', 'vidsrc.me', 'vidsrc.xyz', 'vidsrc.in', 'vidsrc.pm', 'vidsrc.to',
     'vidlink.pro', '2embed.org', '2embed.to', '2embed.cc',
     'autoembed.to', 'autoembed.cc',
@@ -41,11 +54,10 @@ function isEmbedProviderUrl(url: string): boolean {
     'vidcloud', 'vidplay', 'filemoon', 'streamwish',
     'doodstream', 'upstream', 'mixdrop', 'mp4upload',
     'streamsb', 'streamtape', 'fembed', 'evoload',
-    'imdb.com', 'themoviedb.org', 'thetvdb.com',
     'reelview.localhost', 'localhost',
   ];
   
-  const lowerUrl = url.toLowerCase();
+  const lowerUrl = (url || '').toLowerCase();
   return embedProviders.some(provider => lowerUrl.includes(provider));
 }
 
@@ -63,31 +75,16 @@ function isLikelyAdUrl(url: string): boolean {
     'affiliate', 'click.', 'track.',
   ];
   
-  const lowerUrl = url.toLowerCase();
+  const lowerUrl = (url || '').toLowerCase();
   return adPatterns.some(pattern => lowerUrl.includes(pattern));
 }
 
 /**
- * Check if URL should be allowed through (external links like IMDB)
- */
-function isAllowedExternalUrl(url: string): boolean {
-  const allowedDomains = [
-    'imdb.com',
-    'themoviedb.org',
-    'thetvdb.com',
-    'wikipedia.org',
-    'rotten.tomatoes.com',
-  ];
-  
-  const lowerUrl = url.toLowerCase();
-  return allowedDomains.some(domain => lowerUrl.includes(domain));
-}
-
-/**
- * Create an invisible jail iframe to capture an ad
+ * Create an invisible jail iframe to capture an ad/external navigation
  */
 function captureAdInIframe(url: string): Window | null {
-  log('Capturing ad:', url.substring(0, 100));
+  if (!url) return null;
+  log('Capturing external/ad URL in jail:', url.substring(0, 100));
   
   // Limit concurrent ads
   if (adJails.length >= config.maxConcurrentAds) {
@@ -109,6 +106,7 @@ function captureAdInIframe(url: string): Window | null {
     visibility: hidden;
     pointer-events: none;
     z-index: -9999;
+    opacity: 0;
   `;
   
   // Create iframe jail
@@ -118,14 +116,26 @@ function captureAdInIframe(url: string): Window | null {
     height: 1px;
     border: none;
     visibility: hidden;
+    pointer-events: none;
   `;
   iframe.setAttribute('sandbox', 'allow-scripts');
+  iframe.setAttribute('allow', 'autoplay');
   iframe.src = url;
-  
-  // Mute audio
-  if (config.muteAudio) {
-    iframe.setAttribute('allow', 'autoplay; muted');
-  }
+
+  // best-effort mute for same-origin iframe docs
+  iframe.addEventListener('load', () => {
+    if (!config.muteAudio) return;
+    try {
+      const doc = iframe.contentDocument;
+      if (!doc) return;
+      const media = doc.querySelectorAll('video,audio') as NodeListOf<HTMLMediaElement>;
+      media.forEach((m) => {
+        m.muted = true;
+        m.volume = 0;
+        try { m.pause(); } catch {}
+      });
+    } catch {}
+  });
   
   container.appendChild(iframe);
   document.body.appendChild(container);
@@ -143,7 +153,6 @@ function captureAdInIframe(url: string): Window | null {
     }
   }, config.closureDelay);
   
-  // Return fake window object
   return iframe.contentWindow;
 }
 
@@ -160,31 +169,19 @@ function interceptWindowOpen() {
     
     log('window.open intercepted:', urlString.substring(0, 100));
     
-    // Allow empty or about:blank
-    if (!urlString || urlString === 'about:blank') {
+    // Allow empty/about:blank/internal only
+    if (!urlString || isInternalUrl(urlString)) {
       return originalWindowOpen!.call(window, url, target, features);
     }
-    
-    // Allow allowed external sites (IMDB, etc.)
-    if (isAllowedExternalUrl(urlString)) {
-      log('Allowing external URL:', urlString);
-      return originalWindowOpen!.call(window, url, target, features);
-    }
-    
-    // Allow embed providers
-    if (isEmbedProviderUrl(urlString)) {
-      log('Allowing embed provider:', urlString);
-      return originalWindowOpen!.call(window, url, target, features);
-    }
-    
-    // Block likely ads
+
+    // Never open external tabs/windows directly. Jail them all.
     if (isLikelyAdUrl(urlString)) {
-      log('Blocking ad URL:', urlString);
-      return captureAdInIframe(urlString);
+      log('Jailing likely ad URL:', urlString);
+    } else if (isEmbedProviderUrl(urlString)) {
+      log('Jailing embed popup URL (preventing external tab):', urlString);
+    } else {
+      log('Jailing unknown external URL:', urlString);
     }
-    
-    // Default: Capture in jail (safety measure)
-    log('Capturing unknown URL:', urlString);
     return captureAdInIframe(urlString);
   };
   
@@ -195,13 +192,12 @@ function interceptWindowOpen() {
  * Block location changes from ads
  */
 function blockLocationChanges() {
-  // Can't directly override location, but we can catch some patterns
-  // This is best-effort and limited by browser security
   try {
     const originalAssign = window.location.assign;
     window.location.assign = function(url: string) {
-      if (isLikelyAdUrl(url)) {
-        log('Blocked location.assign to ad:', url);
+      if (!isInternalUrl(url)) {
+        log('Blocked location.assign external URL:', url);
+        captureAdInIframe(url);
         return;
       }
       return originalAssign.call(window.location, url);
@@ -220,13 +216,9 @@ export function initializeAdCapture(userConfig?: Partial<AdCaptureConfig>) {
   log('Initializing Ad Capture System');
   log('Config:', config);
   
-  // Only run in browser
   if (typeof window === 'undefined') return;
   
-  // Intercept window.open
   interceptWindowOpen();
-  
-  // Block location changes
   blockLocationChanges();
   
   // Handle clicks on links with target="_blank"
@@ -236,12 +228,11 @@ export function initializeAdCapture(userConfig?: Partial<AdCaptureConfig>) {
     
     if (link && link.target === '_blank') {
       const href = link.href;
-      
-      if (isLikelyAdUrl(href)) {
+      if (!isInternalUrl(href)) {
         e.preventDefault();
         e.stopPropagation();
         captureAdInIframe(href);
-        log('Blocked target="_blank" ad link:', href);
+        log('Jailed target="_blank" link:', href);
       }
     }
   }, true);
@@ -259,5 +250,11 @@ export function cleanupAdCapture() {
     }
   });
   adJails = [];
-  log('All ad jails cleaned up');
+  
+  if (originalWindowOpen) {
+    window.open = originalWindowOpen;
+    originalWindowOpen = null;
+  }
+  
+  log('Ad Capture System cleaned up');
 }

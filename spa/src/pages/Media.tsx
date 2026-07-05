@@ -10,6 +10,7 @@ import { PlayCircle, Star, Pencil } from 'lucide-react';
 import { getWatchHistory, getCustomVideoData } from '@/lib/client-api';
 import { AddToWatchlistButton } from '@/components/video/add-to-watchlist-button';
 import { EditEpisodesDialog } from '@/components/video/edit-episodes-dialog';
+import { SearchDirectLinksModal } from '@/components/video/search-direct-links-modal';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ExpandableText } from '@/components/expandable-text';
 import { getAnimeEpisodes, JikanEpisode } from '@/lib/jikan';
@@ -246,7 +247,7 @@ function MediaDetailsPageContent() {
             <h1 className="text-4xl md:text-5xl font-bold text-foreground drop-shadow-xl">{video.title}</h1>
             <div className="flex items-center gap-4 mt-2 text-muted-foreground">
                {video.release_date && <span>{video.release_date.substring(0, 4)}</span>}
-               {video.vote_average && video.vote_average > 0 && <span>·</span>}
+               {video.vote_average && video.vote_average > 0 && <span>Â·</span>}
                {video.vote_average && video.vote_average > 0 && <div className='flex items-center gap-1'><Star className='h-4 w-4 text-yellow-400' /> {video.vote_average.toFixed(1)}</div>}
             </div>
             <ExpandableText text={video.description} className="mt-4 max-w-prose text-foreground/80 drop-shadow-lg" />
@@ -258,9 +259,10 @@ function MediaDetailsPageContent() {
               <AddToWatchlistButton video={video} variant="outline" size="lg" />
                {isSeries && (
                 <Button variant="outline" size="lg" onClick={() => setIsEditDialogOpen(true)}>
-                  <Pencil className="mr-2 h-5 w-5" /> Edit
+                  <Pencil className="mr-2 h-5 w-5" /> Edit Episode List
                 </Button>
                )}
+               {isSeries && <SearchDirectLinksModal tmdbId={video.id} mediaType={video.media_type} />}
             </div>
           </div>
         </div>

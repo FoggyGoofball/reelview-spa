@@ -18,6 +18,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -110,9 +111,9 @@ public class HLSDownloader {
     }
 
     /**
-     * Download content using WebView cookies and with WakeLock
+     * Download content using WebView cookies, stored headers, and with WakeLock
      */
-    private String downloadContent(String urlString) throws IOException {
+    private String downloadContent(String urlString, Map<String, String> headers) throws IOException {
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         
@@ -121,13 +122,23 @@ public class HLSDownloader {
         connection.setReadTimeout(TIMEOUT);
         connection.setInstanceFollowRedirects(false);
         
+        // Apply stored headers FIRST (from network interceptor)
+        if (headers != null && !headers.isEmpty()) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                connection.setRequestProperty(entry.getKey(), entry.getValue());
+                Log.d(TAG, "Using header: " + entry.getKey());
+            }
+        }
+        
+        // Add cookies as fallback
         CookieManager cookieManager = CookieManager.getInstance();
         String cookies = cookieManager.getCookie(urlString);
-        if (cookies != null) {
+        if (cookies != null && !cookies.isEmpty()) {
             Log.d(TAG, "Adding cookies to request");
             connection.setRequestProperty("Cookie", cookies);
         }
         
+        // Standard headers
         connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
         connection.setRequestProperty("Accept", "*/*");
         connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
@@ -144,7 +155,7 @@ public class HLSDownloader {
                 if (location != null) {
                     Log.d(TAG, "Following redirect");
                     connection.disconnect();
-                    return downloadContent(location);
+                    return downloadContent(location, headers);
                 }
             }
             
@@ -200,9 +211,9 @@ public class HLSDownloader {
     }
 
     /**
-     * Download binary segment with WakeLock
+     * Download binary segment with WakeLock and authentication headers
      */
-    private byte[] downloadSegment(String urlString) throws IOException {
+    private byte[] downloadSegment(String urlString, Map<String, String> headers) throws IOException {
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         
@@ -210,9 +221,17 @@ public class HLSDownloader {
         connection.setConnectTimeout(TIMEOUT);
         connection.setReadTimeout(TIMEOUT);
         
+        // Apply stored headers FIRST
+        if (headers != null && !headers.isEmpty()) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                connection.setRequestProperty(entry.getKey(), entry.getValue());
+            }
+        }
+        
+        // Add cookies as fallback
         CookieManager cookieManager = CookieManager.getInstance();
         String cookies = cookieManager.getCookie(urlString);
-        if (cookies != null) {
+        if (cookies != null && !cookies.isEmpty()) {
             connection.setRequestProperty("Cookie", cookies);
         }
         
@@ -265,35 +284,32 @@ public class HLSDownloader {
     }
 
     /**
-     * Convert TS to MKV
+     * Convert TS to MP4
      */
-    private File convertToMKV(File tsFile, String mkvPath) {
+    private File convertToMP4(File tsFile, String mp4Path) {
         if (!ffmpegAvailable) {
-            File mkvFile = new File(mkvPath);
-            if (tsFile.renameTo(mkvFile)) {
-                Log.d(TAG, "? Renamed to MKV");
-                return mkvFile;
-            }
+            Log.d(TAG, "FFmpeg unavailable - keeping TS file as fallback");
             return tsFile;
         }
 
         try {
             ProcessBuilder pb = new ProcessBuilder(
                 ffmpegPath, "-i", tsFile.getAbsolutePath(),
-                "-c", "copy", "-movflags", "+faststart", "-y", mkvPath
+                "-c", "copy", "-movflags", "+faststart", "-f", "mp4", "-y", mp4Path
             );
             
             Process p = pb.start();
             int exitCode = p.waitFor();
             
             if (exitCode == 0) {
-                File mkvFile = new File(mkvPath);
-                if (mkvFile.exists()) {
-                    Log.d(TAG, "? MKV conversion complete");
+                File mp4File = new File(mp4Path);
+                if (mp4File.exists() && mp4File.length() > 1024) {
+                    Log.d(TAG, "? MP4 conversion complete");
                     tsFile.delete();
-                    return mkvFile;
+                    return mp4File;
                 }
             }
+            Log.w(TAG, "MP4 conversion failed, keeping TS fallback");
             return tsFile;
             
         } catch (Exception e) {
@@ -327,18 +343,32 @@ public class HLSDownloader {
     }
 
     /**
-     * Download HLS stream with WakeLock active and quality estimation
+     * Download HLS stream with WakeLock active, quality estimation, and authentication headers
      */
     public String downloadStream(
             String m3u8Url,
             String quality,
             String fileName,
+            Map<String, String> headers,
             DownloadProgressCallback progressCallback) throws IOException {
         
         // Reset quality estimation
         totalDuration = 0;
         estimatedQuality = "";
         bitrateMbps = 0;
+        
+        // Log headers if provided
+        if (headers != null && !headers.isEmpty()) {
+            Log.d(TAG, "Download using " + headers.size() + " authentication headers");
+            for (String key : headers.keySet()) {
+                String value = headers.get(key);
+                if (value != null && value.length() > 100) {
+                    Log.d(TAG, "  " + key + ": " + value.substring(0, 100) + "...");
+                } else {
+                    Log.d(TAG, "  " + key + ": " + value);
+                }
+            }
+        }
         
         // Use the public Downloads directory so files are visible in file managers
         File downloadsDir;
@@ -358,17 +388,20 @@ public class HLSDownloader {
         }
         
         String baseName = fileName.replaceAll("[^a-zA-Z0-9]", "_");
+        if (baseName == null || baseName.isEmpty()) {
+            baseName = "video_" + System.currentTimeMillis();
+        }
         File tsFile = new File(downloadsDir, baseName + ".ts");
-        File mkvFile = new File(downloadsDir, baseName + ".mkv");
+        File mp4File = new File(downloadsDir, baseName + ".mp4");
         
-        Log.d(TAG, "Download path: " + mkvFile.getAbsolutePath());
+        Log.d(TAG, "Download target: " + mp4File.getAbsolutePath());
         
         try {
             progressCallback.onProgress("Fetching playlist", 5, null, 0);
-            String variantUrl = parsePlaylistAndGetVariant(m3u8Url, quality);
+            String variantUrl = parsePlaylistAndGetVariant(m3u8Url, quality, headers);
             
             progressCallback.onProgress("Analyzing segments", 10, null, 0);
-            List<SegmentInfo> segmentInfos = parseSegmentPlaylistWithDuration(variantUrl);
+            List<SegmentInfo> segmentInfos = parseSegmentPlaylistWithDuration(variantUrl, headers);
             
             if (segmentInfos.isEmpty()) {
                 throw new IOException("No segments found");
@@ -389,7 +422,7 @@ public class HLSDownloader {
                 try {
                     int progress = 10 + (i * 70 / segmentInfos.size());
                     
-                    byte[] segment = downloadSegment(segmentInfos.get(i).url);
+                    byte[] segment = downloadSegment(segmentInfos.get(i).url, headers);
                     segments.add(segment);
                     totalBytes += segment.length;
                     
@@ -429,8 +462,8 @@ public class HLSDownloader {
             progressCallback.onProgress("Merging segments", 85, estimatedQuality, bitrateMbps);
             mergeSegments(segments, tsFile.getAbsolutePath());
             
-            progressCallback.onProgress("Converting to MKV", 92, estimatedQuality, bitrateMbps);
-            File finalFile = convertToMKV(tsFile, mkvFile.getAbsolutePath());
+            progressCallback.onProgress("Converting to MP4", 92, estimatedQuality, bitrateMbps);
+            File finalFile = convertToMP4(tsFile, mp4File.getAbsolutePath());
             
             // Notify media scanner so file shows up in Gallery/Files app
             notifyMediaScanner(finalFile);
@@ -456,8 +489,8 @@ public class HLSDownloader {
     /**
      * Parse segment playlist and extract duration for each segment
      */
-    private List<SegmentInfo> parseSegmentPlaylistWithDuration(String playlistUrl) throws IOException {
-        String content = downloadContent(playlistUrl);
+    private List<SegmentInfo> parseSegmentPlaylistWithDuration(String playlistUrl, Map<String, String> headers) throws IOException {
+        String content = downloadContent(playlistUrl, headers);
         List<SegmentInfo> segments = new ArrayList<>();
         
         String[] lines = content.split("\n");
@@ -485,35 +518,8 @@ public class HLSDownloader {
         return segments;
     }
 
-    /**
-     * Helper class to hold segment URL and duration
-     */
-    private static class SegmentInfo {
-        String url;
-        double duration;
-        
-        SegmentInfo(String url, double duration) {
-            this.url = url;
-            this.duration = duration;
-        }
-    }
-
-    /**
-     * Notify the media scanner so the file shows up in Gallery/Files app
-     */
-    private void notifyMediaScanner(File file) {
-        try {
-            Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-            intent.setData(android.net.Uri.fromFile(file));
-            context.sendBroadcast(intent);
-            Log.d(TAG, "Media scanner notified for: " + file.getAbsolutePath());
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to notify media scanner: " + e.getMessage());
-        }
-    }
-
-    private String parsePlaylistAndGetVariant(String m3u8Url, String quality) throws IOException {
-        String content = downloadContent(m3u8Url);
+    private String parsePlaylistAndGetVariant(String m3u8Url, String quality, Map<String, String> headers) throws IOException {
+        String content = downloadContent(m3u8Url, headers);
         
         String[] lines = content.split("\n");
         for (int i = 0; i < lines.length; i++) {
@@ -530,8 +536,8 @@ public class HLSDownloader {
         return m3u8Url;
     }
 
-    private List<String> parseSegmentPlaylist(String playlistUrl) throws IOException {
-        String content = downloadContent(playlistUrl);
+    private List<String> parseSegmentPlaylist(String playlistUrl, Map<String, String> headers) throws IOException {
+        String content = downloadContent(playlistUrl, headers);
         List<String> segments = new ArrayList<>();
         
         String[] lines = content.split("\n");
@@ -556,6 +562,33 @@ public class HLSDownloader {
             return resolved.toString();
         } catch (Exception e) {
             return relativeUrl;
+        }
+    }
+
+    /**
+     * Helper class to hold segment URL and duration
+     */
+    private static class SegmentInfo {
+        String url;
+        double duration;
+        
+        SegmentInfo(String url, double duration) {
+            this.url = url;
+            this.duration = duration;
+        }
+    }
+
+    /**
+     * Notify the media scanner so the file shows up in Gallery/Files app
+     */
+    private void notifyMediaScanner(File file) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            intent.setData(android.net.Uri.fromFile(file));
+            context.sendBroadcast(intent);
+            Log.d(TAG, "Media scanner notified for: " + file.getAbsolutePath());
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to notify media scanner: " + e.getMessage());
         }
     }
 

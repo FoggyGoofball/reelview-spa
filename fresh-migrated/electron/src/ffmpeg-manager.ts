@@ -102,10 +102,10 @@ export function hasFFmpeg(): boolean {
 }
 
 /**
- * Convert TS to MKV using FFmpeg
- * Returns output path (MKV if successful, TS if failed)
+ * Convert TS to MP4 using FFmpeg
+ * Returns output path (MP4 if successful, TS if failed)
  */
-export function convertToMKV(
+export function convertToMP4(
   inputPath: string, 
   outputPath: string,
   onProgress?: (status: string) => void
@@ -120,8 +120,8 @@ export function convertToMKV(
       return;
     }
     
-    log(`Converting: ${path.basename(inputPath)} ? ${path.basename(outputPath)}`);
-    onProgress?.('Converting to MKV...');
+    log(`Converting: ${path.basename(inputPath)} -> ${path.basename(outputPath)}`);
+    onProgress?.('Converting to MP4...');
     
     // Ensure output directory exists
     const outDir = path.dirname(outputPath);
@@ -139,7 +139,7 @@ export function convertToMKV(
     const args = [
       '-i', inputPath,
       '-c', 'copy',      // No re-encoding (fast!)
-      '-movflags', '+faststart', // Optimize for streaming
+      '-movflags', '+faststart',
       '-y',              // Overwrite
       outputPath
     ];

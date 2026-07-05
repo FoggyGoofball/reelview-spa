@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -9,11 +8,22 @@ import { Search } from 'lucide-react';
 import { ApiKeyNotice } from '@/components/api-key-notice';
 import { Skeleton } from '@/components/ui/skeleton';
 
+function getQueryParam(search: unknown, key: string): string {
+  if (typeof search !== 'string' || !search) return '';
+
+  try {
+    const params = new URLSearchParams(search);
+    const value = params?.get?.(key);
+    return value ?? '';
+  } catch {
+    return '';
+  }
+}
+
 function SearchPageContent() {
   const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const query = searchParams.get('q') || '';
-  const isAnimeSearch = searchParams.get('is_anime_search') === 'true';
+  const query = getQueryParam(location?.search, 'q');
+  const isAnimeSearch = getQueryParam(location?.search, 'is_anime_search') === 'true';
   const [videos, setVideos] = useState<Video[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [apiKey, setApiKey] = useState<string | null>(null);
@@ -137,4 +147,4 @@ export default function SearchPage() {
       <SearchPageContent />
     </Suspense>
   );
-}    
+}

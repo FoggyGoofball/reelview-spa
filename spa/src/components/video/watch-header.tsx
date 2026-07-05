@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DownloadButton } from '@/components/video/download-button';
+import { StreamSourceSelector, type ResolvedStream } from '@/components/video/stream-source-selector';
 import type { Video } from '@/lib/data';
 
 export interface WatchHeaderProps {
@@ -16,6 +17,11 @@ export interface WatchHeaderProps {
   hasNext: boolean;
   hasPrev: boolean;
   playerUrl: string;
+  resolvedStreams?: ResolvedStream[];
+  selectedStreamUrl?: string | null;
+  onStreamSelect?: (url: string) => void;
+  isResolving?: boolean;
+  showStreamSelector?: boolean;
 }
 
 export function WatchHeader({
@@ -28,6 +34,11 @@ export function WatchHeader({
   hasNext,
   hasPrev,
   playerUrl,
+  resolvedStreams = [],
+  selectedStreamUrl = null,
+  onStreamSelect,
+  isResolving = false,
+  showStreamSelector = false,
 }: WatchHeaderProps) {
   const navigate = useNavigate();
   const isSeries = video.media_type === 'tv' || video.media_type === 'anime';
@@ -62,8 +73,8 @@ export function WatchHeader({
             )}
           </div>
 
-          {/* Download Button - Always visible, never wraps */}
-          <div className="flex-shrink-0">
+          {/* Download Button */}
+          <div className="flex items-center gap-1 flex-shrink-0">
             <DownloadButton />
           </div>
         </div>
@@ -102,6 +113,14 @@ export function WatchHeader({
               <span className="hidden sm:inline mr-1">Next</span>
               <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
+            {showStreamSelector && (
+              <StreamSourceSelector
+                sources={resolvedStreams}
+                selectedUrl={selectedStreamUrl}
+                onSelect={(url) => onStreamSelect?.(url)}
+                isResolving={isResolving}
+              />
+            )}
           </div>
         )}
       </div>

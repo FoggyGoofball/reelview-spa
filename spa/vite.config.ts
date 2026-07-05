@@ -12,6 +12,22 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3006',
+        changeOrigin: true,
+      },
+      '/health': {
+        target: 'http://localhost:3006',
+        changeOrigin: true,
+      },
+      '/api/proxy-stream': {
+        target: 'http://localhost:3006',
+        changeOrigin: true,
+        // Don't proxy WebSocket — this is a streaming endpoint
+        ws: false,
+      },
+    },
   },
   build: {
     outDir: 'dist',

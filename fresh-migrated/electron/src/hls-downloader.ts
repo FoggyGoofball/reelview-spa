@@ -2,7 +2,7 @@
  * Stream Downloader Module
  * 
  * Downloads HLS streams using Electron's session for authentication
- * Converts to MKV using FFmpeg for broad compatibility
+ * Converts to MP4 using FFmpeg for broad compatibility
  */
 
 import * as fs from 'fs';
@@ -11,7 +11,7 @@ import { URL } from 'url';
 import { app, BrowserWindow, net, session } from 'electron';
 import * as os from 'os';
 import * as zlib from 'zlib';
-import { getFFmpegPath, hasFFmpeg, convertToMKV, logFFmpeg } from './ffmpeg-manager';
+import { getFFmpegPath, hasFFmpeg, convertToMP4, logFFmpeg } from './ffmpeg-manager';
 
 export type StreamType = 'hls' | 'mp4' | 'dash' | 'unknown';
 
@@ -541,33 +541,52 @@ async function downloadHLSStream(
     try { fs.unlinkSync(file); } catch (e) {}
   }
   
-  // ALWAYS convert to MKV (bundled FFmpeg)
+  // ALWAYS convert to MP4 (bundled FFmpeg)
   onProgress({ status: 'converting', progress: 90, downloadedBytes, estimatedQuality: finalQuality, bitrateMbps: finalBitrate });
-  logDL('Converting to MKV using bundled FFmpeg...');
+  logDL('Converting to MP4 using bundled FFmpeg...');
   
-  // Ensure output path ends with .mkv
-  const mkvPath = outputPath.replace(/\.[^.]+$/, '.mkv');
+  // Ensure output path ends with .mp4
+  const mp4Path = outputPath.replace(/\.[^.]+$/, '.mp4');
   
-  const finalPath = await convertToMKV(tempTsPath, mkvPath, (status) => {
+  const finalPath = await convertToMP4(tempTsPath, mp4Path, (status) => {
     logDL(`Conversion: ${status}`);
   });
-  
-  // Cleanup temp directory
+
+  // If FFmpeg failed, convertToMP4 returns tempTsPath (inside tempDir).
+  // We must move it out before cleaning up tempDir, otherwise the only copy is deleted.
+  let resolvedFinalPath = finalPath;
+  if (resolvedFinalPath === tempTsPath) {
+    const fallbackPath = outputPath.replace(/\.[^.]+$/, '.ts');
+    try {
+      fs.renameSync(tempTsPath, fallbackPath);
+      resolvedFinalPath = fallbackPath;
+      logDL(`FFmpeg conversion failed - saved as TS fallback: ${path.basename(fallbackPath)}`);
+    } catch (moveErr: any) {
+      logDL(`Could not move TS fallback: ${moveErr.message}`);
+      // Last resort: copy then delete
+      try {
+        fs.copyFileSync(tempTsPath, fallbackPath);
+        resolvedFinalPath = fallbackPath;
+      } catch (e) {}
+    }
+  }
+
+  // Now safe to remove the temp directory
   try { fs.rmdirSync(tempDir, { recursive: true }); } catch (e) {}
-  
-  const finalSize = fs.statSync(finalPath).size;
-  logDL(`? COMPLETE: ${path.basename(finalPath)} (${(finalSize / 1024 / 1024).toFixed(2)} MB) - ${finalQuality}`);
-  
+
+  const finalSize = fs.statSync(resolvedFinalPath).size;
+  logDL(`✓ COMPLETE: ${path.basename(resolvedFinalPath)} (${(finalSize / 1024 / 1024).toFixed(2)} MB) - ${finalQuality}`);
+
   onProgress({
     status: 'complete',
     progress: 100,
     downloadedBytes: finalSize,
-    filePath: finalPath,
+    filePath: resolvedFinalPath,
     estimatedQuality: finalQuality,
     bitrateMbps: finalBitrate
   });
-  
-  return { filePath: finalPath, estimatedQuality: finalQuality, bitrateMbps: finalBitrate };
+
+  return { filePath: resolvedFinalPath, estimatedQuality: finalQuality, bitrateMbps: finalBitrate };
 }
 
 export async function downloadStream(
