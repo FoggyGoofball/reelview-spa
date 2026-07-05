@@ -313,16 +313,25 @@ export interface StreamMafiaApiResponse {
 
 // ─── Resolve Stream API ──────────────────────────────────────────────────────
 
+export interface SubtitleTrack {
+  lang: string;
+  url: string;
+  format: 'vtt' | 'srt' | 'ass';
+  default?: boolean;
+}
+
 export interface ResolveStreamRequest {
   tmdbId: string;
   type: 'movie' | 'tv';
   season?: number;
   episode?: number;
+  title?: string;
 }
 
 export interface ResolveStreamResponse {
   success: boolean;
   sources?: StreamSource[];
+  subtitles?: SubtitleTrack[];
   error?: string;
   fromCache?: boolean;
   provider?: string;

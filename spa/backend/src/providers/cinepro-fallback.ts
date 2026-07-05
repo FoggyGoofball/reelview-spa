@@ -34,6 +34,7 @@ import { decryptPeachifyPayload } from './peachify-decrypt.js';
 import { deriveVidZeeKey, decryptVidZee } from './vidzee-decrypt.js';
 import type {
   StreamSource,
+  SubtitleTrack,
   VidNestEncryptedResponse,
   AllMoviesResponse,
   MovieboxResponse,
@@ -241,19 +242,24 @@ function getAntiBanHeaders(baseHeaders: Record<string, string> = {}): Record<str
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
+/**
+ * Resolve stream sources and subtitles from the CinePro waterfall.
+ * Returns both sources and any subtitle tracks found during resolution.
+ */
 export async function resolveWithCinePro(
   tmdbId: string,
   season: number,
   episode: number,
-): Promise<StreamSource[]> {
+): Promise<{ sources: StreamSource[]; subtitles: SubtitleTrack[] }> {
   // Overall deadline: return whatever we have after 15 seconds, even if some
   // phases haven't settled yet. This prevents the frontend's 20s timeout from
   // firing and causing a silent fallback to xpass.
   const DEADLINE_MS = 15000;
   const deadline = Date.now() + DEADLINE_MS;
 
-  // Shared accumulator — phases push into this as they resolve.
+  // Shared accumulators — phases push into these as they resolve.
   const collected: StreamSource[] = [];
+  const collectedSubtitles: SubtitleTrack[] = [];
   const phasePromises: Promise<StreamSource[]>[] = [
     tryVidNestServers(tmdbId, season, episode),
     tryTulnexServers(tmdbId, season, episode),
@@ -308,7 +314,7 @@ export async function resolveWithCinePro(
     }
   }
 
-  return deduped;
+  return { sources: deduped, subtitles: collectedSubtitles };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

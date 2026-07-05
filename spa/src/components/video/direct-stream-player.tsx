@@ -1,9 +1,16 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import Hls from 'hls.js';
 import type { Video } from '@/lib/data';
 import { saveWatchProgress } from '@/lib/client-api';
+
+export interface SubtitleTrack {
+  lang: string;
+  url: string;
+  format: 'vtt' | 'srt' | 'ass';
+  default?: boolean;
+}
 
 interface DirectStreamPlayerProps {
   video: Video;
@@ -11,6 +18,7 @@ interface DirectStreamPlayerProps {
   streamType: 'hls' | 'mp4' | 'mkv';
   season?: number;
   episode?: number;
+  subtitles?: SubtitleTrack[];
 }
 
 /**
@@ -26,6 +34,7 @@ export function DirectStreamPlayer({
   streamType,
   season,
   episode,
+  subtitles,
 }: DirectStreamPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -57,6 +66,28 @@ export function DirectStreamPlayer({
 
     return () => clearInterval(interval);
   }, [video, season, episode]);
+
+  // Generate subtitle track elements for native <track> API
+  const subtitleTracks = useMemo(() => {
+    if (!subtitles || subtitles.length === 0) return null;
+    return subtitles.map((sub, idx) => {
+      // HLS.js handles its own subtitles from the manifest; we only add
+      // <track> elements for MP4/MKV playback or HLS native (Safari).
+      // For HLS.js, subtitles from the stream are handled internally.
+      const kind = sub.format === 'ass' ? 'metadata' : 'subtitles';
+      const srcLang = sub.lang === 'English' ? 'en' : sub.lang.substring(0, 2).toLowerCase();
+      return (
+        <track
+          key={`sub-${idx}`}
+          src={sub.url}
+          kind={kind}
+          srcLang={srcLang}
+          label={sub.lang}
+          default={sub.default || idx === 0}
+        />
+      );
+    });
+  }, [subtitles]);
 
   // Initialize HLS.js or native playback
   useEffect(() => {
@@ -167,6 +198,8 @@ export function DirectStreamPlayer({
       autoPlay
       playsInline
       crossOrigin="anonymous"
-    />
+    >
+      {subtitleTracks}
+    </video>
   );
 }

@@ -9,7 +9,7 @@ import { tmdbMediaToVideo } from '@/lib/api';
 import { getCustomVideoData, updateWatchPositionOnNavigate } from '@/lib/client-api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VidlinkPlayer } from '@/components/video/vidlink-player';
-import { DirectStreamPlayer } from '@/components/video/direct-stream-player';
+import { DirectStreamPlayer, type SubtitleTrack } from '@/components/video/direct-stream-player';
 import { WatchHeader } from '@/components/video/watch-header';
 import { EpisodeSelectionSheet } from '@/components/video/episode-selection-sheet';
 import { useSource } from '@/context/source-context';
@@ -42,6 +42,7 @@ function WatchPageContent() {
   const [resolvedStreams, setResolvedStreams] = useState<ResolvedStream[]>([]);
   const [selectedStreamUrl, setSelectedStreamUrl] = useState<string | null>(null);
   const [isResolving, setIsResolving] = useState(false);
+  const [resolvedSubtitles, setResolvedSubtitles] = useState<SubtitleTrack[]>([]);
 
   // Direct URL from Search Direct Links modal
   const directUrlParam = params.get('directUrl');
@@ -215,9 +216,21 @@ function WatchPageContent() {
             server: s.server,
           }));
 
+          // Extract subtitle tracks from response (if any)
+          const subtitles: SubtitleTrack[] = (data.subtitles || data.data?.subtitles || []).map((s: any) => ({
+            lang: s.lang || 'Unknown',
+            url: s.url?.startsWith('/') ? apiUrl(s.url) : s.url,
+            format: s.format || 'vtt',
+            default: s.default || false,
+          }));
+          if (subtitles.length > 0) {
+            console.log(`[Watch] Found ${subtitles.length} subtitle tracks`, subtitles.map(s => s.lang));
+          }
+
           console.log(`[Watch] Setting ${streams.length} streams, first proxied=${streams[0]?.url?.slice(0, 80)}...`);
 
           setResolvedStreams(streams);
+          setResolvedSubtitles(subtitles);
           setSelectedStreamUrl(streams[0].url);
         } else {
           console.warn(
@@ -428,6 +441,7 @@ function WatchPageContent() {
               }
               season={currentSeason}
               episode={currentEpisode}
+              subtitles={resolvedSubtitles}
             />
           ) : (
             <VidlinkPlayer

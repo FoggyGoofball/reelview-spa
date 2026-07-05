@@ -48,6 +48,17 @@ export function buildProxyUrl(
 }
 
 /**
+ * Build a proxy URL for a subtitle file (.vtt, .srt, .ass).
+ * Uses the same /api/proxy-stream endpoint since subtitle files
+ * are just text files fetched via GET.
+ */
+export function buildSubtitleProxyUrl(subtitleUrl: string): string {
+  const params = new URLSearchParams();
+  params.set('url', subtitleUrl);
+  return `${PROXY_BASE_URL}${PROXY_PATH}?${params.toString()}`;
+}
+
+/**
  * Rewrite an HLS manifest so that all relative/absolute segment URLs
  * are routed through our proxy. This ensures the browser fetches
  * segments through the proxy (with proper headers) rather than

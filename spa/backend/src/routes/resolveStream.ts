@@ -21,6 +21,7 @@ import type {
   ResolveStreamRequest,
   ResolveStreamResponse,
   StreamSource,
+  SubtitleTrack,
 } from '../providers/cinepro.types.js';
 
 const router = Router();
@@ -78,24 +79,34 @@ router.post('/resolve-stream', async (req: Request, res: Response) => {
   //   CinePro:  15s (overall deadline across all 13 phases)
 
   // Helper: race a promise against a timeout so no single step can hang the
-  // entire request. Returns [] on timeout.
-  const withTimeout = <T>(p: Promise<T[]>, ms: number): Promise<T[]> =>
+  // entire request. Returns empty result on timeout.
+  const withStreamTimeout = (p: Promise<StreamSource[]>, ms: number): Promise<StreamSource[]> =>
     Promise.race([
       p,
-      new Promise<T[]>((resolve) => setTimeout(() => resolve([]), ms)),
+      new Promise<StreamSource[]>((resolve) => setTimeout(() => resolve([]), ms)),
     ]);
 
-  const [consumetSources, cineproSources] = await Promise.all([
-    showTitle
-      ? withTimeout(resolveWithConsumet(showTitle, tmdbId, s, e), 12000)
-      : Promise.resolve([] as StreamSource[]),
-    withTimeout(resolveWithCinePro(tmdbId, s, e), 18000),
-  ]);
+  // CinePro now returns { sources, subtitles }, so we need a special race
+  const withCineProTimeout = (
+    p: Promise<{ sources: StreamSource[]; subtitles: SubtitleTrack[] }>,
+    ms: number,
+  ): Promise<{ sources: StreamSource[]; subtitles: SubtitleTrack[] }> =>
+    Promise.race([
+      p,
+      new Promise<{ sources: StreamSource[]; subtitles: SubtitleTrack[] }>((resolve) =>
+        setTimeout(() => resolve({ sources: [], subtitles: [] }), ms),
+      ),
+    ]);
+
+  const cineproResult = await withCineProTimeout(resolveWithCinePro(tmdbId, s, e), 18000);
+  const consumetSources = showTitle
+    ? await withStreamTimeout(resolveWithConsumet(showTitle, tmdbId, s, e), 12000)
+    : ([] as StreamSource[]);
 
   // Merge and deduplicate — prefer CinePro URLs (more reliable) but keep both
   const seen = new Set<string>();
   const merged: StreamSource[] = [];
-  for (const src of [...cineproSources, ...consumetSources]) {
+  for (const src of [...cineproResult.sources, ...consumetSources]) {
     if (src?.url && !seen.has(src.url)) {
       seen.add(src.url);
       merged.push(src);
@@ -103,11 +114,14 @@ router.post('/resolve-stream', async (req: Request, res: Response) => {
   }
 
   const sources = merged;
-  const providerUsed = consumetSources.length > 0 && cineproSources.length > 0
+  const providerUsed = consumetSources.length > 0 && cineproResult.sources.length > 0
     ? 'consumet+cinepro'
-    : cineproSources.length > 0
+    : cineproResult.sources.length > 0
       ? 'cinepro'
       : 'consumet';
+
+  // Collect subtitles — prefer CinePro's subtitles over OpenSubtitles
+  const subtitles: SubtitleTrack[] = [...cineproResult.subtitles];
 
   // ─── Response ────────────────────────────────────────────────────────────
   if (sources.length > 0) {
@@ -122,6 +136,7 @@ router.post('/resolve-stream', async (req: Request, res: Response) => {
     const response: ResolveStreamResponse = {
       success: true,
       sources: proxiedSources,
+      subtitles: subtitles.length > 0 ? subtitles : undefined,
       provider: providerUsed,
       fromCache: false,
     };
@@ -133,10 +148,11 @@ router.post('/resolve-stream', async (req: Request, res: Response) => {
     // So we wrap in "data" as well for compatibility
     res.json({
       success: true,
-      data: { sources: proxiedSources },
+      data: { sources: proxiedSources, subtitles: subtitles.length > 0 ? subtitles : undefined },
       fromCache: false,
       provider: providerUsed,
       sources: proxiedSources, // keep top-level for backward compat
+      subtitles: subtitles.length > 0 ? subtitles : undefined,
     } as any);
   } else {
     res.json({
