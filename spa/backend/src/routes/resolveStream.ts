@@ -68,8 +68,14 @@ router.post('/resolve-stream', async (req: Request, res: Response) => {
     `[ResolveStream] CACHE MISS  tmdbId=${tmdbId}  S=${s}  E=${e}  title="${showTitle}" — starting waterfall`,
   );
 
-  // ─── Waterfall Resolution ────────────────────────────────────────────────
-  let sources: StreamSource[] = [];
+  // ─── Parallel Resolution (both providers run simultaneously) ────────────
+  // Previously Consumet ran first and CinePro was skipped if Consumet found
+  // anything. Now both run in parallel so we get ALL available links — Consumet
+  // provides VidLink/ViewVault links, CinePro provides ~62+ server endpoints.
+  //
+  // Each provider has its own internal timeout:
+  //   Consumet: 12s
+  //   CinePro:  15s (overall deadline across all 13 phases)
 
   // Helper: race a promise against a timeout so no single step can hang the
   // entire request. Returns [] on timeout.
@@ -79,19 +85,29 @@ router.post('/resolve-stream', async (req: Request, res: Response) => {
       new Promise<T[]>((resolve) => setTimeout(() => resolve([]), ms)),
     ]);
 
-  if (showTitle) {
-    // Step 1: Consumet — only works if we have a title to search by.
-    // Give it at most 12s so we still have time for the CinePro fallback.
-    sources = await withTimeout(resolveWithConsumet(showTitle, tmdbId, s, e), 12000);
+  const [consumetSources, cineproSources] = await Promise.all([
+    showTitle
+      ? withTimeout(resolveWithConsumet(showTitle, tmdbId, s, e), 12000)
+      : Promise.resolve([] as StreamSource[]),
+    withTimeout(resolveWithCinePro(tmdbId, s, e), 18000),
+  ]);
+
+  // Merge and deduplicate — prefer CinePro URLs (more reliable) but keep both
+  const seen = new Set<string>();
+  const merged: StreamSource[] = [];
+  for (const src of [...cineproSources, ...consumetSources]) {
+    if (src?.url && !seen.has(src.url)) {
+      seen.add(src.url);
+      merged.push(src);
+    }
   }
 
-  let providerUsed = 'consumet';
-  if (sources.length === 0) {
-    // Step 2: CinePro fallback (works with TMDB IDs directly).
-    // resolveWithCinePro has its own internal 15s deadline.
-    sources = await withTimeout(resolveWithCinePro(tmdbId, s, e), 18000);
-    providerUsed = 'cinepro';
-  }
+  const sources = merged;
+  const providerUsed = consumetSources.length > 0 && cineproSources.length > 0
+    ? 'consumet+cinepro'
+    : cineproSources.length > 0
+      ? 'cinepro'
+      : 'consumet';
 
   // ─── Response ────────────────────────────────────────────────────────────
   if (sources.length > 0) {
