@@ -13,8 +13,8 @@ router.post("/resolve-stream", async (req: Request, res: Response) => {
   if (type === "tv" && (season == null || episode == null)) return res.status(400).json({ success: false, error: "Season+episode required" });
   const s = Number(season) || 1, e = Number(episode) || 1, showTitle = title || "";
   const cacheKey = getCacheKey(tmdbId, s, e);
-  const cached = getFromCache(cacheKey);
-  if (cached) { cached.fromCache = true; return res.json(cached); }
+  const cached = getFromCache<Record<string, unknown>>(cacheKey);
+  if (cached) { (cached as any).fromCache = true; return res.json(cached); }
   const to = (p: Promise<StreamSource[]>, ms: number) => Promise.race([p, new Promise<StreamSource[]>(r => setTimeout(() => r([]), ms))]);
   const ct = (p: Promise<any>, ms: number) => Promise.race([p, new Promise(r => setTimeout(() => r({ sources: [], subtitles: [] }), ms))]);
   const cp = await ct(resolveWithCinePro(tmdbId, s, e), 18000);
