@@ -19,6 +19,4 @@ services:
       - key: CORS_ORIGIN
         value: '*'
       - key: OPENSUBTITLES_API_KEY
-        value: ""
-
-
+        value: qRaaPqZS1UWfBNcq9O3lqcqlJhuvEeWl
