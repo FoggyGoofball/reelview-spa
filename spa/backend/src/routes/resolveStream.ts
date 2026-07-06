@@ -16,6 +16,7 @@ import { Router, type Request, type Response } from 'express';
 import { getCacheKey, getFromCache, setInCache } from '../cache.js';
 import { resolveWithConsumet } from '../providers/consumet-wrapper.js';
 import { resolveWithCinePro } from '../providers/cinepro-fallback.js';
+import { resolveWithOpenSubtitles } from '../providers/opensubtitles-fallback.js';
 import { buildProxyUrl } from './proxyStream.js';
 import type {
   ResolveStreamRequest,
@@ -120,8 +121,20 @@ router.post('/resolve-stream', async (req: Request, res: Response) => {
       ? 'cinepro'
       : 'consumet';
 
-  // Collect subtitles — prefer CinePro's subtitles over OpenSubtitles
-  const subtitles: SubtitleTrack[] = [...cineproResult.subtitles];
+  // Collect subtitles — try CinePro subtitles first, then OpenSubtitles as fallback
+  let subtitles: SubtitleTrack[] = [...cineproResult.subtitles];
+
+  // If CinePro didn't find subtitles, try OpenSubtitles (uses OPENSUBTITLES_API_KEY env var)
+  if (subtitles.length === 0 && sources.length > 0) {
+    const osApiKey = process.env.OPENSUBTITLES_API_KEY || '';
+    if (osApiKey) {
+      const osSubtitles = await resolveWithOpenSubtitles(osApiKey, tmdbId, s, e);
+      if (osSubtitles.length > 0) {
+        console.log(`[ResolveStream] OpenSubtitles returned ${osSubtitles.length} tracks for tmdbId=${tmdbId} S=${s} E=${e}`);
+        subtitles = osSubtitles;
+      }
+    }
+  }
 
   // ─── Response ────────────────────────────────────────────────────────────
   if (sources.length > 0) {

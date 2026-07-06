@@ -18,3 +18,7 @@ services:
         value: https://reelview-spa.onrender.com
       - key: CORS_ORIGIN
         value: '*'
+      - key: OPENSUBTITLES_API_KEY
+        value: ""
+
+

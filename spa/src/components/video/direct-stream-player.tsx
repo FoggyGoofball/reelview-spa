@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import Hls from 'hls.js';
 import type { Video } from '@/lib/data';
 import { saveWatchProgress } from '@/lib/client-api';
@@ -38,6 +38,7 @@ export function DirectStreamPlayer({
 }: DirectStreamPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const [showSubtitles, setShowSubtitles] = useState(subtitles && subtitles.length > 0);
 
   // Watch progress tracking
   useEffect(() => {
@@ -182,6 +183,29 @@ export function DirectStreamPlayer({
     };
   }, [streamUrl, streamType]);
 
+  // Sync showSubtitles state when subtitles prop changes
+  useEffect(() => {
+    if (subtitles && subtitles.length > 0) {
+      setShowSubtitles(true);
+    }
+  }, [subtitles]);
+
+  // Toggle subtitle visibility via text tracks
+  useEffect(() => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+    for (let i = 0; i < videoEl.textTracks.length; i++) {
+      const track = videoEl.textTracks[i];
+      if (track) {
+        track.mode = showSubtitles ? 'showing' : 'hidden';
+      }
+    }
+  }, [showSubtitles, subtitles]);
+
+  const toggleSubtitles = () => {
+    setShowSubtitles((prev) => !prev);
+  };
+
   if (!streamUrl) {
     return (
       <div className="h-full w-full bg-black flex justify-center items-center text-white">
@@ -191,15 +215,39 @@ export function DirectStreamPlayer({
   }
 
   return (
-    <video
-      ref={videoRef}
-      className="h-full w-full bg-black"
-      controls
-      autoPlay
-      playsInline
-      crossOrigin="anonymous"
-    >
-      {subtitleTracks}
-    </video>
+    <div className="relative h-full w-full bg-black">
+      <video
+        ref={videoRef}
+        className="h-full w-full bg-black"
+        controls
+        autoPlay
+        playsInline
+        crossOrigin="anonymous"
+      >
+        {subtitleTracks}
+      </video>
+
+      {/* Subtitle toggle button — visible when external subtitles are available */}
+      {subtitles && subtitles.length > 0 && (
+        <div className="absolute bottom-16 right-4 z-50">
+          <button
+            onClick={toggleSubtitles}
+            className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+              showSubtitles
+                ? 'bg-white/20 text-white hover:bg-white/30'
+                : 'bg-black/60 text-gray-400 hover:bg-black/80'
+            }`}
+            title="Toggle subtitles"
+          >
+            <span className="mr-1">CC</span>
+            {subtitles.length > 0 && (
+              <span className="opacity-60 ml-1">
+                {subtitles.map(s => s.lang).join(', ')}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

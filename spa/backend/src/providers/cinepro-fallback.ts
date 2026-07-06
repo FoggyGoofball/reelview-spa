@@ -32,6 +32,7 @@ import { decryptVidNest } from './vidnest-decrypt.js';
 import { decryptTulnexPayload } from './tulnex-decrypt.js';
 import { decryptPeachifyPayload } from './peachify-decrypt.js';
 import { deriveVidZeeKey, decryptVidZee } from './vidzee-decrypt.js';
+import { buildSubtitleProxyUrl } from '../routes/proxyStream.js';
 import type {
   StreamSource,
   SubtitleTrack,
@@ -265,8 +266,8 @@ export async function resolveWithCinePro(
     tryTulnexServers(tmdbId, season, episode),
     tryPeachifyServers(tmdbId, season, episode),
     tryVidZeeServers(tmdbId, season, episode),
-    tryVideasyServers(tmdbId, season, episode),
-    tryPoprServers(tmdbId, season, episode),
+    tryVideasyServers(tmdbId, season, episode, collectedSubtitles),
+    tryPoprServers(tmdbId, season, episode, collectedSubtitles),
     trySimpleDirectAPIs(tmdbId, season, episode),
     tryVidRock(tmdbId, season, episode),
     tryStreamMafia(tmdbId, season, episode),
@@ -606,13 +607,13 @@ const VIDEASY_SERVERS = [
   'https://api.videasy.net/lamovie/sources-with-title',
 ];
 
-async function tryVideasyServers(tmdbId: string, season: number, episode: number): Promise<StreamSource[]> {
-  const promises = VIDEASY_SERVERS.map((serverUrl) => fetchVideasyServer(serverUrl, tmdbId, season, episode));
+async function tryVideasyServers(tmdbId: string, season: number, episode: number, subCollector: SubtitleTrack[]): Promise<StreamSource[]> {
+  const promises = VIDEASY_SERVERS.map((serverUrl) => fetchVideasyServer(serverUrl, tmdbId, season, episode, subCollector));
   const results = await Promise.allSettled(promises);
   return dedupeAndMerge(results.filter((r): r is PromiseFulfilledResult<StreamSource[]> => r.status === 'fulfilled').map((r) => r.value));
 }
 
-async function fetchVideasyServer(serverUrl: string, tmdbId: string, season: number, episode: number): Promise<StreamSource[]> {
+async function fetchVideasyServer(serverUrl: string, tmdbId: string, season: number, episode: number, subCollector: SubtitleTrack[]): Promise<StreamSource[]> {
   try {
     const params = new URLSearchParams({
       title: '',
@@ -628,7 +629,7 @@ async function fetchVideasyServer(serverUrl: string, tmdbId: string, season: num
     if (!res.ok) return [];
     const blob = await res.text();
     if (!blob || blob.length < 10) return [];
-    const decrypted = await decryptVideasyBlob(blob, String(tmdbId));
+    const decrypted = await decryptVideasyBlob(blob, String(tmdbId), subCollector);
     if (!decrypted || decrypted.sources.length === 0) return [];
     return decrypted.sources.filter((s) => s?.url).map((s) => ({
       url: s.url,
@@ -642,7 +643,7 @@ async function fetchVideasyServer(serverUrl: string, tmdbId: string, season: num
   }
 }
 
-async function decryptVideasyBlob(blob: string, tmdbId: string): Promise<VideasyDecryptedPayload | null> {
+async function decryptVideasyBlob(blob: string, tmdbId: string, subCollector: SubtitleTrack[] = []): Promise<VideasyDecryptedPayload | null> {
   try {
     const res = await fetch('https://enc-dec.app/api/dec-videasy', {
       method: 'POST',
@@ -652,6 +653,18 @@ async function decryptVideasyBlob(blob: string, tmdbId: string): Promise<Videasy
     if (!res.ok) return null;
     const json = await res.json() as { status: number; result: { sources: { url: string; quality?: string; type?: string }[]; subtitles?: any[] } };
     if (json.status !== 200 || !json.result?.sources) return null;
+    // Extract subtitles from Videasy response and push into the shared collector
+    if (json.result.subtitles && Array.isArray(json.result.subtitles)) {
+      for (const sub of json.result.subtitles) {
+        if (sub?.url) {
+          subCollector.push({
+            lang: sub.label || sub.language || sub.lang || 'Unknown',
+            url: buildSubtitleProxyUrl(sub.url),
+            format: sub.url?.endsWith('.vtt') ? 'vtt' : 'srt',
+          });
+        }
+      }
+    }
     return { sources: json.result.sources, subtitles: json.result.subtitles };
   } catch {
     return null;
@@ -672,20 +685,35 @@ const POPR_SERVERS = [
   'Sigma', 'Prime', 'Alfa', 'Lamda', 'ynx_vidsrc',
 ];
 
-async function tryPoprServers(tmdbId: string, season: number, episode: number): Promise<StreamSource[]> {
-  const promises = POPR_SERVERS.map((server) => fetchPoprServer(server, tmdbId, season, episode));
+async function tryPoprServers(tmdbId: string, season: number, episode: number, subCollector: SubtitleTrack[]): Promise<StreamSource[]> {
+  const promises = POPR_SERVERS.map((server) => fetchPoprServer(server, tmdbId, season, episode, subCollector));
   const results = await Promise.allSettled(promises);
   return dedupeAndMerge(results.filter((r): r is PromiseFulfilledResult<StreamSource[]> => r.status === 'fulfilled').map((r) => r.value));
 }
 
-async function fetchPoprServer(server: string, tmdbId: string, season: number, episode: number): Promise<StreamSource[]> {
+async function fetchPoprServer(server: string, tmdbId: string, season: number, episode: number, subCollector: SubtitleTrack[]): Promise<StreamSource[]> {
   try {
     const url = `${POPR_BASE}/api/vidnest?id=${tmdbId}&type=tv&server=${server}&season=${season}&episode=${episode}`;
     const res = await fetchWithTimeout(url, { headers: getPoprHeaders() });
     if (res.status !== 200) return [];
     const data = (await res.json()) as PoprResponse;
-    const stream = data?.results?.[0]?.streams?.[0];
+    const result = data?.results?.[0];
+    const stream = result?.streams?.[0];
     if (!stream?.url) return [];
+    
+    // Extract subtitles from Popr response
+    if (result?.subtitles && Array.isArray(result.subtitles)) {
+      for (const sub of result.subtitles) {
+        if (sub?.url) {
+          subCollector.push({
+            lang: sub.lang || 'Unknown',
+            url: buildSubtitleProxyUrl(sub.url),
+            format: (sub.format || 'vtt') as 'vtt' | 'srt' | 'ass',
+          });
+        }
+      }
+    }
+    
     return [{
       url: stream.url,
       type: inferType(stream.url),
