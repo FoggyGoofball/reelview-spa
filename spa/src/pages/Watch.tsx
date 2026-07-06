@@ -442,6 +442,8 @@ function WatchPageContent() {
               season={currentSeason}
               episode={currentEpisode}
               subtitles={resolvedSubtitles}
+              tmdbId={tmdbId || undefined}
+              title={video.title || video.name || ''}
             />
           ) : (
             <VidlinkPlayer
