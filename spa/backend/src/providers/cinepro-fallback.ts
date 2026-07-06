@@ -28,6 +28,7 @@
 
 import { webcrypto } from 'crypto';
 import { createHash, createDecipheriv } from 'crypto';
+import { throttledFetch } from '../lib/throttle.js';
 import { decryptVidNest } from './vidnest-decrypt.js';
 import { decryptTulnexPayload } from './tulnex-decrypt.js';
 import { decryptPeachifyPayload } from './peachify-decrypt.js';
@@ -144,7 +145,8 @@ export function generateRandomUserAgent(deviceType?: string, browserType?: strin
 const DEFAULT_TIMEOUT = 10000; // 10 seconds
 
 function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = DEFAULT_TIMEOUT): Promise<Response> {
-  return fetch(url, {
+  // Use throttledFetch for per-domain rate limiting on outbound requests
+  return throttledFetch(url, {
     ...options,
     signal: AbortSignal.timeout(timeoutMs),
   });

@@ -232,6 +232,67 @@ function WatchPageContent() {
           setResolvedStreams(streams);
           setResolvedSubtitles(subtitles);
           setSelectedStreamUrl(streams[0].url);
+
+          // ── Background Pre-Cache ──────────────────────────────────────
+          // After resolving episode N, pre-resolve adjacent episodes so that
+          // navigating to them feels instant (cache hit). Fire-and-forget.
+          if (data.sources?.length > 0 && mediaType === 'tv') {
+            const currentS = currentSeason;
+            const currentE = currentEpisode;
+            const episodesToPrecache: { season: number; episode: number }[] = [];
+
+            // Previous episode (N-1)
+            if (currentE > 1) {
+              episodesToPrecache.push({ season: currentS, episode: currentE - 1 });
+            } else {
+              // cSeasonIdx already declared below; use a local lookup
+              const pSeasonIdx = seasonsToDisplay.findIndex((s: any) => s.season_number === currentS);
+              if (pSeasonIdx > 0) {
+                const prevSeason = seasonsToDisplay[pSeasonIdx - 1];
+                if (prevSeason) {
+                  episodesToPrecache.push({ season: prevSeason.season_number, episode: prevSeason.episode_count });
+                }
+              }
+            }
+
+            // Next episodes (N+1, N+2)
+            const cSeasonIdx = seasonsToDisplay.findIndex((s: any) => s.season_number === currentS);
+            const currentSeasonData = seasonsToDisplay.find((s: any) => s.season_number === currentS);
+            if (currentSeasonData) {
+              if (currentE + 1 <= currentSeasonData.episode_count) {
+                episodesToPrecache.push({ season: currentS, episode: currentE + 1 });
+              } else if (cSeasonIdx >= 0 && cSeasonIdx + 1 < seasonsToDisplay.length) {
+                const nextSeason = seasonsToDisplay[cSeasonIdx + 1];
+                if (nextSeason) {
+                  episodesToPrecache.push({ season: nextSeason.season_number, episode: 1 });
+                }
+              }
+
+              if (currentE + 2 <= currentSeasonData.episode_count) {
+                episodesToPrecache.push({ season: currentS, episode: currentE + 2 });
+              } else if (currentE + 1 <= currentSeasonData.episode_count && cSeasonIdx >= 0) {
+                const nextSeason = seasonsToDisplay[cSeasonIdx + 1];
+                if (nextSeason) {
+                  episodesToPrecache.push({ season: nextSeason.season_number, episode: 2 });
+                }
+              }
+            }
+
+            if (episodesToPrecache.length > 0) {
+              fetch(apiUrl('/api/precache-stream'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  tmdbId,
+                  type: 'tv',
+                  title: video.title || video.name || '',
+                  episodes: episodesToPrecache,
+                }),
+              }).catch(() => {});
+              console.log('[Watch] Pre-cache ' + episodesToPrecache.length + ' adjacent episodes', episodesToPrecache);
+            }
+          }
+          // ── End Background Pre-Cache ─────────────────────────────────
         } else {
           console.warn(
             `[Watch] RESOLVE FAIL  tmdbId=${tmdbId}  S=${currentSeason}  E=${currentEpisode}  ` +

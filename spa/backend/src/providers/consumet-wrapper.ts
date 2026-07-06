@@ -14,6 +14,7 @@
  *   - season/episode: Target episode
  */
 
+import { throttledFetch } from '../lib/throttle.js';
 import type { StreamSource } from './cinepro.types.js';
 import { MOVIES } from '@consumet/extensions';
 
@@ -31,6 +32,9 @@ export async function resolveWithConsumet(
     providerLabel: string,
   ): Promise<StreamSource[]> {
     try {
+      // Throttle: small delay before creating provider to avoid burst-firing
+      // multiple Consumet provider connections simultaneously.
+      await new Promise(r => setTimeout(r, 500));
       const provider = new ProviderCtor();
       const searchResult = await provider.search(title);
 

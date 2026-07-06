@@ -3,6 +3,8 @@ import cors from "cors";
 import resolveRouter from "./routes/resolveStream.js";
 import resolveSubtitlesRouter from "./routes/resolveSubtitles.js";
 import proxyRouter from "./routes/proxyStream.js";
+import precacheRouter from "./routes/precacheStream.js";
+import { resolveLimiter, proxyLimiter, precacheLimiter } from "./middleware/rateLimiter.js";
 import persistentCache from "./cache.js";
 const app = express();
 const PORT = Number(process.env.PORT) || 3006;
@@ -11,6 +13,11 @@ app.use(express.json());
 app.use("/api", resolveRouter);
 app.use("/api", resolveSubtitlesRouter);
 app.use("/api", proxyRouter);
+app.use("/api", precacheRouter);
+// Apply rate limiters to specific routes
+app.use("/api/resolve-stream", resolveLimiter);
+app.use("/api/proxy-stream", proxyLimiter);
+app.use("/api/precache-stream", precacheLimiter);
 app.get("/health", (_req, res) => { res.json({ status: "ok", timestamp: new Date().toISOString() }); });
 app.get("/api/clear-cache", (_req, res) => {
   const before = persistentCache.stats();
