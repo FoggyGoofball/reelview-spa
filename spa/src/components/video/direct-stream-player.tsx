@@ -34,7 +34,10 @@ export function DirectStreamPlayer({ video, streamUrl, streamType, season, episo
           setIntSubs(prev => {
             const existing = new Set(prev.map(s => s.lang.toLowerCase()));
             const newOnes = embedded.filter(s => !existing.has(s.lang.toLowerCase()));
-            if (newOnes.length > 0) return [...prev, ...newOnes];
+            if (newOnes.length > 0) {
+              console.log('[DSP] Found ' + newOnes.length + ' embedded textTracks: ' + newOnes.map(s => s.lang).join(', '));
+              return [...prev, ...newOnes];
+            }
             return prev;
           });
         }
@@ -44,6 +47,79 @@ export function DirectStreamPlayer({ video, streamUrl, streamType, season, episo
     setTimeout(() => clearInterval(iv), 8000);
     return () => clearInterval(iv);
   }, [streamUrl]);
+
+  /** Parse HLS master manifest for real subtitle .vtt URLs */
+  useEffect(() => {
+    const isHls = streamType === "hls" || streamUrl.includes(".m3u8") || streamUrl.includes("proxy-stream");
+    if (!isHls || !streamUrl) return;
+    let cancelled = false;
+    const fetchManifest = async () => {
+      try {
+        console.log('[DSP] Fetching HLS manifest for subtitle URLs: ' + streamUrl);
+        const res = await fetch(streamUrl, { signal: AbortSignal.timeout(10000) });
+        if (!res.ok) { console.warn('[DSP] Manifest fetch failed: ' + res.status); return; }
+        const text = await res.text();
+        console.log('[DSP] Manifest response (' + text.length + ' bytes)');
+        // Parse for EXT-X-MEDIA:TYPE=SUBTITLES
+        // Format: #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="English",LANGUAGE="en",URI="subs_en.m3u8"
+        const subRe = /#EXT-X-MEDIA:TYPE=SUBTITLES[^]*?URI="([^"]+)"/g;
+        const langRe = /NAME="([^"]+)"/g;
+        const langRe2 = /LANGUAGE="([^"]+)"/g;
+        const subs: SubtitleTrack[] = [];
+        let match;
+        // Reset lastIndex
+        subRe.lastIndex = 0;
+        let lastName = '';
+        let urlMatch;
+        while ((urlMatch = subRe.exec(text)) !== null) {
+          const fullMatch = urlMatch[0];
+          const uri = urlMatch[1];
+          const nameMatch = fullMatch.match(/NAME="([^"]+)"/);
+          const langMatch = fullMatch.match(/LANGUAGE="([^"]+)"/);
+          const name = nameMatch ? nameMatch[1] : (langMatch ? langMatch[1] : 'Unknown');
+          subs.push({
+            lang: name,
+            url: resolveUrl(uri, streamUrl),
+            format: "vtt",
+            default: name.toLowerCase().includes('english') || name.toLowerCase().includes('en'),
+          });
+        }
+        if (subs.length > 0) {
+          console.log('[DSP] Parsed ' + subs.length + ' subtitle tracks from manifest: ' + subs.map(s => s.lang).join(', '));
+          setIntSubs(prev => {
+            const existing = new Set(prev.map(s => s.lang.toLowerCase()));
+            const newOnes = subs.filter(s => !existing.has(s.lang.toLowerCase()));
+            if (newOnes.length > 0) return [...prev, ...newOnes];
+            return prev;
+          });
+        } else {
+          console.log('[DSP] No EXT-X-MEDIA:SUBTITLES found in manifest');
+        }
+      } catch (e) {
+        console.warn('[DSP] HLS manifest subtitle parsing error:', e);
+      }
+    };
+    // Small delay to let HLS.js process first
+    const timeout = setTimeout(fetchManifest, 2000);
+    return () => { cancelled = true; clearTimeout(timeout); };
+  }, [streamUrl, streamType]);
+
+/** Resolve a relative URI against a base URL */
+function resolveUrl(uri: string, base: string): string {
+  if (uri.startsWith('http://') || uri.startsWith('https://')) return uri;
+  try {
+    const baseUrl = new URL(base);
+    // If URI is absolute path, use origin
+    if (uri.startsWith('/')) return baseUrl.origin + uri;
+    // Otherwise resolve relative to base
+    return new URL(uri, base).href;
+  } catch {
+    // Fallback: try to use the base URL's directory
+    const lastSlash = base.lastIndexOf('/');
+    if (lastSlash > 0) return base.substring(0, lastSlash + 1) + uri;
+    return uri;
+  }
+}
   useEffect(() => { const el = vr.current; if (!el) return; for (let i = 0; i < el.textTracks.length; i++) { const t = el.textTracks[i]; if (t) t.mode = selSub && t.label === selSub ? "showing" : "hidden"; } }, [selSub, allSubs]);
   const hSubSel = useCallback((lang: string | null) => setSelSub(lang), []);
   const hSubChg = useCallback((t: SubtitleTrack[]) => { setIntSubs(t); if (onSubtitlesChange) onSubtitlesChange(t); }, [onSubtitlesChange]);
