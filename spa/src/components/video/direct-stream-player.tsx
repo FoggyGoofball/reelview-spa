@@ -20,7 +20,7 @@ export function DirectStreamPlayer({ video, streamUrl, streamType, season, episo
   const hSubChg = useCallback((t: SubtitleTrack[]) => { setIntSubs(t); if (onSubtitlesChange) onSubtitlesChange(t); }, [onSubtitlesChange]);
   if (!streamUrl) return <div className="h-full w-full bg-black flex justify-center items-center text-white">Loading Stream...</div>;
   return (
-    <div className="relative h-full w-full bg-black group pb-14">
+    <div className="relative h-full w-full bg-black group">
       <video ref={vr} className="h-full w-full bg-black object-contain" controls autoPlay playsInline crossOrigin="anonymous" style={{ "--cue-font-size": "1rem" } as React.CSSProperties}>{subTracks}</video>
       <div className="absolute bottom-16 right-4 z-50 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <SubtitleSelector videoRef={vr} subtitles={allSubs} selectedSubtitle={selSub} onSubtitleSelect={hSubSel} onSubtitlesChange={hSubChg} tmdbId={tmdbId} season={season} episode={episode} title={title} />
