@@ -473,7 +473,7 @@ function WatchPageContent() {
   }
 
   return (
-    <div className="h-screen w-screen bg-black overflow-hidden">
+    <div className="h-screen w-screen bg-black overflow-y-auto">
       <div className="relative h-full w-full flex flex-col">
         <WatchHeader 
             video={video}
@@ -491,7 +491,7 @@ function WatchPageContent() {
             isResolving={isResolving}
             showStreamSelector={source === 'reelview-engine'}
         />
-        <div className="flex-1 relative w-full">
+        <div className="flex-1 relative w-full min-h-0">
           {selectedStreamUrl ? (
             <DirectStreamPlayer
               video={video}

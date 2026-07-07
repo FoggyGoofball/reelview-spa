@@ -1,0 +1,7 @@
+- [x] Fix 1: Watch.tsx - overflow-hidden→overflow-y-auto + min-h-0 on flex-1
+- [x] Fix 2: Create subtitle-freestream.ts - YIFY + Podnapisi free subtitle scrapers
+- [x] Fix 3: Update resolveSubtitles.ts - add free subtitle sources to waterfall
+- [x] Fix 4: direct-stream-player.tsx - embedded HLS subtitle track extraction
+- [ ] Build SPA locally
+- [ ] Copy artifacts to repo root + gh-pages-final worktree
+- [ ] Commit + push both branches (triggers Render redeploy)
