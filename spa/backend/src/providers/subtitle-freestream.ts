@@ -60,7 +60,7 @@ async function scrapeYifyFast(imdbId: string): Promise<SubtitleTrack[]> {
           if (dlMatch) {
             let dlUrl = dlMatch[1];
             if (dlUrl.startsWith("/")) dlUrl = "https://yifysubtitles.com" + dlUrl;
-            return { ...t, url: buildSubtitleProxyUrl(dlUrl), format: dlUrl.endsWith(".vtt") ? "vtt" : "srt" };
+            return { ...t, url: buildSubtitleProxyUrl(dlUrl), format: (dlUrl.endsWith(".vtt") ? "vtt" : "srt") as "vtt" | "srt" };
           }
           return null;
         } catch { return null; }
@@ -117,7 +117,7 @@ async function scrapePodnapisiFast(imdbId: string, season?: number, episode?: nu
           const dlMatch = dlHtml.match(/<a[^>]*href="([^"]+\.(srt|vtt))"[^>]*>/i);
           if (dlMatch) {
             const dlUrl = dlMatch[1].startsWith("http") ? dlMatch[1] : "https://www.podnapisi.net" + dlMatch[1];
-            return { ...t, url: buildSubtitleProxyUrl(dlUrl), format: dlMatch[2] === "vtt" ? "vtt" : "srt" };
+            return { ...t, url: buildSubtitleProxyUrl(dlUrl), format: (dlMatch[2] === "vtt" ? "vtt" : "srt") as "vtt" | "srt" };
           }
           return null;
         } catch { return null; }
