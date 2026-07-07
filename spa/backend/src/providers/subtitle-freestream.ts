@@ -14,58 +14,82 @@ async function tmdbToImdb(tmdbId: string, type: string): Promise<string | null> 
 }
 
 /**
- * Podnapisi subtitle scraper.
- * Parses the search results page and fetches download links.
+ * Podnapisi — fully rewritten with a catch-all HTML scraper.
+ * Dumps first 2KB of HTML on failure so we can debug.
  */
 async function scrapePodnapisi(imdbId: string, season?: number, episode?: number): Promise<SubtitleTrack[]> {
   try {
-    const st = season ? "&sseason=" + season : "";
-    const ep = episode ? "&sepisode=" + episode : "";
-    const url = "https://www.podnapisi.net/subtitles/search/?sublanguage_id=en&imdb_id=" + imdbId + st + ep;
+    const params = new URLSearchParams({ sublanguage_id: "en", imdb_id: imdbId.replace("tt", "") });
+    if (season) params.set("sseason", String(season));
+    if (episode) params.set("sepisode", String(episode));
+    const url = "https://www.podnapisi.net/subtitles/search/?" + params.toString();
     console.log("[FreeSubs] Podnapisi URL: " + url);
+    
     const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", Accept: "text/html,*/*" },
       signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) { console.warn("[FreeSubs] Podnapisi failed: " + res.status); return []; }
     const html = await res.text();
 
-    // Collect all subtitle rows from the table
-    type Row = { lang: string; url: string };
-    const rows: Row[] = [];
+    // Debug: dump raw HTML sample
+    const debug = html.slice(0, 1500);
+    console.log("[FreeSubs] Podnapisi HTML raw (" + html.length + "b): " + debug);
 
-    // Try multiple regex patterns to handle different HTML structures
-    const patterns = [
-      // Pattern 1: <td class="lang">...</td> ... <a href="/subtitles/..." rel="nofollow">
-      /<td[^>]*class="[^"]*lang[^"]*"[^>]*>([^<]+)<\/td>[\s\S]*?<a[^>]*href="(\/[^"]+)"[^>]*rel="nofollow"[^>]*>/gi,
-      // Pattern 2: Simpler link-based pattern
-      /<a[^>]*href="(\/subtitles\/[^"]+)"[^>]*>[\s\S]*?<span[^>]*class="[^"]*lang[^"]*"[^>]*>([^<]+)<\/span>/gi,
-      // Pattern 3: Broadest - any tr with a lang indicator
-      /<tr[^>]*>[\s\S]*?<td[^>]*>([^<]+)<\/td>[\s\S]*?<a[^>]*href="(\/subtitles\/[^"]+)"[^>]*>/gi,
-    ];
+    // Catch-all: find all links that look like subtitle detail pages
+    const rows: Array<{ lang: string; url: string }> = [];
+    
+    // Pattern: any <a href="/subtitles/.../"> containing language text near it
+    const linkRe = /<a[^>]*href="(\/subtitles\/[^"]+)"[^>]*>([\s\S]{0,200})<\/a>/gi;
+    let m;
+    while ((m = linkRe.exec(html)) !== null) {
+      const href = m[1];
+      const context = m[2].toLowerCase();
+      // Extract language from context (usually the first word before <br> or similar)
+      const cleaned = m[2].replace(/<[^>]+>/g, " ").trim();
+      if (cleaned && cleaned.length < 50 && !/^\d/.test(cleaned)) {
+        rows.push({ lang: cleaned, url: "https://www.podnapisi.net" + href });
+      }
+    }
 
-    for (const pat of patterns) {
-      let m;
-      while ((m = pat.exec(html)) !== null) {
-        const lang = (m[1] || m[2] || "").trim();
-        const link = (m[2] || m[1] || "").trim();
-        if (lang && link.startsWith("/")) {
-          rows.push({ lang, url: "https://www.podnapisi.net" + link });
+    // Also try extracting subtitle rows from <tr> elements
+    if (rows.length === 0) {
+      console.warn("[FreeSubs] Podnapisi link-based parse found 0 rows, trying tr-based...");
+      const trRe = /<tr[^>]*>([\s\S]{0,2000}?)<\/tr>/gi;
+      let trm;
+      while ((trm = trRe.exec(html)) !== null) {
+        const tr = trm[1];
+        // Look for language within the row
+        const langMatch = tr.match(/<td[^>]*>([A-Za-z\s]{2,30})<\/td>/);
+        const linkMatch = tr.match(/href="(\/subtitles\/[^"]+)"/);
+        if (langMatch && linkMatch) {
+          const lang = langMatch[1].trim();
+          if (lang && lang.length < 30 && !/^\d/.test(lang)) {
+            rows.push({ lang, url: "https://www.podnapisi.net" + linkMatch[1] });
+          }
         }
       }
-      if (rows.length > 0) break; // stop at first matching pattern
+    }
+
+    // Last resort: find any link with "subtitles" in path
+    if (rows.length === 0) {
+      const broadRe = /href="(\/subtitles\/[^"]+)"[^>]*>([^<]{2,50})<\/a>/gi;
+      while ((m = broadRe.exec(html)) !== null) {
+        rows.push({ lang: m[2].trim(), url: "https://www.podnapisi.net" + m[1] });
+      }
+    }
+
+    if (rows.length === 0) {
+      console.warn("[FreeSubs] Podnapisi: 0 rows found for " + imdbId + " (html=" + html.length + " bytes)");
+      return [];
     }
 
     // Deduplicate by language
     const seen = new Set<string>();
     const unique = rows.filter(r => { const k = r.lang.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
+    console.log("[FreeSubs] Podnapisi: " + unique.length + " unique rows found");
 
-    if (unique.length === 0) {
-      console.warn("[FreeSubs] Podnapisi: 0 subtitle rows for " + imdbId + " (html length: " + html.length + ")");
-      return [];
-    }
-
-    // Fetch download pages in parallel batches (3 at a time)
+    // Fetch download pages in batches of 3
     const final: SubtitleTrack[] = [];
     for (let i = 0; i < unique.length; i += 3) {
       const batch = unique.slice(i, i + 3);
@@ -77,14 +101,16 @@ async function scrapePodnapisi(imdbId: string, season?: number, episode?: number
           });
           if (!dlRes.ok) return null;
           const dlHtml = await dlRes.text();
-          // Look for download link
-          const dlMatch = dlHtml.match(/<a[^>]*href="([^"]+\.(srt|vtt))"[^>]*>/i);
+          // Look for download link - try both full URL and relative
+          let dlMatch = dlHtml.match(/<a[^>]*href="([^"]+\.(srt|vtt|sub))"[^>]*>/i);
+          if (!dlMatch) dlMatch = dlHtml.match(/href="(\/download\/[^"]+\.(srt|vtt|sub))"/i);
           if (dlMatch) {
             const dlUrl = dlMatch[1].startsWith("http") ? dlMatch[1] : "https://www.podnapisi.net" + dlMatch[1];
+            const fmt = (dlMatch[2] || "srt").toLowerCase();
             return {
               lang: r.lang,
               url: buildSubtitleProxyUrl(dlUrl),
-              format: (dlMatch[2] === "vtt" ? "vtt" : "srt") as "vtt" | "srt",
+              format: (fmt === "vtt" ? "vtt" : "srt") as "vtt" | "srt",
               default: r.lang.toLowerCase() === "english",
             };
           }
@@ -101,19 +127,99 @@ async function scrapePodnapisi(imdbId: string, season?: number, episode?: number
   } catch (e) { console.warn("[FreeSubs] Podnapisi error:", e); return []; }
 }
 
+/**
+ * TVSubtitles.net scraper — direct subtitle file links by IMDB ID.
+ * URL format: https://www.tvsubtitles.net/tvshow-IMDBID.html
+ * Where IMDBID is the numeric part of the IMDB ID.
+ */
+async function scrapeTVSubtitles(imdbId: string, season?: number, episode?: number): Promise<SubtitleTrack[]> {
+  try {
+    const numericId = imdbId.replace("tt", "");
+    // Try both episode-level and show-level URLs
+    const urls: string[] = [];
+    
+    // Episode-level: /episode-IMDBID-SS-EE.html  
+    if (season && episode) {
+      urls.push("https://www.tvsubtitles.net/episode-" + numericId + "-" + season + "-" + episode + ".html");
+    }
+    // Show-level: /tvshow-IMDBID-1.html
+    urls.push("https://www.tvsubtitles.net/tvshow-" + numericId + "-1.html");
+    
+    for (const url of urls) {
+      console.log("[FreeSubs] TVSubtitles URL: " + url);
+      const res = await fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (res.status === 200) {
+        const html = await res.text();
+        const debug = html.slice(0, 1200);
+        console.log("[FreeSubs] TVSubtitles HTML raw: " + debug);
+        
+        // Look for subtitle download links (.srt, .zip)
+        const tracks: SubtitleTrack[] = [];
+        const re = /<a[^>]*href="([^"]+\.(?:srt|zip))"[^>]*>([^<]{1,100})<\/a>/gi;
+        let m;
+        while ((m = re.exec(html)) !== null) {
+          const href = m[1];
+          const label = m[2].trim();
+          let lang = "Unknown";
+          // Try to extract language from context
+          const before = html.slice(Math.max(0, m.index - 200), m.index);
+          const langMatch = before.match(/(?:English|Spanish|French|German|Italian|Portuguese|Dutch|Polish|Arabic|Hindi|Chinese|Japanese|Korean|Russian|Turkish)/i);
+          if (langMatch) lang = langMatch[0];
+          
+          const dlUrl = href.startsWith("http") ? href : "https://www.tvsubtitles.net" + href;
+          tracks.push({
+            lang,
+            url: buildSubtitleProxyUrl(dlUrl),
+            format: (m[2].toLowerCase() === "vtt" ? "vtt" : "srt") as "vtt" | "srt",
+          });
+        }
+        if (tracks.length > 0) {
+          console.log("[FreeSubs] TVSubtitles: " + tracks.length + " tracks");
+          return tracks;
+        }
+      }
+    }
+    console.warn("[FreeSubs] TVSubtitles: 0 results");
+    return [];
+  } catch (e) { console.warn("[FreeSubs] TVSubtitles error:", e); return []; }
+}
+
+/**
+ * TheSubDB API — free, no API key needed.
+ * GET http://api.thesubdb.com/?action=search&hash=<hash>
+ * Only works with movie file hashes, so limited use.
+ * 
+ * Instead, use the SubDB search: http://thesubdb.com/api/
+ */
+
+/**
+ * Addic7ed-style scraper via https://www.opensubtitles.org API.
+ * We'll skip this since it requires login/captcha often.
+ */
+
 export async function resolveFreeSubtitles(
   tmdbId: string, type: string, season?: number, episode?: number, imdbId?: string | null
 ): Promise<SubtitleTrack[]> {
   const imdb_id = imdbId || await tmdbToImdb(tmdbId, type);
   if (!imdb_id) { console.warn('[FreeSubs] No IMDB ID for ' + tmdbId); return []; }
 
-  // NOTE: YIFY is movies-only, skip for TV shows
   const all: SubtitleTrack[] = [];
 
-  // Podnapisi as primary free source
-  const pod = await scrapePodnapisi(imdb_id, season, episode);
-  all.push(...pod);
+  // Try multiple free sources in parallel
+  const [pod, tvsubs] = await Promise.all([
+    scrapePodnapisi(imdb_id, season, episode).catch(() => [] as SubtitleTrack[]),
+    scrapeTVSubtitles(imdb_id, season, episode).catch(() => [] as SubtitleTrack[]),
+  ]);
+  all.push(...pod, ...tvsubs);
 
-  console.log("[FreeSubs] Total: " + all.length + " tracks for " + tmdbId + " (Podnapisi=" + pod.length + ")");
-  return all;
+  // Deduplicate by language
+  const dd = new Map<string, SubtitleTrack>();
+  for (const t of all) { if (!dd.has(t.lang.toLowerCase())) dd.set(t.lang.toLowerCase(), t); }
+  const final = Array.from(dd.values());
+
+  console.log("[FreeSubs] Total: " + final.length + " tracks for " + tmdbId + " (Podnapisi=" + pod.length + ", TVSubtitles=" + tvsubs.length + ")");
+  return final;
 }
