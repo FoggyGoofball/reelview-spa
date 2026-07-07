@@ -10,11 +10,11 @@ async function tmdbToImdb(tmdbId: string, type: string): Promise<string | null> 
     return d?.imdb_id || null;
   } catch { return null; }
 }
-export async function scrapeSubdl(tmdbId: string, type: string, season?: number, episode?: number): Promise<SubtitleTrack[]> {
+export async function scrapeSubdl(tmdbId: string, type: string, season?: number, episode?: number, imdbId?: string | null): Promise<SubtitleTrack[]> {
   try {
-    const imdbId = await tmdbToImdb(tmdbId, type);
-    if (!imdbId) return [];
-    const url = type === "movie" ? "https://subdl.com/subtitle/" + imdbId : "https://subdl.com/s/subtitle/" + imdbId + "/" + season + "/" + episode;
+    const imdb_id = imdbId || await tmdbToImdb(tmdbId, type);
+    if (!imdb_id) { console.warn('[Subdl] No IMDB ID available for ' + tmdbId); return []; }
+    const url = type === "movie" ? "https://subdl.com/subtitle/" + imdb_id : "https://subdl.com/s/subtitle/" + imdb_id + "/" + season + "/" + episode;
     const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", Accept: "text/html,*/*" },
       signal: AbortSignal.timeout(10000),

@@ -132,13 +132,13 @@ async function scrapePodnapisiFast(imdbId: string, season?: number, episode?: nu
 }
 
 export async function resolveFreeSubtitles(
-  tmdbId: string, type: string, season?: number, episode?: number
+  tmdbId: string, type: string, season?: number, episode?: number, imdbId?: string | null
 ): Promise<SubtitleTrack[]> {
-  const imdbId = await tmdbToImdb(tmdbId, type);
-  if (!imdbId) return [];
+  const imdb_id = imdbId || await tmdbToImdb(tmdbId, type);
+  if (!imdb_id) { console.warn('[FreeSubs] No IMDB ID for ' + tmdbId); return []; }
   const [yify, pod] = await Promise.all([
-    scrapeYifyFast(imdbId),
-    scrapePodnapisiFast(imdbId, season, episode),
+    scrapeYifyFast(imdb_id),
+    scrapePodnapisiFast(imdb_id, season, episode),
   ]);
   const all = [...yify, ...pod];
   console.log("[FreeSubs] Total: " + all.length + " tracks for " + tmdbId + " (YIFY=" + yify.length + ", Podnapisi=" + pod.length + ")");

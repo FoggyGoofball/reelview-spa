@@ -505,6 +505,7 @@ function WatchPageContent() {
               subtitles={resolvedSubtitles}
               tmdbId={tmdbId || undefined}
               title={video.title || video.name || ''}
+              imdbId={video.external_ids?.imdb_id || undefined}
             />
           ) : (
             <VidlinkPlayer

@@ -5,17 +5,17 @@ import { resolveFreeSubtitles } from "../providers/subtitle-freestream.js";
 import type { SubtitleTrack } from "../providers/cinepro.types.js";
 const router = Router();
 router.post("/resolve-subtitles", async (req: Request, res: Response) => {
-  const { tmdbId, type = "tv", season, episode } = req.body as any;
+  const { tmdbId, type = "tv", season, episode, imdbId } = req.body as any;
   if (!tmdbId) return res.status(400).json({ success: false, error: "Missing tmdbId" });
   const s = Number(season) || 1, e = Number(episode) || 1;
   const dedup = new Map<string, SubtitleTrack>();
   const [osT, subdlT, freeT] = await Promise.all([
-    resolveWithOpenSubtitles(tmdbId, s, e).catch(() => { console.warn('[ResolveSubtitles] OpenSubtitles failed for ' + tmdbId); return [] as SubtitleTrack[]; }),
-    scrapeSubdl(tmdbId, type, s, e).catch(() => { console.warn('[ResolveSubtitles] Subdl failed for ' + tmdbId); return [] as SubtitleTrack[]; }),
-    resolveFreeSubtitles(tmdbId, type, s, e).catch(() => { console.warn('[ResolveSubtitles] Free failed for ' + tmdbId); return [] as SubtitleTrack[]; }),
+    resolveWithOpenSubtitles(tmdbId, s, e).catch((e: any) => { console.warn('[ResolveSubtitles] OpenSubtitles failed for ' + tmdbId, e?.message || ''); return [] as SubtitleTrack[]; }),
+    scrapeSubdl(tmdbId, type, s, e, imdbId).catch((e: any) => { console.warn('[ResolveSubtitles] Subdl failed for ' + tmdbId, e?.message || ''); return [] as SubtitleTrack[]; }),
+    resolveFreeSubtitles(tmdbId, type, s, e, imdbId).catch((e: any) => { console.warn('[ResolveSubtitles] Free failed for ' + tmdbId, e?.message || ''); return [] as SubtitleTrack[]; }),
   ]);
   for (const t of [...osT, ...subdlT, ...freeT]) { if (!dedup.has(t.lang.toLowerCase())) dedup.set(t.lang.toLowerCase(), t); }
   console.log('[ResolveSubtitles] Found ' + dedup.size + ' tracks for ' + tmdbId + ' (OS=' + osT.length + ', Subdl=' + subdlT.length + ', Free=' + freeT.length + ')');
-  return res.json({ success: true, subtitles: Array.from(dedup.values()) });
+  return res.json({ success: true, subtitles: Array.from(dedup.values()), provider_results: { opensubtitles: osT.length, subdl: subdlT.length, free: freeT.length } });
 });
 export default router;

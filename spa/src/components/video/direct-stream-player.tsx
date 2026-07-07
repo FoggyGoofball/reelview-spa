@@ -5,8 +5,8 @@ import type { Video } from "@/lib/data";
 import { saveWatchProgress } from "@/lib/client-api";
 import { SubtitleSelector } from "./subtitle-selector";
 export interface SubtitleTrack { lang: string; url: string; format: "vtt" | "srt" | "ass"; default?: boolean; }
-interface P { video: Video; streamUrl: string; streamType: "hls" | "mp4" | "mkv"; season?: number; episode?: number; subtitles?: SubtitleTrack[]; onSubtitlesChange?: (t: SubtitleTrack[]) => void; tmdbId?: string; title?: string; }
-export function DirectStreamPlayer({ video, streamUrl, streamType, season, episode, subtitles: extSubs, onSubtitlesChange, tmdbId, title }: P) {
+interface P { video: Video; streamUrl: string; streamType: "hls" | "mp4" | "mkv"; season?: number; episode?: number; subtitles?: SubtitleTrack[]; onSubtitlesChange?: (t: SubtitleTrack[]) => void; tmdbId?: string; title?: string; imdbId?: string; }
+export function DirectStreamPlayer({ video, streamUrl, streamType, season, episode, subtitles: extSubs, onSubtitlesChange, tmdbId, title, imdbId }: P) {
   const vr = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [selSub, setSelSub] = useState<string | null>(null);
@@ -128,7 +128,7 @@ function resolveUrl(uri: string, base: string): string {
     <div className="relative h-full w-full bg-black group">
       <video ref={vr} className="h-full w-full bg-black object-contain" controls autoPlay playsInline crossOrigin="anonymous" style={{ "--cue-font-size": "1rem" } as React.CSSProperties}>{subTracks}</video>
       <div className="absolute bottom-16 right-4 z-50 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <SubtitleSelector videoRef={vr} subtitles={allSubs} selectedSubtitle={selSub} onSubtitleSelect={hSubSel} onSubtitlesChange={hSubChg} tmdbId={tmdbId} season={season} episode={episode} title={title} />
+        <SubtitleSelector videoRef={vr} subtitles={allSubs} selectedSubtitle={selSub} onSubtitleSelect={hSubSel} onSubtitlesChange={hSubChg} tmdbId={tmdbId} season={season} episode={episode} title={title} imdbId={imdbId} />
       </div>
     </div>
   );
