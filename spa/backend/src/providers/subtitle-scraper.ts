@@ -4,7 +4,7 @@ import { buildSubtitleProxyUrl } from "../routes/proxyStream.js";
 async function tmdbToImdb(tmdbId: string, type: string): Promise<string | null> {
   try {
     const mt = type === "movie" ? "movie" : "tv";
-    const res = await fetch("https://api.themoviedb.org/3/" + mt + "/" + tmdbId + "?api_key=3a4d5d2a9f5e4c8b8a7f6e5d4c3b2a1f", { signal: AbortSignal.timeout(5000) });
+    const res = await fetch("https://api.themoviedb.org/3/" + mt + "/" + tmdbId + "?api_key=3fa2f58b01fc2153fe716cb40c39dddf", { signal: AbortSignal.timeout(5000) });
     if (!res.ok) return null;
     const d = await res.json() as any;
     return d?.imdb_id || null;

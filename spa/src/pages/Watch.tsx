@@ -491,7 +491,7 @@ function WatchPageContent() {
             isResolving={isResolving}
             showStreamSelector={source === 'reelview-engine'}
         />
-        <div className="flex-1 relative w-full pb-16">
+        <div className="flex-1 relative w-full">
           {selectedStreamUrl ? (
             <DirectStreamPlayer
               video={video}
