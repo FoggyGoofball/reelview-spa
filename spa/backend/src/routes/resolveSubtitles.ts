@@ -5,6 +5,7 @@ import { scrapeSubdl } from "../providers/subtitle-scraper.js";
 import { scrapeSubdlNew } from "../providers/subtitle-subdl.js";
 import { resolveFreeSubtitles } from "../providers/subtitle-freestream.js";
 import { scrapeAddic7ed } from "../providers/subtitle-addic7ed.js";
+import { scrapeSubSource } from "../providers/subtitle-subsource.js";
 import type { SubtitleTrack } from "../providers/cinepro.types.js";
 
 const router = Router();
@@ -42,20 +43,21 @@ router.post("/resolve-subtitles", async (req: Request, res: Response) => {
     return res.json({ success: true, subtitles: cp.subtitles, provider_results: { cinepro: cp.subtitles.length } });
   }
 
-  // 4) Fallback: free scrapers (Addic7ed + Subdl new + Podnapisi + Subdl old)
+  // 4) Fallback: free scrapers (Addic7ed + SubSource + Subdl new + Podnapisi + Subdl old)
   console.log('[Subs] CinePro no subs, trying free scrapers...');
-  const [subdlT, subdlNewT, freeT, addic7edT] = await Promise.all([
+  const [subdlT, subdlNewT, freeT, addic7edT, subsourceT] = await Promise.all([
     scrapeSubdl(tmdbId, type, s, e, imdbId).catch((e: any) => { console.warn('[Subs] Subdl old failed', e?.message || ''); return [] as SubtitleTrack[]; }),
     scrapeSubdlNew(tmdbId, type, s, e).catch((e: any) => { console.warn('[Subs] Subdl new failed', e?.message || ''); return [] as SubtitleTrack[]; }),
     resolveFreeSubtitles(tmdbId, type, s, e, imdbId || null).catch((e: any) => { console.warn('[Subs] Free failed', e?.message || ''); return [] as SubtitleTrack[]; }),
     scrapeAddic7ed(tmdbId, type, s, e).catch((e: any) => { console.warn('[Subs] Addic7ed failed', e?.message || ''); return [] as SubtitleTrack[]; }),
+    scrapeSubSource(tmdbId, type, s, e).catch((e: any) => { console.warn('[Subs] SubSource failed', e?.message || ''); return [] as SubtitleTrack[]; }),
   ]);
   const dedup = new Map<string, SubtitleTrack>();
-  for (const t of [...addic7edT, ...subdlNewT, ...subdlT, ...freeT]) { if (!dedup.has(t.lang.toLowerCase())) dedup.set(t.lang.toLowerCase(), t); }
+  for (const t of [...addic7edT, ...subsourceT, ...subdlNewT, ...subdlT, ...freeT]) { if (!dedup.has(t.lang.toLowerCase())) dedup.set(t.lang.toLowerCase(), t); }
   const final = Array.from(dedup.values());
   if (final.length > 0) setInCache(subKey, final);
-  console.log('[Subs] Final: ' + final.length + ' tracks (Addic7ed=' + addic7edT.length + ', SubdlNew=' + subdlNewT.length + ', Subdl=' + subdlT.length + ', Free=' + freeT.length + ')');
-  return res.json({ success: true, subtitles: final, provider_results: { addic7ed: addic7edT.length, subdlNew: subdlNewT.length, subdl: subdlT.length, free: freeT.length } });
+  console.log('[Subs] Final: ' + final.length + ' tracks (Addic7ed=' + addic7edT.length + ', SubSource=' + subsourceT.length + ', SubdlNew=' + subdlNewT.length + ', Subdl=' + subdlT.length + ', Free=' + freeT.length + ')');
+  return res.json({ success: true, subtitles: final, provider_results: { addic7ed: addic7edT.length, subsource: subsourceT.length, subdlNew: subdlNewT.length, subdl: subdlT.length, free: freeT.length } });
 });
 
 export default router;
