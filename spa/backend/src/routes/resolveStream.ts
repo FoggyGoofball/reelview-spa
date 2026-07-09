@@ -49,7 +49,12 @@ router.post("/resolve-stream", async (req: Request, res: Response) => {
   }
 
   if (sources.length > 0) {
-    const proxied = sources.map(s => ({ ...s, url: buildProxyUrl(s.url, s.headers) }));
+    const proxied = sources.map(s => ({
+      ...s,
+      url: buildProxyUrl(s.url, s.headers),
+      // Keep the original URL for "open in new tab" external playback
+      rawUrl: s.url,
+    }));
     const resp = { success: true, data: { sources: proxied, subtitles: subtitles.length > 0 ? subtitles : undefined }, fromCache: false, provider, sources: proxied, subtitles: subtitles.length > 0 ? subtitles : undefined };
     setInCache(cacheKey, resp);
     return res.json(resp);

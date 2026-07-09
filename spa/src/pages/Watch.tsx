@@ -43,6 +43,8 @@ function WatchPageContent() {
   const [selectedStreamUrl, setSelectedStreamUrl] = useState<string | null>(null);
   const [isResolving, setIsResolving] = useState(false);
   const [resolvedSubtitles, setResolvedSubtitles] = useState<SubtitleTrack[]>([]);
+  const [embedPlayerUrl, setEmbedPlayerUrl] = useState<string>('');
+  const [selectedStreamType, setSelectedStreamType] = useState<string>('');
 
   // Direct URL from Search Direct Links modal
   const directUrlParam = params.get('directUrl');
@@ -214,6 +216,8 @@ function WatchPageContent() {
             type: s.type,
             quality: s.quality,
             server: s.server,
+            // Original unproxied URL for external playback (open in new tab)
+            rawUrl: s.rawUrl || undefined,
           }));
 
           // Extract subtitle tracks from response (if any)
@@ -319,6 +323,19 @@ function WatchPageContent() {
       }
     };
   }, [source, tmdbId, video, mediaType, currentSeason, currentEpisode, directUrlParam]);
+
+  // When a ReelView Engine stream is selected, build the embed player URL
+  useEffect(() => {
+    if (source === 'reelview-engine' && selectedStreamUrl) {
+      const selected = resolvedStreams.find((s) => s.url === selectedStreamUrl);
+      const streamType = selected?.type || (selectedStreamUrl.includes('.m3u8') || selectedStreamUrl.includes('proxy-stream') ? 'hls' : 'mp4');
+      setSelectedStreamType(streamType);
+      setEmbedPlayerUrl(apiUrl(`/api/embed-player?url=${encodeURIComponent(selectedStreamUrl)}&type=${streamType}`));
+    } else {
+      setEmbedPlayerUrl('');
+      setSelectedStreamType('');
+    }
+  }, [source, selectedStreamUrl, resolvedStreams]);
 
   const playerUrl = useMemo(() => {
     if (!video) return '';
@@ -493,20 +510,33 @@ function WatchPageContent() {
         />
         <div className="flex-1 relative w-full min-h-0">
           {selectedStreamUrl ? (
-            <DirectStreamPlayer
-              video={video}
-              streamUrl={playerUrl}
-              streamType={
-                (resolvedStreams.find((s) => s.url === selectedStreamUrl)?.type ||
-                (playerUrl.includes('.m3u8') || playerUrl.includes('proxy-stream') ? 'hls' : 'mp4')) as 'hls' | 'mp4' | 'mkv'
-              }
-              season={currentSeason}
-              episode={currentEpisode}
-              subtitles={resolvedSubtitles}
-              tmdbId={tmdbId || undefined}
-              title={video.title || video.name || ''}
-              imdbId={video.external_ids?.imdb_id || undefined}
-            />
+            source === 'reelview-engine' ? (
+              /* ReelView Engine: use embed iframe instead of native <video>.
+                 The embed player page handles HLS (via hls.js) or MP4 playback
+                 and bypasses CORS since it's served from the Render backend. */
+              <iframe
+                src={embedPlayerUrl || playerUrl}
+                className="h-full w-full bg-black"
+                allow="autoplay; fullscreen"
+                allowFullScreen
+                title="Stream Player"
+              />
+            ) : (
+              <DirectStreamPlayer
+                video={video}
+                streamUrl={playerUrl}
+                streamType={
+                  (resolvedStreams.find((s) => s.url === selectedStreamUrl)?.type ||
+                  (playerUrl.includes('.m3u8') || playerUrl.includes('proxy-stream') ? 'hls' : 'mp4')) as 'hls' | 'mp4' | 'mkv'
+                }
+                season={currentSeason}
+                episode={currentEpisode}
+                subtitles={resolvedSubtitles}
+                tmdbId={tmdbId || undefined}
+                title={video.title || video.name || ''}
+                imdbId={video.external_ids?.imdb_id || undefined}
+              />
+            )
           ) : (
             <VidlinkPlayer
               video={video}
