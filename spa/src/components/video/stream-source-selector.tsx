@@ -20,6 +20,8 @@ export interface ResolvedStream {
   server?: string;
   /** The original (non-proxied) stream URL, for external playback */
   rawUrl?: string;
+  /** The aggregator embed page URL (vidlink, autoembed, etc.) for iframe playback */
+  embedUrl?: string;
 }
 
 interface StreamSourceSelectorProps {

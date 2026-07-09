@@ -10,6 +10,8 @@ export interface StreamSource {
   quality?: string;
   headers?: Record<string, string>;
   server?: string;
+  /** The aggregator embed page URL (e.g. https://vidlink.pro/tv/...) for iframe playback */
+  embedUrl?: string;
 }
 
 export interface ScrapeResult {

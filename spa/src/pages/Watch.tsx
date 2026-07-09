@@ -218,6 +218,8 @@ function WatchPageContent() {
             server: s.server,
             // Original unproxied URL for external playback (open in new tab)
             rawUrl: s.rawUrl || undefined,
+            // Aggregator embed page URL for iframe playback
+            embedUrl: s.embedUrl || undefined,
           }));
 
           // Extract subtitle tracks from response (if any)
@@ -324,13 +326,23 @@ function WatchPageContent() {
     };
   }, [source, tmdbId, video, mediaType, currentSeason, currentEpisode, directUrlParam]);
 
-  // When a ReelView Engine stream is selected, build the embed player URL
+  // When a ReelView Engine stream is selected, build the embed player URL.
+  // If the source has an embedUrl (aggregator embed page), use it directly —
+  // this preserves the original aggregator's UI (server selector, subtitle toggles).
+  // Otherwise, fall back to the backend's minimal embed player page.
   useEffect(() => {
     if (source === 'reelview-engine' && selectedStreamUrl) {
       const selected = resolvedStreams.find((s) => s.url === selectedStreamUrl);
       const streamType = selected?.type || (selectedStreamUrl.includes('.m3u8') || selectedStreamUrl.includes('proxy-stream') ? 'hls' : 'mp4');
       setSelectedStreamType(streamType);
-      setEmbedPlayerUrl(apiUrl(`/api/embed-player?url=${encodeURIComponent(selectedStreamUrl)}&type=${streamType}`));
+      if (selected?.embedUrl) {
+        // Use the aggregator's own embed page — it's already an iframe-ready page
+        // that handles HLS/MP4 with its own UI and subtitle support.
+        setEmbedPlayerUrl(selected.embedUrl);
+      } else {
+        // Fall back to the backend's minimal embed player (hls.js or native <video>)
+        setEmbedPlayerUrl(apiUrl(`/api/embed-player?url=${encodeURIComponent(selectedStreamUrl)}&type=${streamType}`));
+      }
     } else {
       setEmbedPlayerUrl('');
       setSelectedStreamType('');

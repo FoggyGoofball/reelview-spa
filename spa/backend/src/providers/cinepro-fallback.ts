@@ -93,6 +93,10 @@ function dedupeAndMerge(results: StreamSource[][]): StreamSource[] {
   return all;
 }
 
+/** Add an embedUrl to each source — the aggregator embed page the scraper used */
+function tagWithEmbedUrl(sources: StreamSource[], embedUrl: string): StreamSource[] {
+  return sources.map(s => ({ ...s, embedUrl: s.embedUrl || embedUrl }));
+}
 
 // ─── Anti-Ban: Random User-Agent (ported from cinepro src/utils/ua.ts) ──────
 
@@ -347,13 +351,13 @@ async function fetchVidNestServer(server: string, tmdbId: string, season: number
     if (!res.ok) return [];
     const json = (await res.json()) as VidNestEncryptedResponse;
     if (!json.data) return [];
-    return parseVidNestResponse(server, json.data);
+    return parseVidNestResponse(server, json.data, tmdbId, season, episode);
   } catch {
     return [];
   }
 }
 
-function parseVidNestResponse(server: string, data: string): StreamSource[] {
+function parseVidNestResponse(server: string, data: string, tmdbId?: string, season?: number, episode?: number): StreamSource[] {
   try {
     switch (server) {
       case 'moviebox': {
@@ -942,6 +946,7 @@ function decryptStreamMafia(payload: StreamMafiaEncryptedPayload): StreamMafiaAp
 
 async function tryAutoEmbed(tmdbId: string, season: number, episode: number): Promise<StreamSource[]> {
   try {
+    const embedUrl = `https://autoembed.cc/embed/tv/${tmdbId}/${season}/${episode}`;
     const url = `https://autoembed.cc/api/v2/tv/${tmdbId}/${season}/${episode}`;
     const res = await fetchWithTimeout(url, { headers: getAntiBanHeaders({ Accept: 'application/json' }) });
     if (!res.ok) return [];
@@ -952,6 +957,7 @@ async function tryAutoEmbed(tmdbId: string, season: number, episode: number): Pr
         if (s?.url) {
           sources.push({
             url: s.url,
+            embedUrl,
             type: inferType(s.url, s.type),
             quality: s.quality || 'auto',
             server: 'autoembed',
@@ -974,26 +980,28 @@ async function trySuperEmbed(tmdbId: string, season: number, episode: number): P
 
   // VidLink API
   try {
+    const embedUrl = `https://vidlink.pro/tv/${tmdbId}/${season}/${episode}`;
     const url = `https://vidlink.pro/api/tv/${tmdbId}/${season}/${episode}`;
     const res = await fetchWithTimeout(url, { headers: getAntiBanHeaders({ Accept: 'application/json', Referer: 'https://vidlink.pro/' }) });
     if (res.ok) {
       const json = await res.json();
       if (json?.url) {
-        sources.push({ url: json.url, type: inferType(json.url), quality: 'auto', server: 'vidlink' });
+        sources.push({ url: json.url, embedUrl, type: inferType(json.url), quality: 'auto', server: 'vidlink' });
       }
     }
   } catch { /* ignore */ }
 
   // SuperEmbed API
   try {
-    const url = `https://multiembed.mov/directstream.php?video_id=${tmdbId}&s=${season}&e=${episode}`;
+    const embedUrl = `https://multiembed.mov/directstream.php?video_id=${tmdbId}&s=${season}&e=${episode}`;
+    const url = embedUrl;
     const res = await fetchWithTimeout(url, { headers: getAntiBanHeaders({ Accept: 'application/json', Referer: 'https://multiembed.mov/' }) });
     if (res.ok) {
       const json = await res.json();
       if (Array.isArray(json.sources)) {
         for (const s of json.sources) {
           if (s?.file) {
-            sources.push({ url: s.file, type: inferType(s.file), quality: s.label || 'auto', server: 'superembed' });
+            sources.push({ url: s.file, embedUrl, type: inferType(s.file), quality: s.label || 'auto', server: 'superembed' });
           }
         }
       }
@@ -1011,8 +1019,9 @@ const VIDSRC_BASE = 'https://vsembed.ru/';
 
 async function tryVidSrc(tmdbId: string, season: number, episode: number): Promise<StreamSource[]> {
   try {
+    const embedUrl = `${VIDSRC_BASE}/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}`;
     const headers = getAntiBanHeaders({ Referer: VIDSRC_BASE });
-    const pageUrl = `${VIDSRC_BASE}/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}`;
+    const pageUrl = embedUrl;
 
     // Step 1: Fetch embed page
     const html = await fetchHtml(pageUrl, headers);

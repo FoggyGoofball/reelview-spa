@@ -54,6 +54,8 @@ router.post("/resolve-stream", async (req: Request, res: Response) => {
       url: buildProxyUrl(s.url, s.headers),
       // Keep the original URL for "open in new tab" external playback
       rawUrl: s.url,
+      // Pass through the aggregator embed page URL (vidlink, autoembed, etc.)
+      embedUrl: s.embedUrl,
     }));
     const resp = { success: true, data: { sources: proxied, subtitles: subtitles.length > 0 ? subtitles : undefined }, fromCache: false, provider, sources: proxied, subtitles: subtitles.length > 0 ? subtitles : undefined };
     setInCache(cacheKey, resp);
