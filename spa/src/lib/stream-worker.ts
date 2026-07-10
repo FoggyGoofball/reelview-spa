@@ -5,7 +5,14 @@
  * and fetches them directly from sources with proper headers.
  */
 
-const WORKER_PATH = '/stream-worker.js';
+// Dynamically determine worker path based on deployment subpath
+function getWorkerPath(): string {
+  // Use import.meta.env.BASE_URL from Vite (e.g. "/reelview-experimental/")
+  const base = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) || '/';
+  const normalized = base.endsWith('/') ? base : base + '/';
+  return `${normalized}stream-worker.js`;
+}
+const WORKER_PATH = getWorkerPath();
 const LOG_PREFIX = '[StreamWorkerManager]';
 
 export interface WorkerStatus {
@@ -80,9 +87,11 @@ export async function registerStreamWorker(): Promise<WorkerStatus> {
     }
 
     // Register new worker
-    workerRegistration = await navigator.serviceWorker.register(WORKER_PATH, {
-      scope: '/'
-    });
+    // Register worker. The default scope is the path the script lives at
+    // (e.g. /reelview-experimental/). DO NOT set scope: '/' — when the app
+    // is served under a subpath (GitHub Pages), '/' would exceed the max
+    // allowed scope and cause registration to fail.
+    workerRegistration = await navigator.serviceWorker.register(WORKER_PATH);
 
     log('INFO', 'Stream worker registered successfully');
 

@@ -521,19 +521,36 @@ function WatchPageContent() {
             showStreamSelector={source === 'reelview-engine'}
         />
         <div className="flex-1 relative w-full min-h-0">
-          {selectedStreamUrl ? (
-            source === 'reelview-engine' ? (
-              /* ReelView Engine: use embed iframe instead of native <video>.
-                 The embed player page handles HLS (via hls.js) or MP4 playback
-                 and bypasses CORS since it's served from the Render backend. */
-              <iframe
-                src={embedPlayerUrl || playerUrl}
-                className="h-full w-full bg-black"
-                allow="autoplay; fullscreen"
-                allowFullScreen
-                title="Stream Player"
-              />
-            ) : (
+      {selectedStreamUrl ? (
+        source === 'reelview-engine' ? (
+          /* ReelView Engine: if the stream has an aggregator embed page
+             (embedUrl), use it as an iframe. Otherwise fall back to the
+             native DirectStreamPlayer which handles HLS/MP4 directly. */
+          (resolvedStreams.find((s) => s.url === selectedStreamUrl)?.embedUrl) ? (
+            <iframe
+              src={embedPlayerUrl || playerUrl}
+              className="h-full w-full bg-black"
+              allow="autoplay; fullscreen"
+              allowFullScreen
+              title="Stream Player"
+            />
+          ) : (
+            <DirectStreamPlayer
+              video={video}
+              streamUrl={selectedStreamUrl}
+              streamType={
+                (resolvedStreams.find((s) => s.url === selectedStreamUrl)?.type ||
+                (selectedStreamUrl.includes('.m3u8') || selectedStreamUrl.includes('proxy-stream') ? 'hls' : 'mp4')) as 'hls' | 'mp4' | 'mkv'
+              }
+              season={currentSeason}
+              episode={currentEpisode}
+              subtitles={resolvedSubtitles}
+              tmdbId={tmdbId || undefined}
+              title={video.title || video.name || ''}
+              imdbId={video.external_ids?.imdb_id || undefined}
+            />
+          )
+        ) : (
               <DirectStreamPlayer
                 video={video}
                 streamUrl={playerUrl}
