@@ -516,6 +516,7 @@ function WatchPageContent() {
             playerUrl={playerUrl}
             resolvedStreams={resolvedStreams}
             selectedStreamUrl={selectedStreamUrl}
+            rawUrl={resolvedStreams.find((s) => s.url === selectedStreamUrl)?.rawUrl ?? null}
             onStreamSelect={setSelectedStreamUrl}
             isResolving={isResolving}
             showStreamSelector={source === 'reelview-engine'}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ExternalLink, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DownloadButton } from '@/components/video/download-button';
 import { StreamSourceSelector, type ResolvedStream } from '@/components/video/stream-source-selector';
@@ -19,9 +19,12 @@ export interface WatchHeaderProps {
   playerUrl: string;
   resolvedStreams?: ResolvedStream[];
   selectedStreamUrl?: string | null;
+  /** Original unproxied stream URL (for external playback in VLC, etc.) */
+  rawUrl?: string | null;
   onStreamSelect?: (url: string) => void;
   isResolving?: boolean;
   showStreamSelector?: boolean;
+
 }
 
 export function WatchHeader({
@@ -36,6 +39,7 @@ export function WatchHeader({
   playerUrl,
   resolvedStreams = [],
   selectedStreamUrl = null,
+  rawUrl = null,
   onStreamSelect,
   isResolving = false,
   showStreamSelector = false,
@@ -73,8 +77,20 @@ export function WatchHeader({
             )}
           </div>
 
-          {/* Download Button */}
+          {/* Stream Action Buttons (Open in VLC / Download) */}
           <div className="flex items-center gap-1 flex-shrink-0">
+            {rawUrl && (
+              <a
+                href={`vlc://${rawUrl}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-green-700/80 text-white hover:bg-green-600 transition-colors"
+                title="Open stream in VLC media player (vlc:// protocol)"
+              >
+                <ExternalLink className="h-3 w-3" />
+                <span className="hidden sm:inline">VLC</span>
+              </a>
+            )}
             <DownloadButton />
           </div>
         </div>

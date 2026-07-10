@@ -22,53 +22,38 @@ function log(level: string, message: string, data?: any) {
 export interface SubtitleTrack { lang: string; url: string; format: "vtt" | "srt" | "ass"; default?: boolean; }
 interface P { video: Video; streamUrl: string; streamType: "hls" | "mp4" | "mkv"; season?: number; episode?: number; subtitles?: SubtitleTrack[]; onSubtitlesChange?: (t: SubtitleTrack[]) => void; tmdbId?: string; title?: string; imdbId?: string; }
 
+/** Backend domains whose proxy URLs should always be used as-is (not sent to SW) */
+const PROXY_DOMAINS = ['reelview-spa.onrender.com'];
+
 /**
- * Convert a proxy-stream URL to a stream worker URL if applicable
+ * Convert a URL to a stream worker URL if applicable.
+ *
+ * Rule: if the URL is already proxied through one of our backend domains,
+ * use it as-is — the proxy already handles CORS, and extracting the raw
+ * CDN URL would cause the service worker to attempt a cross-origin fetch
+ * that the CDN may not allow (CORS error → 502).
  */
 function convertToWorkerUrl(originalUrl: string): string {
   log('DEBUG', 'Converting URL', { originalUrl });
-  
-  // Check if this is a proxy-stream URL
-  if (originalUrl.includes('proxy-stream')) {
-    log('INFO', 'Detected proxy-stream URL');
-    
-    // Extract the actual source URL from the proxy URL
-    try {
-      const url = new URL(originalUrl);
-      const sourceUrl = url.searchParams.get('url');
-      
-      if (sourceUrl) {
-        log('INFO', 'Extracted source URL from proxy', { sourceUrl });
-        
-        // Check if we should use the stream worker
-        if (shouldUseStreamWorker(sourceUrl)) {
-          const workerUrl = toStreamWorkerUrl(sourceUrl);
-          log('INFO', 'Using stream worker URL', { workerUrl });
-          return workerUrl;
-        } else {
-          log('INFO', 'Source URL does not match worker patterns, using original');
-          return originalUrl;
-        }
-      } else {
-        log('WARN', 'Could not extract source URL from proxy URL');
-        return originalUrl;
-      }
-    } catch (error: any) {
-      log('ERROR', 'Failed to parse proxy URL', {
-        error: error.message,
-        originalUrl
-      });
+
+  // ── Already proxied through backend → skip SW conversion ──
+  try {
+    const parsed = new URL(originalUrl);
+    if (PROXY_DOMAINS.some((d) => parsed.hostname === d || parsed.hostname.endsWith('.' + d))) {
+      log('INFO', 'URL already proxied through backend, using as-is');
       return originalUrl;
     }
+  } catch {
+    // invalid URL, fall through
   }
-  
-  // Check if this is a direct source URL that should use the worker
+
+  // ── Direct source URL that should use the worker ──
   if (shouldUseStreamWorker(originalUrl)) {
     const workerUrl = toStreamWorkerUrl(originalUrl);
     log('INFO', 'Converting direct URL to worker URL', { workerUrl });
     return workerUrl;
   }
-  
+
   log('DEBUG', 'URL does not need conversion', { originalUrl });
   return originalUrl;
 }
